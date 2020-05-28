@@ -1,5 +1,6 @@
 import pandas
 from transformers import PreTrainedModel, PreTrainedTokenizer
+from abc import abstractmethod
 
 
 class BaseExplainer:
@@ -14,18 +15,20 @@ class BaseExplainer:
         self.model = model
         self.tokenizer = tokenizer
 
-        if self.model.__class__.__name__ not in self.ALLOWED_MODELS:
-            raise NotImplementedError(
-                "Model Interpretation is currently not supported for {}. Please select a model from {} for interpretation.".format(
-                    self.model.__class__.__name__, self.ALLOWED_MODELS
-                )
-            )
+        # if self.model.__class__.__name__ not in self.ALLOWED_MODELS:
+        #     raise NotImplementedError(
+        #         "Model Interpretation is currently not supported for {}. Please select a model from {} for interpretation.".format(
+        #             self.model.__class__.__name__, self.ALLOWED_MODELS
+        #         )
+        #     )
 
+    @abstractmethod
     def get_model_attributions(self):
-        pass
-
+        raise NotImplementedError
+    
+    @abstractmethod
     def get_layer_attributions(self):
-        pass
+        raise NotImplementedError
 
     @ staticmethod
     def encode_inputs(tokenizer: PreTrainedTokenizer, inputs: str):
