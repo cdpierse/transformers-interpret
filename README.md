@@ -1,2 +1,2 @@
 # transformers-interpret
- Explainable AI made easy for Transformer based models. 
+ Explainable AI made for Transformer based models. 
