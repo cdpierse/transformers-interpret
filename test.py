@@ -1,4 +1,3 @@
-from transformers_interpret.explainers import SequenceClassificationExplainer
+from transformers_interpret import BaseExplainer
 model, tokenizer = "model1", "tokenizer"
-sce = SequenceClassificationExplainer(model=model, tokenizer=tokenizer)
-sce
+sce = BaseExplainer(model=model, tokenizer=tokenizer)
