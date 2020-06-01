@@ -8,11 +8,22 @@ class BaseExplainer:
     ALLOWED_MODELS = [
         "model1"
     ]
-    __metaclass__  = abc.ABCMeta
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self,
                  model: PreTrainedModel,
                  tokenizer: PreTrainedTokenizer,
                  attribution_type: str = "shap"):
+        """
+
+        Args:
+            model (PreTrainedModel): [description]
+            tokenizer (PreTrainedTokenizer): [description]
+            attribution_type (str, optional): [description]. Defaults to "shap".
+
+        Raises:
+            NotImplementedError: [description]
+        """        
         self.model = model
         self.tokenizer = tokenizer
 
