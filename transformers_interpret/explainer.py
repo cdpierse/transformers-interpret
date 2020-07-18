@@ -36,11 +36,11 @@ class BaseExplainer:
 
     @abstractmethod
     def get_model_attributions(self):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def get_layer_attributions(self):
-        raise NotImplementedError
+        pass
 
     @staticmethod
     def encode_inputs(tokenizer: PreTrainedTokenizer, inputs: str):
@@ -53,7 +53,12 @@ class BaseExplainer:
 
 
 class SequenceClassificationExplainer(BaseExplainer):
-    pass
+
+    def get_layer_attributions(self):
+        print("SCE attributions")
+
+    def get_model_attributions(self):
+        print("SCE model attributions")
 
 
 class QuestionAnsweringExplainer(BaseExplainer):
