@@ -1,3 +1,12 @@
 {
-    "python.pythonPath": "/Users/charlesp/anaconda3/envs/transformers_interpret/bin/python"
+    "python.testing.pytestArgs": [
+        "."
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.pycodestyleEnabled": false,
+    "python.linting.mypyEnabled": true,
+    "python.linting.enabled": true
 }

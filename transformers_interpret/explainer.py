@@ -23,7 +23,7 @@ class BaseExplainer:
 
         Raises:
             NotImplementedError: [description]
-        """        
+        """
         self.model = model
         self.tokenizer = tokenizer
 
