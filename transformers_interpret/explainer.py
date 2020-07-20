@@ -52,23 +52,27 @@ class BaseExplainer:
                 Please select a an attribution method from {}.".format(
                     self.attribution_type, self.SUPPORTED_ATTRIBUTION_TYPES)
             )
+        self._get_special_token_ids()
 
-    @abstractmethod
-    def get_model_attributions(self):
+    def get_attributions(self, text: str):
+
         pass
 
     @abstractmethod
     def get_layer_attributions(self):
         pass
 
-    @staticmethod
-    def encode_inputs(tokenizer: PreTrainedTokenizer, inputs: str):
-        tokenizer.encode_plus(inputs,
-                              pad_to_max_length=True)
+    @abstractmethod
+    def custom_forward(self):
+        pass
 
-    @staticmethod
-    def decode_inputs(tokenizer: PreTrainedTokenizer, token_ids: str):
-        tokenizer.decode(token_ids)
+    def encode(self, text: str) -> torch.Tensor:
+        return self.tokenizer.encode(text,
+                                     add_special_tokens=False)
+
+    def decode(self, input_ids: torch.Tensor) -> list:
+        indices = input_ids[0].detach().tolist()
+        return self.tokenizer.convert_ids_to_tokens(input_ids)
 
     def _get_special_token_ids(self):
         self.ref_token_id = self.tokenizer.pad_token_id
@@ -76,12 +80,21 @@ class BaseExplainer:
         self.cls_token_id = self.tokenizer.cls_token_id
 
     def _make_input_reference_pair(self, text: str):
-        pass
+        text_ids = self.encode(text)
+        input_ids = [self.cls_token_id] + text_ids + [self.sep_token_id]
+        ref_input_ids = [self.cls_token_id] + \
+            [self.ref_token_id] * len(text_ids) + [self.sep_token_id]
+        return (torch.tensor([input_ids], device=self.device),
+                torch.tensor([ref_input_ids], device=self.device),
+                len(text_ids))
 
     def _make_input_reference_token_type_pair(self, input_ids: torch.Tensor):
         pass
 
     def _make_input_reference_position_id_pair(self, input_ids: torch.Tensor):
+        pass
+
+    def _make_attention_mask(self, input_ids: torch.Tensor):
         pass
 
 

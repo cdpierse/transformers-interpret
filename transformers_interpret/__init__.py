@@ -7,3 +7,5 @@ from .explainer import (
     QuestionAnsweringExplainer,
     LMExplainer
 )
+
+from .attributions import Attributions
