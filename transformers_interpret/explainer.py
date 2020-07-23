@@ -1,9 +1,12 @@
-import pandas
-from transformers import PreTrainedModel, PreTrainedTokenizer
-from abc import abstractmethod
 import abc
+from abc import abstractmethod
 from typing import Tuple
+
+import pandas
 import torch
+from transformers import PreTrainedModel, PreTrainedTokenizer
+
+from .attributions import LIGAttributions
 
 
 """ transfromers-interpret
@@ -24,13 +27,13 @@ class BaseExplainer:
     SUPPORTED_ATTRIBUTION_TYPES = [
         "lig"
     ]
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self,
                  model: PreTrainedModel,
                  tokenizer: PreTrainedTokenizer,
                  attribution_type: str = "lig"):
         """
+        [summary]
 
         Args:
             model (PreTrainedModel): [description]
@@ -52,16 +55,8 @@ class BaseExplainer:
                 Please select a an attribution method from {}.".format(
                     self.attribution_type, self.SUPPORTED_ATTRIBUTION_TYPES)
             )
+
         self._get_special_token_ids()
-
-    # @abstractmethod
-    # def get_layer_attributions(self):
-    #     print("abstract but it does something at elast")
-    #     pass
-
-    # @abstractmethod
-    # def custom_forward(self):
-    #     pass
 
     def encode(self, text: str) -> torch.Tensor:
         return self.tokenizer.encode(text,
@@ -121,6 +116,15 @@ class BaseExplainer:
         return (token_type_ids, ref_token_type_ids)
 
     def _make_input_reference_position_id_pair(self, input_ids: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Returns tensors for positional encoding of tokens for input_ids and zeroed tensor for reference ids.
+
+        Args:
+            input_ids (torch.Tensor): inputs to create positional encoding.
+
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor]
+        """
         seq_len = input_ids.size(1)
         position_ids = torch.arange(
             seq_len, dtype=torch.long, device=self.device)
@@ -136,9 +140,20 @@ class BaseExplainer:
 
 class SequenceClassificationExplainer(BaseExplainer):
 
-    def forward(self):
+    def __init__(self, text: str, model, tokenizer, attribution_type="lig"):
+        super().__init__(model, tokenizer, attribution_type)
+        self.input_ids, self.ref_input_ids, self.sep_idx = self._make_input_reference_pair(
+            text)
+        print("does this run")
+
+    def forward(self, inputs):
+        preds = self.model(inputs)[0]
+        torch.softmax(preds, dim=1)[0][0].unsqueeze(-1)
         "Custom forward function for sequence classification"
-        pass
+
+    def get_attributions(self):
+        if self.attribution_type == "lig":
+            return
 
 
 class QuestionAnsweringExplainer(BaseExplainer):

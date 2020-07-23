@@ -12,14 +12,17 @@ model.zero_grad()
 tokenizer = BertTokenizer.from_pretrained(
     'textattack/bert-base-uncased-rotten-tomatoes')
 
+text = "For those who like their romance movies filled with unnecessary mysteries, murdered dogs, poached lobsters and the ghosts of deceased little girls, \
+        “Dirt Music” will fit the bill. All others need not apply, not even if you’re into the kind of Nicholas Sparks-style drama this movie shamelessly marinates in for an interminable 105 minutes. Director Gregor Jordan’s Australia-set \
+        potboiler plays like “Wake in Fright” meets “The Notebook”; the toxic masculinity of several characters wreaks havoc before one guy reveals a softer side that bends toward true love as a means of assuaging his guilt."
 
-be = BaseExplainer(model, tokenizer)
-inputs, refs, length = be._make_input_reference_pair(
-    "Hey there how are you doing today sir?")
-types = be._make_input_reference_token_type_pair(inputs)
+sce = SequenceClassificationExplainer(text, model, tokenizer)
+print(sce.input_ids, sce.ref_input_ids, sce.sep_idx)
 
-print("="*30)
-print("Inputs are: ", inputs)
-print("="*30)
-print("Types are: ", types)
 
+# print("="*50)
+# print("Inputs are: ", inputs)
+# print("="*50)
+# print("Types are: ", types)
+# print("="*50)
+# print("Positions are: ", positions)
