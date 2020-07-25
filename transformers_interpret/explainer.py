@@ -137,23 +137,41 @@ class BaseExplainer:
     def _make_attention_mask(self, input_ids: torch.Tensor) -> torch.Tensor:
         return torch.ones_like(input_ids)
 
+    @staticmethod
+    def get_model_namespace(model):
+        # TODO: #2 @cdpierse write method for extracting the appropriate namespace from a model
+        return "bert"
+
 
 class SequenceClassificationExplainer(BaseExplainer):
 
     def __init__(self, text: str, model, tokenizer, attribution_type="lig"):
         super().__init__(model, tokenizer, attribution_type)
+        self.text = text
         self.input_ids, self.ref_input_ids, self.sep_idx = self._make_input_reference_pair(
-            text)
-        print("does this run")
+            self.text)
+        self.get_attributions()
 
     def forward(self, inputs):
         preds = self.model(inputs)[0]
-        torch.softmax(preds, dim=1)[0][0].unsqueeze(-1)
-        "Custom forward function for sequence classification"
+        return torch.softmax(preds, dim=1)[0][0].unsqueeze(-1)
 
     def get_attributions(self):
         if self.attribution_type == "lig":
-            return
+            namespace = self.get_model_namespace(self.model)
+            embeddings = getattr(self.model, namespace).embeddings
+            lig = LIGAttributions(self.forward,
+                                  embeddings,
+                                  self.input_ids,
+                                  self.ref_input_ids,
+                                  self.sep_idx)
+            attributions = lig.attributions
+            all_tokens = self.tokenizer.convert_ids_to_tokens(self.input_ids[0].detach().tolist())
+            for word, attr in zip(all_tokens, attributions):
+                print(word,float(attr))
+        else:
+            raise NotImplementedError(
+                "Other attribution types are not added yet.")
 
 
 class QuestionAnsweringExplainer(BaseExplainer):

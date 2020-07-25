@@ -17,7 +17,7 @@ text = "For those who like their romance movies filled with unnecessary mysterie
         potboiler plays like “Wake in Fright” meets “The Notebook”; the toxic masculinity of several characters wreaks havoc before one guy reveals a softer side that bends toward true love as a means of assuaging his guilt."
 
 sce = SequenceClassificationExplainer(text, model, tokenizer)
-print(sce.input_ids, sce.ref_input_ids, sce.sep_idx)
+
 
 
 # print("="*50)
