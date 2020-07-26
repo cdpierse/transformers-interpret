@@ -1,12 +1,12 @@
 import abc
 from abc import abstractmethod
-from typing import Tuple
+from typing import Tuple, List, Union
 
 import pandas
 import torch
 from transformers import PreTrainedModel, PreTrainedTokenizer
 
-from .attributions import LIGAttributions
+from .attributions import LIGAttributions, Attributions
 
 
 """ transfromers-interpret
@@ -71,7 +71,7 @@ class BaseExplainer:
         self.sep_token_id = self.tokenizer.sep_token_id
         self.cls_token_id = self.tokenizer.cls_token_id
 
-    def _make_input_reference_pair(self, text: str) -> Tuple[torch.Tensor, torch.Tensor, int]:
+    def _make_input_reference_pair(self, text: Union[List, str]) -> Tuple[torch.Tensor, torch.Tensor, int]:
         """
         Tokenizes `text` to numerical token id  representation `input_ids`,
         as well as creating another reference tensor of the same length
@@ -86,6 +86,11 @@ class BaseExplainer:
         Returns:
             Tuple[torch.Tensor, torch.Tensor, int]
         """
+
+        if isinstance(text, list):
+            raise NotImplementedError(
+                "Lists of text are not currently supported.")
+
         text_ids = self.encode(text)
         input_ids = [self.cls_token_id] + text_ids + [self.sep_token_id]
         ref_input_ids = [self.cls_token_id] + \
@@ -140,23 +145,43 @@ class BaseExplainer:
     @staticmethod
     def get_model_namespace(model):
         # TODO: #2 @cdpierse write method for extracting the appropriate namespace from a model
-        return "bert"
+        return "distilbert"
 
 
 class SequenceClassificationExplainer(BaseExplainer):
+    """
+    Instantiates an explainer for Sequence Classification based models
+    from the Transformer package by Hugging Face.
+    """
 
-    def __init__(self, text: str, model, tokenizer, attribution_type="lig"):
+    def __init__(self,
+                 text: Union[List, str],
+                 model: PreTrainedModel,
+                 tokenizer: PreTrainedTokenizer,
+                 attribution_type: str = "lig"):
+        """
+        Instantiates an explainer for Sequence Classification based models
+        from the Transformer package by Hugging Face.
+
+        Args:
+            text (Union[List, str]): The texts or list of texts to derive explanations for.
+            model (PreTrainedModel): A pretrained model with a sequence classification head. 
+            tokenizer (PreTrainedTokenizer): The official tokenizer for the model
+            attribution_type (str, optional): The type of attributions we want to calculate. Defaults to "lig".
+        """
+
         super().__init__(model, tokenizer, attribution_type)
+
         self.text = text
         self.input_ids, self.ref_input_ids, self.sep_idx = self._make_input_reference_pair(
             self.text)
-        self.get_attributions()
+        self.calculate_attributions()
 
     def forward(self, inputs):
         preds = self.model(inputs)[0]
-        return torch.softmax(preds, dim=1)[0][0].unsqueeze(-1)
+        return torch.softmax(preds, dim=1)[0][1].unsqueeze(-1)
 
-    def get_attributions(self):
+    def calculate_attributions(self):
         if self.attribution_type == "lig":
             namespace = self.get_model_namespace(self.model)
             embeddings = getattr(self.model, namespace).embeddings
@@ -165,13 +190,16 @@ class SequenceClassificationExplainer(BaseExplainer):
                                   self.input_ids,
                                   self.ref_input_ids,
                                   self.sep_idx)
-            attributions = lig.attributions
-            all_tokens = self.tokenizer.convert_ids_to_tokens(self.input_ids[0].detach().tolist())
-            for word, attr in zip(all_tokens, attributions):
-                print(word,float(attr))
+            self.attributions = lig
+            all_tokens = self.tokenizer.convert_ids_to_tokens(
+                self.input_ids[0].detach().tolist())
+
         else:
             raise NotImplementedError(
                 "Other attribution types are not added yet.")
+
+    def get_attributions(self) -> LIGAttributions:
+        return self.attributions
 
 
 class QuestionAnsweringExplainer(BaseExplainer):
