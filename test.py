@@ -1,9 +1,19 @@
+from pprint import pprint
+
+from transformers import (
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    BertConfig,
+    BertForSequenceClassification,
+    BertTokenizer,
+)
+
 from transformers_interpret import BaseExplainer, SequenceClassificationExplainer
-from transformers import BertTokenizer, BertForSequenceClassification, BertConfig, AutoTokenizer, AutoModelForSequenceClassification
 
-
-tokenizer = AutoTokenizer.from_pretrained("sampathkethineedi/industry-classification")  
-model = AutoModelForSequenceClassification.from_pretrained("sampathkethineedi/industry-classification")
+tokenizer = AutoTokenizer.from_pretrained("sampathkethineedi/industry-classification")
+model = AutoModelForSequenceClassification.from_pretrained(
+    "sampathkethineedi/industry-classification"
+)
 
 device = "cpu"
 # model = BertForSequenceClassification.from_pretrained(
@@ -23,6 +33,8 @@ text = "For those who like their romance movies filled with unnecessary mysterie
 sce = SequenceClassificationExplainer(text, model, tokenizer)
 atr = sce.get_attributions()
 print(atr.attributions)
+pprint(dir(model))
+
 
 # print("="*50)
 # print("Inputs are: ", inputs)
