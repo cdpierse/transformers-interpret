@@ -1,7 +1,12 @@
+import sys
+
 import torch
 from transformers import PreTrainedModel, PreTrainedTokenizer
 from transformers_interpret import BaseExplainer, LIGAttributions
-from transformers_interpret.errors import AttributionTypeNotSupportedError
+from transformers_interpret.errors import (
+    AttributionTypeNotSupportedError,
+    InputIdsNotCalculatedError,
+)
 
 SUPPORTED_ATTRIBUTION_TYPES: list = ["lig"]
 
@@ -40,7 +45,9 @@ class SequenceClassificationExplainer(BaseExplainer):
         indices = input_ids[0].detach().tolist()
         return self.tokenizer.convert_ids_to_tokens(input_ids)
 
-    def get_attributions(self, text: str = None):
+    def get_attributions(
+        self, text: str = None, index: int = None, class_name: str = None
+    ):
         if text is not None:
             self.text = text
         self._calculate_attributions()
@@ -48,7 +55,27 @@ class SequenceClassificationExplainer(BaseExplainer):
 
     def _forward(self, input_ids):
         preds = self.model(input_ids)[0]
-        return torch.softmax(preds, dim=1)[0][1].unsqueeze(-1)
+        # currently returns the index that "fires" the highest, i.e. the predicted class
+        return torch.softmax(preds, dim=1)[0][self.predicted_index].unsqueeze(-1)
+
+    @property
+    def predicted_class_index(self):
+        try:
+            preds = self.model(self.input_ids)[0]
+            return torch.argmax(torch.softmax(preds, dim=1)[0]).detach().numpy()
+
+        except:
+            raise InputIdsNotCalculatedError(
+                "input_ids have not been created yet. Please call `get_attributions()`"
+            )
+
+    @property
+    def predicted_class_name(self):
+        try:
+            index = self.predicted_class_index
+            return self.id2label[int(index)]
+        except:
+            pass
 
     def _calculate_attributions(self):
 
@@ -57,12 +84,13 @@ class SequenceClassificationExplainer(BaseExplainer):
             self.ref_input_ids,
             self.sep_idx,
         ) = self._make_input_reference_pair(self.text)
+        # TODO: @cdpierse eventually add some logic for choosing which
+        # index to explain
+        self.predicted_index = self.predicted_class_index
 
         if self.attribution_type == "lig":
             embeddings = getattr(self.model, self.model_type).embeddings
-            reference_text = (
-                "BOS_TOKEN " + self.text + " EOS_TOKEN"
-            )
+            reference_text = "BOS_TOKEN " + self.text + " EOS_TOKEN"
             lig = LIGAttributions(
                 self._forward,
                 embeddings,
