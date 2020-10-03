@@ -41,8 +41,7 @@ class BaseExplainer:
         """
         self.model = model
         self.tokenizer = tokenizer
-        self.device = torch.device(
-            "cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.attribution_type = attribution_type.lower()
 
         if attribution_type not in SUPPORTED_ATTRIBUTION_TYPES:
@@ -86,8 +85,7 @@ class BaseExplainer:
         """
 
         if isinstance(text, list):
-            raise NotImplementedError(
-                "Lists of text are not currently supported.")
+            raise NotImplementedError("Lists of text are not currently supported.")
 
         text_ids = self.encode(text)
         input_ids = [self.cls_token_id] + text_ids + [self.sep_token_id]
@@ -119,8 +117,7 @@ class BaseExplainer:
         token_type_ids = torch.tensor(
             [0 if i <= sep_idx else 1 for i in range(seq_len)], device=self.device
         )
-        ref_token_type_ids = torch.zeros_like(
-            token_type_ids, device=self.device)
+        ref_token_type_ids = torch.zeros_like(token_type_ids, device=self.device)
 
         return (token_type_ids, ref_token_type_ids)
 
@@ -137,10 +134,8 @@ class BaseExplainer:
             Tuple[torch.Tensor, torch.Tensor]
         """
         seq_len = input_ids.size(1)
-        position_ids = torch.arange(
-            seq_len, dtype=torch.long, device=self.device)
-        ref_position_ids = torch.zeros(
-            seq_len, dtype=torch.long, device=self.device)
+        position_ids = torch.arange(seq_len, dtype=torch.long, device=self.device)
+        ref_position_ids = torch.zeros(seq_len, dtype=torch.long, device=self.device)
         position_ids = position_ids.unsqueeze(0).expand_as(input_ids)
         ref_position_ids = ref_position_ids.unsqueeze(0).expand_as(input_ids)
         return (position_ids, ref_position_ids)
@@ -209,8 +204,7 @@ class SequenceClassificationExplainer(BaseExplainer):
             )
 
         else:
-            raise NotImplementedError(
-                "Other attribution types are not added yet.")
+            raise NotImplementedError("Other attribution types are not added yet.")
 
     def get_attributions(self) -> LIGAttributions:
         return self.attributions

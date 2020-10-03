@@ -1,7 +1,7 @@
 import torch
 from transformers import PreTrainedModel, PreTrainedTokenizer
-
 from transformers_interpret import BaseExplainer, LIGAttributions
+from transformers_interpret.errors import AttributionTypeNotSupportedError
 
 SUPPORTED_ATTRIBUTION_TYPES: list = ["lig"]
 
@@ -20,10 +20,16 @@ class SequenceClassificationExplainer(BaseExplainer):
         attribution_type: str = "lig",
     ):
         super().__init__(text, model, tokenizer)
+        if attribution_type not in SUPPORTED_ATTRIBUTION_TYPES:
+            raise AttributionTypeNotSupportedError(
+                f"Attribution type '{attribution_type}' is not supported. Supported types are {SUPPORTED_ATTRIBUTION_TYPES}"
+            )
         self.attribution_type = attribution_type
 
         self.label2id = model.config.label2id
         self.id2label = model.config.id2label
+
+        self.attributions = None
 
     def encode(self, text: str = None):
         if text is None:
@@ -46,18 +52,27 @@ class SequenceClassificationExplainer(BaseExplainer):
 
     def _calculate_attributions(self):
 
-        self.input_ids, self.ref_input_ids, self.sep_idx = self._make_input_reference_pair(
-            self.text)
+        (
+            self.input_ids,
+            self.ref_input_ids,
+            self.sep_idx,
+        ) = self._make_input_reference_pair(self.text)
 
         if self.attribution_type == "lig":
             embeddings = getattr(self.model, self.model_type).embeddings
-            self.attributions = LIGAttributions(
+            reference_text = (
+                "BOS_TOKEN " + self.text + " EOS_TOKEN"
+            )
+            lig = LIGAttributions(
                 self._forward,
                 embeddings,
+                reference_text,
                 self.input_ids,
                 self.ref_input_ids,
-                self.sep_idx
+                self.sep_idx,
             )
+            lig.summarize()
+            self.attributions = lig
 
     def __repr__(self):
         s = f"{self.__class__.__name__}("

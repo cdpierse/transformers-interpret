@@ -20,8 +20,7 @@ class BaseExplainer(ABC):
 
         self.model_type = model.config.model_type
 
-        self.device = torch.device(
-            "cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     @abstractmethod
     def encode(self, text: str = None):
@@ -66,8 +65,7 @@ class BaseExplainer(ABC):
         raise NotImplementedError
 
     def _make_input_reference_pair(
-        self,
-        text: Union[List, str]
+        self, text: Union[List, str]
     ) -> Tuple[torch.Tensor, torch.Tensor, int]:
         """
         Tokenizes `text` to numerical token id  representation `input_ids`,
@@ -85,8 +83,7 @@ class BaseExplainer(ABC):
         """
 
         if isinstance(text, list):
-            raise NotImplementedError(
-                "Lists of text are not currently supported.")
+            raise NotImplementedError("Lists of text are not currently supported.")
 
         text_ids = self.encode(text)
         input_ids = [self.cls_token_id] + text_ids + [self.sep_token_id]
@@ -102,9 +99,7 @@ class BaseExplainer(ABC):
         )
 
     def _make_input_reference_token_type_pair(
-        self,
-        input_ids: torch.Tensor,
-        sep_idx: int = 0
+        self, input_ids: torch.Tensor, sep_idx: int = 0
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Returns two tensors indicating the corresponding token types for the `input_ids`
@@ -120,8 +115,7 @@ class BaseExplainer(ABC):
         token_type_ids = torch.tensor(
             [0 if i <= sep_idx else 1 for i in range(seq_len)], device=self.device
         )
-        ref_token_type_ids = torch.zeros_like(
-            token_type_ids, device=self.device)
+        ref_token_type_ids = torch.zeros_like(token_type_ids, device=self.device)
 
         return (token_type_ids, ref_token_type_ids)
 
@@ -138,10 +132,8 @@ class BaseExplainer(ABC):
             Tuple[torch.Tensor, torch.Tensor]
         """
         seq_len = input_ids.size(1)
-        position_ids = torch.arange(
-            seq_len, dtype=torch.long, device=self.device)
-        ref_position_ids = torch.zeros(
-            seq_len, dtype=torch.long, device=self.device)
+        position_ids = torch.arange(seq_len, dtype=torch.long, device=self.device)
+        ref_position_ids = torch.zeros(seq_len, dtype=torch.long, device=self.device)
         position_ids = position_ids.unsqueeze(0).expand_as(input_ids)
         ref_position_ids = ref_position_ids.unsqueeze(0).expand_as(input_ids)
         return (position_ids, ref_position_ids)
