@@ -6,7 +6,7 @@ model = AutoModelForSequenceClassification.from_pretrained(
     "sampathkethineedi/industry-classification"
 )
 tokenizer = AutoTokenizer.from_pretrained("sampathkethineedi/industry-classification")
-text = "economic impact of competition markets in economic equilibrium and boobs too"
+text = "Migrating on premises servers to the cloud using kubernetes and distributed computing"
 se = SequenceClassificationExplainer(text, model, tokenizer)
 
 
@@ -17,3 +17,6 @@ attr = se.get_attributions()
 wa = attr.word_attributions
 for w in wa:
     print(w)
+
+print(se.predicted_class_index)
+print(se.predicted_class_name)

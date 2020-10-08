@@ -1,4 +1,5 @@
 import sys
+import warnings
 
 import torch
 from transformers import PreTrainedModel, PreTrainedTokenizer
@@ -50,7 +51,8 @@ class SequenceClassificationExplainer(BaseExplainer):
     ):
         if text is not None:
             self.text = text
-        self._calculate_attributions()
+
+        self._calculate_attributions(index=index, class_name=class_name)
         return self.attributions
 
     def _forward(self, input_ids):
@@ -77,16 +79,28 @@ class SequenceClassificationExplainer(BaseExplainer):
         except:
             pass
 
-    def _calculate_attributions(self):
+    def _calculate_attributions(self, index: int = None, class_name: str = None):
 
         (
             self.input_ids,
             self.ref_input_ids,
             self.sep_idx,
         ) = self._make_input_reference_pair(self.text)
+
         # TODO: @cdpierse eventually add some logic for choosing which
         # index to explain
-        self.predicted_index = self.predicted_class_index
+        if index:
+            self.predicted_index = index
+        elif class_name:
+            if class_name in self.label2id.keys():
+                self.predicted_index = self.label2id[class_name]
+            else:
+                s = f"'{class_name}' is not found in self.label2id keys."
+                s += "Defaulting to predicted index instead."
+                warnings.warn(s)
+                self.predicted_index = self.predicted_class_index
+        else:
+            self.predicted_index = self.predicted_class_index
 
         if self.attribution_type == "lig":
             embeddings = getattr(self.model, self.model_type).embeddings
