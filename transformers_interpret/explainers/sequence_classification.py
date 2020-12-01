@@ -1,13 +1,18 @@
 import sys
 import warnings
 
+import captum
 import torch
+from captum.attr import visualization as viz
 from transformers import PreTrainedModel, PreTrainedTokenizer
 from transformers_interpret import BaseExplainer, LIGAttributions
-from transformers_interpret.errors import (
-    AttributionTypeNotSupportedError,
-    InputIdsNotCalculatedError,
-)
+from transformers_interpret.errors import (AttributionTypeNotSupportedError,
+                                           InputIdsNotCalculatedError)
+
+if captum.__version__ <= "0.3.0":
+    from transformers_interpret.custom_visualization import visualize_text
+else:
+    from viz import visualize_text
 
 SUPPORTED_ATTRIBUTION_TYPES: list = ["lig"]
 
@@ -57,27 +62,42 @@ class SequenceClassificationExplainer(BaseExplainer):
 
     def _forward(self, input_ids):
         preds = self.model(input_ids)[0]
-        # currently returns the index that "fires" the highest, i.e. the predicted class
-        return torch.softmax(preds, dim=1)[0][self.predicted_index].unsqueeze(-1)
+        self.pred_probs = torch.softmax(preds, dim=1)[0][1]
+        return torch.softmax(preds, dim=1)[0][self.selected_index].unsqueeze(-1)
 
     @property
     def predicted_class_index(self):
         try:
             preds = self.model(self.input_ids)[0]
+            self.pred_class = torch.argmax(torch.softmax(preds, dim=0)[0])
             return torch.argmax(torch.softmax(preds, dim=1)[0]).detach().numpy()
 
         except:
             raise InputIdsNotCalculatedError(
                 "input_ids have not been created yet. Please call `get_attributions()`"
             )
-
+    
     @property
     def predicted_class_name(self):
         try:
             index = self.predicted_class_index
             return self.id2label[int(index)]
         except:
-            pass
+            return self.predicted_class_index
+    
+
+    def visualize(self):
+        tokens = self.tokenizer.convert_ids_to_tokens(self.input_ids[0]) 
+        score_viz = self.attributions.visualize_attributions(
+            self.pred_probs,
+            self.predicted_class_name,
+            self.text,
+            tokens
+        )
+        return visualize_text([score_viz],return_html=True)
+
+
+
 
     def _calculate_attributions(self, index: int = None, class_name: str = None):
 
@@ -87,20 +107,18 @@ class SequenceClassificationExplainer(BaseExplainer):
             self.sep_idx,
         ) = self._make_input_reference_pair(self.text)
 
-        # TODO: @cdpierse eventually add some logic for choosing which
-        # index to explain
         if index:
-            self.predicted_index = index
+            self.selected_index = index
         elif class_name:
             if class_name in self.label2id.keys():
-                self.predicted_index = self.label2id[class_name]
+                self.selected_index = self.label2id[class_name]
             else:
                 s = f"'{class_name}' is not found in self.label2id keys."
                 s += "Defaulting to predicted index instead."
                 warnings.warn(s)
-                self.predicted_index = self.predicted_class_index
+                self.selected_index = self.predicted_class_index
         else:
-            self.predicted_index = self.predicted_class_index
+            self.selected_index = self.predicted_class_index
 
         if self.attribution_type == "lig":
             embeddings = getattr(self.model, self.model_type).embeddings
