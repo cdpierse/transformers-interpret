@@ -32,16 +32,13 @@ class LIGAttributions(Attributions):
         sep_id: int,
     ):
         super().__init__(custom_forward, embeddings, text)
-        # self.custom_forward = custom_forward
-        # self.embeddings
         self.input_ids = input_ids
         self.ref_input_ids = ref_input_ids
         self.lig = LayerIntegratedGradients(self.custom_forward, self.embeddings)
         self._attributions, self.delta = self.lig.attribute(
             inputs=self.input_ids,
             baselines=self.ref_input_ids,
-            return_convergence_delta=True
-            
+            return_convergence_delta=True,
         )
 
     @property
@@ -63,7 +60,7 @@ class LIGAttributions(Attributions):
             self.attributions_sum
         )
 
-    def visualize_attributions(self, pred_prob, pred_class,text, all_tokens):
+    def visualize_attributions(self, pred_prob, pred_class, text, all_tokens):
 
         return viz.VisualizationDataRecord(
             self.attributions_sum,
@@ -73,7 +70,8 @@ class LIGAttributions(Attributions):
             pred_class,
             self.attributions_sum.sum(),
             all_tokens,
-            self.delta)
+            self.delta,
+        )
 
 
 class IGAttributions(Attributions):

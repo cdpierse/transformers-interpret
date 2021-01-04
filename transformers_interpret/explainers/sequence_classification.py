@@ -1,4 +1,3 @@
-import sys
 import warnings
 
 import captum
@@ -6,8 +5,10 @@ import torch
 from captum.attr import visualization as viz
 from transformers import PreTrainedModel, PreTrainedTokenizer
 from transformers_interpret import BaseExplainer, LIGAttributions
-from transformers_interpret.errors import (AttributionTypeNotSupportedError,
-                                           InputIdsNotCalculatedError)
+from transformers_interpret.errors import (
+    AttributionTypeNotSupportedError,
+    InputIdsNotCalculatedError,
+)
 
 if captum.__version__ <= "0.3.0":
     from transformers_interpret.custom_visualization import visualize_text
@@ -19,8 +20,8 @@ SUPPORTED_ATTRIBUTION_TYPES: list = ["lig"]
 
 class SequenceClassificationExplainer(BaseExplainer):
     """
-    Explainer for explaining attributions for models of type `{MODEL_NAME}ForSequenceClassification`
-    from the Transformers package.
+    Explainer for explaining attributions for models of type
+    `{MODEL_NAME}ForSequenceClassification` from the Transformers package.
     """
 
     def __init__(
@@ -33,7 +34,8 @@ class SequenceClassificationExplainer(BaseExplainer):
         super().__init__(text, model, tokenizer)
         if attribution_type not in SUPPORTED_ATTRIBUTION_TYPES:
             raise AttributionTypeNotSupportedError(
-                f"Attribution type '{attribution_type}' is not supported. Supported types are {SUPPORTED_ATTRIBUTION_TYPES}"
+                f"""Attribution type '{attribution_type}' is not supported.
+                Supported types are {SUPPORTED_ATTRIBUTION_TYPES}"""
             )
         self.attribution_type = attribution_type
 
@@ -47,11 +49,10 @@ class SequenceClassificationExplainer(BaseExplainer):
             text = self.text
         return self.tokenizer.encode(text, add_special_tokens=False)
 
-    def decode(self):
-        indices = input_ids[0].detach().tolist()
-        return self.tokenizer.convert_ids_to_tokens(input_ids)
+    def decode(self, input_ids):
+        return self.tokenizer.convert_ids_to_tokens(input_ids[0])
 
-    def get_attributions(
+    def run(
         self, text: str = None, index: int = None, class_name: str = None
     ):
         if text is not None:
@@ -76,28 +77,21 @@ class SequenceClassificationExplainer(BaseExplainer):
             raise InputIdsNotCalculatedError(
                 "input_ids have not been created yet. Please call `get_attributions()`"
             )
-    
+
     @property
     def predicted_class_name(self):
         try:
             index = self.predicted_class_index
             return self.id2label[int(index)]
-        except:
+        except ValueError:
             return self.predicted_class_index
-    
 
     def visualize(self):
-        tokens = self.tokenizer.convert_ids_to_tokens(self.input_ids[0]) 
+        tokens = self.tokenizer.convert_ids_to_tokens(self.input_ids[0])
         score_viz = self.attributions.visualize_attributions(
-            self.pred_probs,
-            self.predicted_class_name,
-            self.text,
-            tokens
+            self.pred_probs, self.predicted_class_name, self.text, tokens
         )
-        return visualize_text([score_viz],return_html=True)
-
-
-
+        return visualize_text([score_viz], return_html=True)
 
     def _calculate_attributions(self, index: int = None, class_name: str = None):
 

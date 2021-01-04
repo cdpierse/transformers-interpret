@@ -7,7 +7,17 @@
     "python.testing.pytestEnabled": true,
     "python.linting.pylintEnabled": false,
     "python.linting.pycodestyleEnabled": false,
-    "python.linting.mypyEnabled": true,
+    "editor.defaultFormatter": "black",
+    "python.formatting.blackArgs": [
+        "--line-length=120"
+
+    ],
+    "python.linting.flake8Enabled": true,
+    "python.linting.mypyPath": "",
+    "python.linting.mypyEnabled": false,
     "python.linting.enabled": true,
-    "editor.defaultFormatter": "black"
+    "python.linting.flake8Args": [
+        "--max-line-length=120",
+        "--ignore=E203, E266, E501, W503, F403, F401",
+    ]
 }

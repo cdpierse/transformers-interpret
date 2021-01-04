@@ -1,8 +1,11 @@
 from typing import Iterable
 
-from captum.attr._utils.visualization import (VisualizationDataRecord,
-                                              _get_color, format_classname,
-                                              format_word_importances)
+from captum.attr._utils.visualization import (
+    VisualizationDataRecord,
+    _get_color,
+    format_classname,
+    format_word_importances,
+)
 
 try:
     from IPython.core.display import HTML, display
@@ -13,7 +16,9 @@ except ImportError:
 
 
 def visualize_text(
-    datarecords: Iterable[VisualizationDataRecord], legend: bool = True, return_html=False
+    datarecords: Iterable[VisualizationDataRecord],
+    legend: bool = True,
+    return_html=False,
 ) -> None:
     assert HAS_IPYTHON, (
         "IPython must be available to visualize text. "

@@ -4,8 +4,10 @@ import warnings
 import torch
 from transformers import PreTrainedModel, PreTrainedTokenizer
 from transformers_interpret import BaseExplainer, LIGAttributions
-from transformers_interpret.errors import (AttributionTypeNotSupportedError,
-                                           InputIdsNotCalculatedError)
+from transformers_interpret.errors import (
+    AttributionTypeNotSupportedError,
+    InputIdsNotCalculatedError,
+)
 
 
 class QuestionAnsweringExplainer(BaseExplainer):
@@ -13,6 +15,7 @@ class QuestionAnsweringExplainer(BaseExplainer):
     Explainer for explaining attributions for models of type `{MODEL_NAME}ForQuestionAnswering`
     from the Transformers package.
     """
+
     pass
 
     # def __init__(
