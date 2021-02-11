@@ -10,11 +10,6 @@ from transformers_interpret.errors import (
     InputIdsNotCalculatedError,
 )
 
-if captum.__version__ <= "0.3.0":
-    from transformers_interpret.custom_visualization import visualize_text
-else:
-    from viz import visualize_text
-
 SUPPORTED_ATTRIBUTION_TYPES: list = ["lig"]
 
 
@@ -52,9 +47,7 @@ class SequenceClassificationExplainer(BaseExplainer):
     def decode(self, input_ids):
         return self.tokenizer.convert_ids_to_tokens(input_ids[0])
 
-    def run(
-        self, text: str = None, index: int = None, class_name: str = None
-    ):
+    def run(self, text: str = None, index: int = None, class_name: str = None):
         if text is not None:
             self.text = text
 
@@ -73,8 +66,8 @@ class SequenceClassificationExplainer(BaseExplainer):
             self.pred_class = torch.argmax(torch.softmax(preds, dim=0)[0])
             return torch.argmax(torch.softmax(preds, dim=1)[0]).detach().numpy()
 
-        except:
-            raise InputIdsNotCalculatedError(
+        except InputIdsNotCalculatedError as error:
+            print(
                 "input_ids have not been created yet. Please call `get_attributions()`"
             )
 
@@ -91,7 +84,8 @@ class SequenceClassificationExplainer(BaseExplainer):
         score_viz = self.attributions.visualize_attributions(
             self.pred_probs, self.predicted_class_name, self.text, tokens
         )
-        return visualize_text([score_viz], return_html=True)
+
+        return viz.visualize_text([score_viz])
 
     def _calculate_attributions(self, index: int = None, class_name: str = None):
 
@@ -128,7 +122,7 @@ class SequenceClassificationExplainer(BaseExplainer):
             lig.summarize()
             self.attributions = lig
 
-    def __repr__(self):
+    def __str__(self):
         s = f"{self.__class__.__name__}("
         s += f'\n\ttext="{str(self.text[:10])}...",'
         s += f"\n\tmodel={self.model.__class__.__name__},"

@@ -72,7 +72,3 @@ class LIGAttributions(Attributions):
             all_tokens,
             self.delta,
         )
-
-
-class IGAttributions(Attributions):
-    pass
