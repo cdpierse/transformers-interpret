@@ -1,22 +1,23 @@
-# Transformers-Interpret
+# Transformers Interpret
 
-Transformers-interpret is a model explainability tool designed to work exclusively with 🤗 transformers.
+Transformers Interpret is a model explainability tool designed to work exclusively with 🤗 transformers.
 
-In line with the philosophy of the transformers package tranformers-interpret allows any transformers model to be explained in just two lines. It even supports visualizations in both notebooks and as savable html files.
+In line with the philosophy of the transformers package tranformers interpret allows any transformers model to be explained in just two lines. It even supports visualizations in both notebooks and as savable html files.
 
-This package stands on the shoulder of the the incredible work being done by the teams at [Pytorch Captum](https://captum.ai/) and [Hugging Face](https://huggingface.co/) and would not exist if not for the amazing job they are both doing in the fields of nlp and model interpretability respectively.
+This package stands on the shoulders of the the incredible work being done by the teams at [Pytorch Captum](https://captum.ai/) and [Hugging Face](https://huggingface.co/) and would not exist if not for the amazing job they are both doing in the fields of nlp and model interpretability respectively.
 
 ## Install
 
 I recommend Python 3.6 or higher, Pytorch 1.5.0 or higher, transformers v3.0.0 or higher, and captum 0.3.1 (**required**). The package does not work with Python 2.7.
 
 ```bash
-pip install transformers_interpret
+pip install transformers-interpret
 ```
 
 ## Quick Start
 
-Let's start by import some our auto model and tokenizer class from transformers and initializing a model and tokenizer.
+Let's start by importing the auto model and tokenizer class from transformers and initializing a model and tokenizer.
+
 For this example we are using `distilbert-base-uncased-finetuned-sst-2-english` a distilbert model finetuned on a sentiment analysis task.
 
 ```python
@@ -47,7 +48,7 @@ Returns the list of tuples below.
  ('EOS_TOKEN', 0.4822169265102293)]
 ```
 
-Positive numbers indicate a word contributes positively towards the predicted class, negative numbers indicate the opposite. Here we can see that **I love you** gets the most attention.
+Positive attribution numbers indicate a word contributes positively towards the predicted class, negative numbers indicate a word contributes negatively towards the predicted class. Here we can see that **I love you** gets the most attention.
 
 In case you want to know what the predicted class actually is:
 
@@ -56,7 +57,7 @@ In case you want to know what the predicted class actually is:
 array(1)
 ```
 
-And if the model creator has provided label names for each class
+And if the model has label names for each class
 
 ```python
 >>> cls_explainer.predicted_class_name
@@ -66,7 +67,9 @@ And if the model creator has provided label names for each class
 ### Visualizing attributions
 
 Sometimes the numeric attributions can be difficult to read particularly in instances where there is a lot of text. To help with that there
-is also an inbuilt visualize method that utilizes Captum's in built viz library to create a HTML file highlighting attributions. If you are in a notebook call the `visualize()` method will display the visualization in line, otherwise you can pass a filepath in as an argument a html file will be created so you can view the explanation in your browser.
+is also an inbuilt visualize method that utilizes Captum's in built viz library to create a HTML file highlighting attributions.
+
+If you are in a notebook call the `visualize()` method will display the visualization in line, otherwise you can pass a filepath in as an argument and a html file will be created so you can view the explanation in your browser.
 
 ```python
 cls_explainer.visualize("distilbert_viz.html")
@@ -77,7 +80,8 @@ cls_explainer.visualize("distilbert_viz.html")
 ### Explaining Attributions for Non Predicted Class
 
 Attribution explanations are not limited to the predicted class. Let's test a more complex sentence that contains mixed sentiments.
-In this case we pass `class_name="NEGATIVE"` as an argument indicating we would like the attributions to be explained for the **NEGATIVE** class regardless of what the actual prediction is.
+
+In the example below we pass `class_name="NEGATIVE"` as an argument indicating we would like the attributions to be explained for the **NEGATIVE** class regardless of what the actual prediction is.
 
 ```python
 cls_explainer = SequenceClassificationExplainer("I love you, I like you, I also kinda dislike you", model, tokenizer)
@@ -100,6 +104,9 @@ cls_explainer.visualize("distilbert_negative_attr.html")
 
 <img src="images/distilbert_example_negative.png" width="60%" height="60%" align="center" />
 
+Getting attributions for different classes is particularly insightful for multiclass problems as it allows you to inspect model predictions for a number of different classes and sanity check that it is "looking" at the right things. For a detailed example of this please checkout 
+this [multiclass classification notebook](notebooks/multiclass_classification_example.ipynb)
+
 ## Future Development
 
 This package is still in its early days and there is hopefully much more planned. For a 1.0.0 release I'm aiming to have:
@@ -119,3 +126,10 @@ The main contributor to this repository is [@cdpierse](https://github.com/cdpier
 If you have any questions, suggestions, or would like to make a contribution (please do 😁) please get in touch at charlespierse@gmail.com
 
 I'd also highly suggest checkout out [Pytorch Captum](https://captum.ai/) if you find model explainability and interpretability interesting. They are doing amazing and important work.
+
+## Captum Links
+
+Below are some links I used to help me get this package together using captum. Thank you to @davidefiocco for your very insightful GIST.
+
+- [Link to useful GIST on captum](https://gist.github.com/davidefiocco/3e1a0ed030792230a33c726c61f6b3a5)
+- [Link to runnable colab of captum with BERT](https://colab.research.google.com/drive/1snFbxdVDtL3JEFW7GNfRs1PZKgNHfoNz)
