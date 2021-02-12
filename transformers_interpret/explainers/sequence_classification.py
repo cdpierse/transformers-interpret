@@ -5,10 +5,8 @@ import torch
 from captum.attr import visualization as viz
 from transformers import PreTrainedModel, PreTrainedTokenizer
 from transformers_interpret import BaseExplainer, LIGAttributions
-from transformers_interpret.errors import (
-    AttributionTypeNotSupportedError,
-    InputIdsNotCalculatedError,
-)
+from transformers_interpret.errors import (AttributionTypeNotSupportedError,
+                                           InputIdsNotCalculatedError)
 
 SUPPORTED_ATTRIBUTION_TYPES: list = ["lig"]
 
@@ -38,8 +36,9 @@ class SequenceClassificationExplainer(BaseExplainer):
         self.id2label = model.config.id2label
 
         self.attributions = None
+        self.input_ids = None
 
-    def encode(self, text: str = None):
+    def encode(self, text: str = None) -> list:
         if text is None:
             text = self.text
         return self.tokenizer.encode(text, add_special_tokens=False)
@@ -61,13 +60,13 @@ class SequenceClassificationExplainer(BaseExplainer):
 
     @property
     def predicted_class_index(self):
-        try:
+        if self.input_ids is not None:
             preds = self.model(self.input_ids)[0]
             self.pred_class = torch.argmax(torch.softmax(preds, dim=0)[0])
             return torch.argmax(torch.softmax(preds, dim=1)[0]).detach().numpy()
 
-        except InputIdsNotCalculatedError as error:
-            print(
+        else:
+            raise InputIdsNotCalculatedError(
                 "input_ids have not been created yet. Please call `get_attributions()`"
             )
 
@@ -79,25 +78,34 @@ class SequenceClassificationExplainer(BaseExplainer):
         except ValueError:
             return self.predicted_class_index
 
-    def visualize(self):
+    def visualize(self, html_filepath: str = None, true_class: str = None):
         tokens = self.tokenizer.convert_ids_to_tokens(self.input_ids[0])
+        attr_class = self.id2label[int(self.selected_index)]
+        if true_class is None:
+            true_class = self.predicted_class_name
         score_viz = self.attributions.visualize_attributions(
-            self.pred_probs, self.predicted_class_name, self.text, tokens
+            self.pred_probs, self.predicted_class_name, true_class, attr_class, self.text, tokens
         )
+        html = viz.visualize_text([score_viz])
 
-        return viz.visualize_text([score_viz])
+        if html_filepath:
+            if not html_filepath.endswith(".html"):
+                html_filepath = html_filepath + ".html"
+            with open(html_filepath, "w") as html_file:
+                html_file.write(html.data)
+
+        return html
 
     def _calculate_attributions(self, index: int = None, class_name: str = None):
-
         (
             self.input_ids,
             self.ref_input_ids,
             self.sep_idx,
         ) = self._make_input_reference_pair(self.text)
 
-        if index:
+        if index is not None:
             self.selected_index = index
-        elif class_name:
+        elif class_name is not None:
             if class_name in self.label2id.keys():
                 self.selected_index = self.label2id[class_name]
             else:
@@ -121,6 +129,11 @@ class SequenceClassificationExplainer(BaseExplainer):
             )
             lig.summarize()
             self.attributions = lig
+        else:
+            pass
+
+    def __call__(self, text: str = None, index: int = None, class_name: str = None):
+        return self.run(text, index, class_name)
 
     def __str__(self):
         s = f"{self.__class__.__name__}("

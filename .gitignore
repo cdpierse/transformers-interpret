@@ -125,3 +125,5 @@ dmypy.json
 .pyre/
 references.md
 test.html
+api.py
+.vscode

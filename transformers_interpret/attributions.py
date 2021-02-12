@@ -60,14 +60,16 @@ class LIGAttributions(Attributions):
             self.attributions_sum
         )
 
-    def visualize_attributions(self, pred_prob, pred_class, text, all_tokens):
+    def visualize_attributions(
+        self, pred_prob, pred_class, true_class, attr_class, text, all_tokens
+    ):
 
         return viz.VisualizationDataRecord(
             self.attributions_sum,
             pred_prob,
             pred_class,
-            "Testing",
-            pred_class,
+            true_class,
+            attr_class,
             self.attributions_sum.sum(),
             all_tokens,
             self.delta,
