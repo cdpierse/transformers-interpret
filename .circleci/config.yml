@@ -28,4 +28,4 @@ workflows:
             branches:
               only:
                 - dev
-                - main
+                - master

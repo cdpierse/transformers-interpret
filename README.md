@@ -111,6 +111,7 @@ this [multiclass classification notebook](notebooks/multiclass_classification_ex
 
 This package is still in its early days and there is hopefully much more planned. For a 1.0.0 release I'm aiming to have:
 
+- Proper documentation site
 - Support for Question Answering models
 - Support for NER models
 - Support for Multiple Choice models (not sure how feasible this is)
