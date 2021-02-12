@@ -192,5 +192,5 @@ def test_sequence_classification_viz():
     explainer_string = "I love you , I like you"
     seq_explainer = SequenceClassificationExplainer(explainer_string, MODEL, TOKENIZER)
     seq_explainer()
-    viz = seq_explainer.visualize()
-    assert isinstance(viz, HTML)
+    seq_explainer.visualize()
+
