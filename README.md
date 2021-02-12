@@ -106,8 +106,9 @@ cls_explainer.visualize("distilbert_negative_attr.html")
 
 <img src="images/distilbert_example_negative.png" width="80%" height="80%" align="center" />
 
-Getting attributions for different classes is particularly insightful for multiclass problems as it allows you to inspect model predictions for a number of different classes and sanity check that the model is "looking" at the right things. For a detailed example of this please checkout 
-this [multiclass classification notebook](notebooks/multiclass_classification_example.ipynb)
+Getting attributions for different classes is particularly insightful for multiclass problems as it allows you to inspect model predictions for a number of different classes and sanity check that the model is "looking" at the right things.
+
+For a detailed example of this please checkout this [multiclass classification notebook](notebooks/multiclass_classification_example.ipynb)
 
 ## Future Development
 

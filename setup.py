@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 setup(
     name = 'transformers-interpret',
     packages = find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests", "examples", "docs", "out", "dist","media","test"]),
-    version = '0.1.0',
+    version = '0.1.3',
     license='Apache-2.0',
     description = 'Transformers Interpret is a model explainability tool designed to work exclusively with 🤗 transformers.',
     long_description=long_description,
