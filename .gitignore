@@ -123,3 +123,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+references.md
+test.html
+api.py
+.vscode
+notebooks/explore_captum.ipynb

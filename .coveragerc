@@ -1,0 +1,32 @@
+# .coveragerc to control coverage.py
+# Point at this file with PYCHARM_COVERAGERC=/PATH/TO/THIS/.coveragerc
+# May require reading PYCHARM_COVERAGERC in run_coverage.py in intellij helpers
+
+[run]
+branch = True
+
+omit =
+    */runners/*
+    *docs*
+    *stubs*
+    *examples*
+    *tests*
+    */config/plugins/python/helpers/*
+
+[report]
+omit =
+    */runners/*
+    *docs*
+    *stubs*
+    *examples*
+    *test*
+
+
+exclude_lines =
+
+    # Don't complain if non-runnable code isn't run:
+    if __name__ == .__main__.:
+
+    raise NotImplementedError()
+
+

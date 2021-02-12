@@ -32,8 +32,6 @@ class LIGAttributions(Attributions):
         sep_id: int,
     ):
         super().__init__(custom_forward, embeddings, text)
-        # self.custom_forward = custom_forward
-        # self.embeddings
         self.input_ids = input_ids
         self.ref_input_ids = ref_input_ids
         self.lig = LayerIntegratedGradients(self.custom_forward, self.embeddings)
@@ -46,9 +44,9 @@ class LIGAttributions(Attributions):
     @property
     def word_attributions(self):
         wa = []
-        if len(self.attributions) >= 1:
+        if len(self.attributions_sum) >= 1:
             for i, (word, attribution) in enumerate(
-                zip(self.text.split(), self.attributions)
+                zip(self.text.split(), self.attributions_sum)
             ):
                 wa.append((word, float(attribution.data.numpy())))
             return wa
@@ -57,10 +55,22 @@ class LIGAttributions(Attributions):
             raise AttributionsNotCalculatedError("Attributions are not yet calculated")
 
     def summarize(self):
-        print("I run")
-        self.attributions = self._attributions.sum(dim=-1).squeeze(0)
-        self.attributions = self.attributions / torch.norm(self.attributions)
+        self.attributions_sum = self._attributions.sum(dim=-1).squeeze(0)
+        self.attributions_sum = self.attributions_sum / torch.norm(
+            self.attributions_sum
+        )
 
-    def get_predicted_class(self):
-        "will return index of the predicted class etc"
-        pass
+    def visualize_attributions(
+        self, pred_prob, pred_class, true_class, attr_class, text, all_tokens
+    ):
+
+        return viz.VisualizationDataRecord(
+            self.attributions_sum,
+            pred_prob,
+            pred_class,
+            true_class,
+            attr_class,
+            self.attributions_sum.sum(),
+            all_tokens,
+            self.delta,
+        )

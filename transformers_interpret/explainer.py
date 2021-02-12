@@ -43,7 +43,7 @@ class BaseExplainer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_attributions(self):  # Add abstract type return for attribution
+    def run(self):  # Add abstract type return for attribution
         raise NotImplementedError
 
     @abstractmethod
@@ -69,8 +69,8 @@ class BaseExplainer(ABC):
     ) -> Tuple[torch.Tensor, torch.Tensor, int]:
         """
         Tokenizes `text` to numerical token id  representation `input_ids`,
-        as well as creating another reference tensor of the same length
-        that will be used as baseline for attributions `ref_input_ids`. Additionally
+        as well as creating another reference tensor `ref_input_ids` of the same length
+        that will be used as baseline for attributions. Additionally
         the length of text without special tokens appended is prepended is also
         returned.
 
@@ -134,14 +134,14 @@ class BaseExplainer(ABC):
         seq_len = input_ids.size(1)
         position_ids = torch.arange(seq_len, dtype=torch.long, device=self.device)
         ref_position_ids = torch.zeros(seq_len, dtype=torch.long, device=self.device)
-        position_ids = position_ids.unsqueeze(0).expand_as(input_ids)
-        ref_position_ids = ref_position_ids.unsqueeze(0).expand_as(input_ids)
+        # position_ids = position_ids.unsqueeze(0).expand_as(input_ids)
+        # ref_position_ids = ref_position_ids.unsqueeze(0).expand_as(input_ids)
         return (position_ids, ref_position_ids)
 
     def _make_attention_mask(self, input_ids: torch.Tensor) -> torch.Tensor:
         return torch.ones_like(input_ids)
 
-    def __repr__(self):
+    def __str__(self):
         s = f"{self.__class__.__name__}("
         s += f'\n\ttext="{str(self.text[:10])}...",'
         s += f"\n\tmodel={self.model.__class__.__name__},"
