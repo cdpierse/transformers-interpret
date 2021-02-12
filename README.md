@@ -75,7 +75,7 @@ If you are in a notebook call the `visualize()` method will display the visualiz
 cls_explainer.visualize("distilbert_viz.html")
 ```
 
-<img src="images/distilbert_example.png" width="60%" height="60%" align="center" />
+<img src="images/distilbert_example.png" width="80%" height="80%" align="center" />
 
 ### Explaining Attributions for Non Predicted Class
 
@@ -102,7 +102,7 @@ class.
 cls_explainer.visualize("distilbert_negative_attr.html")
 ```
 
-<img src="images/distilbert_example_negative.png" width="60%" height="60%" align="center" />
+<img src="images/distilbert_example_negative.png" width="80%" height="80%" align="center" />
 
 Getting attributions for different classes is particularly insightful for multiclass problems as it allows you to inspect model predictions for a number of different classes and sanity check that the model is "looking" at the right things. For a detailed example of this please checkout 
 this [multiclass classification notebook](notebooks/multiclass_classification_example.ipynb)
@@ -125,7 +125,7 @@ The main contributor to this repository is [@cdpierse](https://github.com/cdpier
 
 If you have any questions, suggestions, or would like to make a contribution (please do 😁) please get in touch at charlespierse@gmail.com
 
-I'd also highly suggest checkout out [Pytorch Captum](https://captum.ai/) if you find model explainability and interpretability interesting. They are doing amazing and important work.
+I'd also highly suggest checking out [Captum](https://captum.ai/) if you find model explainability and interpretability interesting. They are doing amazing and important work.
 
 ## Captum Links
 
