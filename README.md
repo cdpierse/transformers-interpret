@@ -30,7 +30,7 @@ With both the model and tokenizer initialized we are now able to get get some ex
 
 ```python
 from transformers_interpret import SequenceClassificationExplainer
-cls_explainer = SequenceClassificationExplainer("I love you, I like you",model, tokenizer)
+cls_explainer = SequenceClassificationExplainer("I love you, I like you", model, tokenizer)
 attributions = cls_explainer()
 ```
 
@@ -81,7 +81,7 @@ cls_explainer.visualize("distilbert_viz.html")
 
 Attribution explanations are not limited to the predicted class. Let's test a more complex sentence that contains mixed sentiments.
 
-In the example below we pass `class_name="NEGATIVE"` as an argument indicating we would like the attributions to be explained for the **NEGATIVE** class regardless of what the actual prediction is.
+In the example below we pass `class_name="NEGATIVE"` as an argument indicating we would like the attributions to be explained for the **NEGATIVE** class regardless of what the actual prediction is. Effectively because this is a binary classifier we are getting the inverse attributions.
 
 ```python
 cls_explainer = SequenceClassificationExplainer("I love you, I like you, I also kinda dislike you", model, tokenizer)
@@ -104,7 +104,7 @@ cls_explainer.visualize("distilbert_negative_attr.html")
 
 <img src="images/distilbert_example_negative.png" width="60%" height="60%" align="center" />
 
-Getting attributions for different classes is particularly insightful for multiclass problems as it allows you to inspect model predictions for a number of different classes and sanity check that it is "looking" at the right things. For a detailed example of this please checkout 
+Getting attributions for different classes is particularly insightful for multiclass problems as it allows you to inspect model predictions for a number of different classes and sanity check that the model is "looking" at the right things. For a detailed example of this please checkout 
 this [multiclass classification notebook](notebooks/multiclass_classification_example.ipynb)
 
 ## Future Development
