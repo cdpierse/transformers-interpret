@@ -1,7 +1,11 @@
 # Transformers-Interpret
 
 Transformers-interpret is a model explainability tool designed to work exclusively with 🤗 transformers.
-In line with the philosophy of the transformers package tranformers-interpret allows any transformers model to be explained in just two lines. It even supports visualizations in both notebooks and as savable html files. The package stands on the shoulder of the the incredible work being done by the team over at Pytorch Captum and would not exist if not for the amazing job they are doing in the field of model interpretability.  
+
+
+In line with the philosophy of the transformers package tranformers-interpret allows any transformers model to be explained in just two lines. It even supports visualizations in both notebooks and as savable html files. 
+
+This package stands on the shoulder of the the incredible work being done by the teams at [Pytorch Captum](https://captum.ai/) and  [Hugging Face](https://huggingface.co/) and would not exist if not for the amazing job they are both doing in the fields of nlp and model interpretability respectively.  
 
 
 ## Install
