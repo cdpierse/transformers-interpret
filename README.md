@@ -121,6 +121,7 @@ This package is still in its early days and there is hopefully much more planned
 - Ability to show attributions for each layer rather than a summary of all layers
 - Additional attribution methods
 - In depth examples
+- Get a nice logo
 - and more...
 
 ## Questions / Get In Touch
