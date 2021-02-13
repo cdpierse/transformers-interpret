@@ -1,4 +1,5 @@
 import abc
+import re
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Union
 
@@ -12,6 +13,7 @@ class BaseExplainer(ABC):
     ):
         self.model = model
         self.tokenizer = tokenizer
+        text = self._clean_text(text)
         self.text = text
 
         self.ref_token_id = self.tokenizer.pad_token_id
@@ -140,6 +142,11 @@ class BaseExplainer(ABC):
 
     def _make_attention_mask(self, input_ids: torch.Tensor) -> torch.Tensor:
         return torch.ones_like(input_ids)
+
+    def _clean_text(self, text: str) -> str:
+        text = re.sub("([.,!?()])", r" \1 ", text)
+        text = re.sub("\s{2,}", " ", text)
+        return text
 
     def __str__(self):
         s = f"{self.__class__.__name__}("

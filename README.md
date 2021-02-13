@@ -41,13 +41,14 @@ Returns the list of tuples below.
 ```python
 >>> attributions.word_attributions
 [('BOS_TOKEN', 0.0),
- ('I', 0.46820533977856904),
- ('love', 0.4606184697303162),
- ('you,', 0.5664126708457133),
- ('I', -0.017154242497229605),
- ('like', -0.05376360639469018),
- ('you', 0.10987772217503108),
- ('EOS_TOKEN', 0.4822169265102293)]
+ ('I', 0.46820529249283205),
+ ('love', 0.46061853275727177),
+ ('you', 0.566412765400519),
+ (',', -0.017154456486408547),
+ ('I', -0.053763869433472),
+ ('like', 0.10987746237531228),
+ ('you', 0.48221682341218103),
+ ('EOS_TOKEN', 0.0)]
 ```
 
 Positive attribution numbers indicate a word contributes positively towards the predicted class, negative numbers indicate a word contributes negatively towards the predicted class. Here we can see that **I love you** gets the most attention.
