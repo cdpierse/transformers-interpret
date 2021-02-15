@@ -2,8 +2,9 @@ from distutils.core import setup
 
 from setuptools import find_packages
 
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
+
 
 setup(
     name = 'transformers-interpret',
