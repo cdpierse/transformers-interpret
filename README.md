@@ -1,6 +1,21 @@
 # Transformers Interpret
-[![build](https://circleci.com/gh/cdpierse/transformers-interpret.svg?style=shield&circle-token=de18bfcb7476a5a47b8ad39b8cb1d61f5ae9ed52)](https://app.circleci.com/pipelines/github/cdpierse/transformers-interpret)
-<img src="./images/coverage.svg">
+
+
+
+
+<p align="center">
+    <a href="https://opensource.org/licenses/Apache-2.0">
+        <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"/> 
+    </a>
+    <img src="./images/coverage.svg">
+    <a href="https://github.com/cdpierse/transformers-interpret/releases">
+        <img src="https://img.shields.io/pypi/v/transformers_interpret?label=version"/> 
+    </a>
+    <a href="https://app.circleci.com/pipelines/github/cdpierse/transformers-interpret">
+        <img src="https://circleci.com/gh/cdpierse/transformers-interpret.svg?style=shield&circle-token=de18bfcb7476a5a47b8ad39b8cb1d61f5ae9ed52">
+    </a>
+</p>
+
 
 Transformers Interpret is a model explainability tool designed to work exclusively with 🤗 transformers.
 
