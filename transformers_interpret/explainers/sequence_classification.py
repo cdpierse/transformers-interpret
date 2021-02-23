@@ -63,7 +63,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         if self.input_ids is not None:
             preds = self.model(self.input_ids)[0]
             self.pred_class = torch.argmax(torch.softmax(preds, dim=0)[0])
-            return torch.argmax(torch.softmax(preds, dim=1)[0]).detach().numpy()
+            return torch.argmax(torch.softmax(preds, dim=1)[0]).cpu().detach().numpy()
 
         else:
             raise InputIdsNotCalculatedError(

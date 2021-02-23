@@ -48,7 +48,7 @@ class LIGAttributions(Attributions):
             for i, (word, attribution) in enumerate(
                 zip(self.text.split(), self.attributions_sum)
             ):
-                wa.append((word, float(attribution.data.numpy())))
+                wa.append((word, float(attribution.cpu().data.numpy())))
             return wa
 
         else:
