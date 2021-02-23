@@ -5,8 +5,10 @@ import torch
 from captum.attr import visualization as viz
 from transformers import PreTrainedModel, PreTrainedTokenizer
 from transformers_interpret import BaseExplainer, LIGAttributions
-from transformers_interpret.errors import (AttributionTypeNotSupportedError,
-                                           InputIdsNotCalculatedError)
+from transformers_interpret.errors import (
+    AttributionTypeNotSupportedError,
+    InputIdsNotCalculatedError,
+)
 
 SUPPORTED_ATTRIBUTION_TYPES: list = ["lig"]
 
@@ -84,7 +86,12 @@ class SequenceClassificationExplainer(BaseExplainer):
         if true_class is None:
             true_class = self.predicted_class_name
         score_viz = self.attributions.visualize_attributions(
-            self.pred_probs, self.predicted_class_name, true_class, attr_class, self.text, tokens
+            self.pred_probs,
+            self.predicted_class_name,
+            true_class,
+            attr_class,
+            self.text,
+            tokens,
         )
         html = viz.visualize_text([score_viz])
 
@@ -93,7 +100,6 @@ class SequenceClassificationExplainer(BaseExplainer):
                 html_filepath = html_filepath + ".html"
             with open(html_filepath, "w") as html_file:
                 html_file.write(html.data)
-
 
     def _calculate_attributions(self, index: int = None, class_name: str = None):
         (
@@ -117,11 +123,11 @@ class SequenceClassificationExplainer(BaseExplainer):
 
         if self.attribution_type == "lig":
             embeddings = getattr(self.model, self.model_type).embeddings
-            reference_text = "BOS_TOKEN " + self.text + " EOS_TOKEN"
+            reference_tokens = self.decode(self.input_ids)
             lig = LIGAttributions(
                 self._forward,
                 embeddings,
-                reference_text,
+                reference_tokens,
                 self.input_ids,
                 self.ref_input_ids,
                 self.sep_idx,

@@ -84,15 +84,16 @@ def test_sequence_classification_run_text_given():
 
     actual_tokens = [token for token, _ in attributions.word_attributions]
     expected_tokens = [
-        "BOS_TOKEN",
-        "I",
+        "[CLS]",
+        "i",
         "love",
-        "you,",
-        "I",
+        "you",
+        ",",
+        "i",
         "just",
         "love",
         "you",
-        "EOS_TOKEN",
+        "[SEP]",
     ]
     assert actual_tokens == expected_tokens
 
@@ -105,15 +106,15 @@ def test_sequence_classification_no_text_given():
 
     actual_tokens = [token for token, _ in attributions.word_attributions]
     expected_tokens = [
-        "BOS_TOKEN",
-        "I",
+        "[CLS]",
+        "i",
         "love",
         "you",
         ",",
-        "I",
+        "i",
         "hate",
         "you",
-        "EOS_TOKEN",
+        "[SEP]",
     ]
     assert actual_tokens == expected_tokens
 

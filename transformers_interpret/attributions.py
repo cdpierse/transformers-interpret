@@ -15,10 +15,10 @@ from transformers_interpret.errors import AttributionsNotCalculatedError
 
 
 class Attributions:
-    def __init__(self, custom_forward: Callable, embeddings: nn.Module, text: str):
+    def __init__(self, custom_forward: Callable, embeddings: nn.Module, tokens: list):
         self.custom_forward = custom_forward
         self.embeddings = embeddings
-        self.text = text
+        self.tokens = tokens
 
 
 class LIGAttributions(Attributions):
@@ -26,12 +26,12 @@ class LIGAttributions(Attributions):
         self,
         custom_forward: Callable,
         embeddings: nn.Module,
-        text: str,
+        tokens: list,
         input_ids: torch.Tensor,
         ref_input_ids: torch.Tensor,
         sep_id: int,
     ):
-        super().__init__(custom_forward, embeddings, text)
+        super().__init__(custom_forward, embeddings, tokens)
         self.input_ids = input_ids
         self.ref_input_ids = ref_input_ids
         self.lig = LayerIntegratedGradients(self.custom_forward, self.embeddings)
@@ -46,7 +46,7 @@ class LIGAttributions(Attributions):
         wa = []
         if len(self.attributions_sum) >= 1:
             for i, (word, attribution) in enumerate(
-                zip(self.text.split(), self.attributions_sum)
+                zip(self.tokens, self.attributions_sum)
             ):
                 wa.append((word, float(attribution.cpu().data.numpy())))
             return wa
