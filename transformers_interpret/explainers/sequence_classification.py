@@ -81,7 +81,7 @@ class SequenceClassificationExplainer(BaseExplainer):
             return self.predicted_class_index
 
     def visualize(self, html_filepath: str = None, true_class: str = None):
-        tokens = self.tokenizer.convert_ids_to_tokens(self.input_ids[0])
+        tokens = [token.replace("Ġ","") for token in self.decode(self.input_ids)]
         attr_class = self.id2label[int(self.selected_index)]
         if true_class is None:
             true_class = self.predicted_class_name
@@ -120,10 +120,11 @@ class SequenceClassificationExplainer(BaseExplainer):
                 self.selected_index = self.predicted_class_index
         else:
             self.selected_index = self.predicted_class_index
-
         if self.attribution_type == "lig":
-            embeddings = getattr(self.model, self.model_type).embeddings
-            reference_tokens = self.decode(self.input_ids)
+            embeddings = getattr(self.model, self.model_prefix).embeddings
+            # embeddings = self.model.get_input_embeddings()
+            # embeddings = getattr(self.model, self.model_prefix).get_input_embeddings()
+            reference_tokens = [token.replace("Ġ","") for token in self.decode(self.input_ids)]
             lig = LIGAttributions(
                 self._forward,
                 embeddings,
