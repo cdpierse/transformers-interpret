@@ -20,7 +20,7 @@ class BaseExplainer(ABC):
         self.sep_token_id = self.tokenizer.sep_token_id
         self.cls_token_id = self.tokenizer.cls_token_id
 
-        self.model_type = model.config.model_type
+        self.model_prefix = model.base_model_prefix
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)

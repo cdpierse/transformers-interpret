@@ -45,7 +45,7 @@ def test_explainer_init():
     assert isinstance(explainer.tokenizer, PreTrainedTokenizerFast) | isinstance(
         explainer.tokenizer, PreTrainedTokenizer
     )
-    assert explainer.model_type == MODEL.config.model_type
+    assert explainer.model_prefix == MODEL.base_model_prefix
     if torch.cuda.is_available():
         assert explainer.device.type == "cuda:0"
     else:
