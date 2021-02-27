@@ -57,12 +57,13 @@ class SequenceClassificationExplainer(BaseExplainer):
 
     def _forward(self, input_ids):
         preds = self.model(input_ids)[0]
-        self.pred_probs = torch.softmax(preds, dim=1)[0][1] # NOTE: should the second index here be self.selected_index
+        self.pred_probs = torch.softmax(preds, dim=1)[0][self.selected_index]
         return torch.softmax(preds, dim=1)[0][self.selected_index].unsqueeze(-1)
 
     @property
     def predicted_class_index(self):
         if self.input_ids is not None:
+            # we call this before _forward() so it has to be calculated twice
             preds = self.model(self.input_ids)[0]
             self.pred_class = torch.argmax(torch.softmax(preds, dim=0)[0])
             return torch.argmax(torch.softmax(preds, dim=1)[0]).cpu().detach().numpy()
@@ -100,6 +101,7 @@ class SequenceClassificationExplainer(BaseExplainer):
                 html_filepath = html_filepath + ".html"
             with open(html_filepath, "w") as html_file:
                 html_file.write(html.data)
+        return html
 
     def _calculate_attributions(self, index: int = None, class_name: str = None):
         (
@@ -122,7 +124,6 @@ class SequenceClassificationExplainer(BaseExplainer):
             self.selected_index = self.predicted_class_index
         if self.attribution_type == "lig":
             embeddings = self.model.get_input_embeddings()
-            # embeddings = getattr(self.model, self.model_prefix).get_input_embeddings()
             reference_tokens = [token.replace("Ġ","") for token in self.decode(self.input_ids)]
             lig = LIGAttributions(
                 self._forward,
