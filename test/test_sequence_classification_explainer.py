@@ -194,4 +194,3 @@ def test_sequence_classification_viz():
     seq_explainer = SequenceClassificationExplainer(explainer_string, MODEL, TOKENIZER)
     seq_explainer()
     seq_explainer.visualize()
-
