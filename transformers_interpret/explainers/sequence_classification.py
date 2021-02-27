@@ -40,6 +40,8 @@ class SequenceClassificationExplainer(BaseExplainer):
         self.attributions = None
         self.input_ids = None
 
+        self._single_node_output = False
+
     def encode(self, text: str = None) -> list:
         if text is None:
             text = self.text
@@ -48,7 +50,7 @@ class SequenceClassificationExplainer(BaseExplainer):
     def decode(self, input_ids):
         return self.tokenizer.convert_ids_to_tokens(input_ids[0])
 
-    def run(self, text: str = None, index: int = None, class_name: str = None):
+    def _run(self, text: str = None, index: int = None, class_name: str = None):
         if text is not None:
             self.text = text
 
@@ -57,6 +59,12 @@ class SequenceClassificationExplainer(BaseExplainer):
 
     def _forward(self, input_ids):
         preds = self.model(input_ids)[0]
+        # if it is a single output node
+        if len(preds[0]) == 1:
+            self._single_node_output = True
+            self.pred_probs = torch.sigmoid(preds)[0][0]
+            return torch.sigmoid(preds)[0][0].unsqueeze(-1)
+
         self.pred_probs = torch.softmax(preds, dim=1)[0][self.selected_index]
         return torch.softmax(preds, dim=1)[0][self.selected_index].unsqueeze(-1)
 
@@ -82,13 +90,22 @@ class SequenceClassificationExplainer(BaseExplainer):
             return self.predicted_class_index
 
     def visualize(self, html_filepath: str = None, true_class: str = None):
-        tokens = [token.replace("Ġ","") for token in self.decode(self.input_ids)]
+        tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
         attr_class = self.id2label[int(self.selected_index)]
-        if true_class is None:
-            true_class = self.predicted_class_name
+
+        if self._single_node_output:
+            if true_class is None:
+                true_class = round(float(self.pred_probs))
+            predicted_class = round(float(self.pred_probs))
+            attr_class = round(float(self.pred_probs))
+        else:
+            if true_class is None:
+                true_class = round(float(self.pred_probs))
+            predicted_class = self.predicted_class_name
+
         score_viz = self.attributions.visualize_attributions(
             self.pred_probs,
-            self.predicted_class_name,
+            predicted_class,
             true_class,
             attr_class,
             self.text,
@@ -124,7 +141,9 @@ class SequenceClassificationExplainer(BaseExplainer):
             self.selected_index = self.predicted_class_index
         if self.attribution_type == "lig":
             embeddings = self.model.get_input_embeddings()
-            reference_tokens = [token.replace("Ġ","") for token in self.decode(self.input_ids)]
+            reference_tokens = [
+                token.replace("Ġ", "") for token in self.decode(self.input_ids)
+            ]
             lig = LIGAttributions(
                 self._forward,
                 embeddings,
@@ -139,7 +158,7 @@ class SequenceClassificationExplainer(BaseExplainer):
             pass
 
     def __call__(self, text: str = None, index: int = None, class_name: str = None):
-        return self.run(text, index, class_name)
+        return self._run(text, index, class_name)
 
     def __str__(self):
         s = f"{self.__class__.__name__}("
