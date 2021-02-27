@@ -57,7 +57,7 @@ class SequenceClassificationExplainer(BaseExplainer):
 
     def _forward(self, input_ids):
         preds = self.model(input_ids)[0]
-        self.pred_probs = torch.softmax(preds, dim=1)[0][1]
+        self.pred_probs = torch.softmax(preds, dim=1)[0][1] # NOTE: should the second index here be self.selected_index
         return torch.softmax(preds, dim=1)[0][self.selected_index].unsqueeze(-1)
 
     @property
@@ -121,8 +121,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         else:
             self.selected_index = self.predicted_class_index
         if self.attribution_type == "lig":
-            embeddings = getattr(self.model, self.model_prefix).embeddings
-            # embeddings = self.model.get_input_embeddings()
+            embeddings = self.model.get_input_embeddings()
             # embeddings = getattr(self.model, self.model_prefix).get_input_embeddings()
             reference_tokens = [token.replace("Ġ","") for token in self.decode(self.input_ids)]
             lig = LIGAttributions(

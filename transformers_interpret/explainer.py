@@ -17,8 +17,16 @@ class BaseExplainer(ABC):
         self.text = text
 
         self.ref_token_id = self.tokenizer.pad_token_id
-        self.sep_token_id = self.tokenizer.sep_token_id
-        self.cls_token_id = self.tokenizer.cls_token_id
+        self.sep_token_id = (
+            self.tokenizer.sep_token_id
+            if self.tokenizer.sep_token_id is not None
+            else self.tokenizer.eos_token_id
+        )
+        self.cls_token_id = (
+            self.tokenizer.cls_token_id
+            if self.tokenizer.cls_token_id is not None
+            else self.tokenizer.bos_token_id
+        )
 
         self.model_prefix = model.base_model_prefix
 
@@ -89,12 +97,18 @@ class BaseExplainer(ABC):
             raise NotImplementedError("Lists of text are not currently supported.")
 
         text_ids = self.encode(text)
-        input_ids = [self.cls_token_id] + text_ids + [self.sep_token_id]
-        ref_input_ids = (
-            [self.cls_token_id]
-            + [self.ref_token_id] * len(text_ids)
-            + [self.sep_token_id]
-        )
+        input_ids = self.tokenizer.encode(text, add_special_tokens=True)
+
+        # if no special tokens were added
+        if len(text_ids) == len(input_ids):
+            ref_input_ids = [self.ref_token_id] * len(text_ids)
+        else:
+            ref_input_ids = (
+                [self.cls_token_id]
+                + [self.ref_token_id] * len(text_ids)
+                + [self.sep_token_id]
+            )
+
         return (
             torch.tensor([input_ids], device=self.device),
             torch.tensor([ref_input_ids], device=self.device),
