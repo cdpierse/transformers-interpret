@@ -54,7 +54,7 @@ class BaseExplainer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def run(self):  # Add abstract type return for attribution
+    def _run(self):  # Add abstract type return for attribution
         raise NotImplementedError
 
     @abstractmethod
