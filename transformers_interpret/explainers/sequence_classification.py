@@ -100,6 +100,7 @@ class SequenceClassificationExplainer(BaseExplainer):
                 html_filepath = html_filepath + ".html"
             with open(html_filepath, "w") as html_file:
                 html_file.write(html.data)
+        return html
 
     def _calculate_attributions(self, index: int = None, class_name: str = None):
         (
