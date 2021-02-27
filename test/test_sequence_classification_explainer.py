@@ -79,7 +79,7 @@ def test_sequence_classification_decode():
 def test_sequence_classification_run_text_given():
     explainer_string = "I love you , I hate you"
     seq_explainer = SequenceClassificationExplainer(explainer_string, MODEL, TOKENIZER)
-    attributions = seq_explainer.run("I love you, I just love you")
+    attributions = seq_explainer._run("I love you, I just love you")
     assert isinstance(attributions, LIGAttributions)
 
     actual_tokens = [token for token, _ in attributions.word_attributions]
@@ -101,7 +101,7 @@ def test_sequence_classification_run_text_given():
 def test_sequence_classification_no_text_given():
     explainer_string = "I love you , I hate you"
     seq_explainer = SequenceClassificationExplainer(explainer_string, MODEL, TOKENIZER)
-    attributions = seq_explainer.run()
+    attributions = seq_explainer._run()
     assert isinstance(attributions, LIGAttributions)
 
     actual_tokens = [token for token, _ in attributions.word_attributions]
@@ -122,7 +122,7 @@ def test_sequence_classification_no_text_given():
 def test_sequence_classification_explain_on_cls_index():
     explainer_string = "I love you , I like you"
     seq_explainer = SequenceClassificationExplainer(explainer_string, MODEL, TOKENIZER)
-    attributions = seq_explainer.run(index=0)
+    attributions = seq_explainer._run(index=0)
     assert seq_explainer.predicted_class_index == 1
     assert seq_explainer.predicted_class_index != seq_explainer.selected_index
     assert (
@@ -136,7 +136,7 @@ def test_sequence_classification_explain_on_cls_index():
 def test_sequence_classification_explain_on_cls_name():
     explainer_string = "I love you , I like you"
     seq_explainer = SequenceClassificationExplainer(explainer_string, MODEL, TOKENIZER)
-    attributions = seq_explainer.run(class_name="NEGATIVE")
+    attributions = seq_explainer._run(class_name="NEGATIVE")
     assert seq_explainer.predicted_class_index == 1
     assert seq_explainer.predicted_class_index != seq_explainer.selected_index
     assert (
@@ -150,7 +150,7 @@ def test_sequence_classification_explain_on_cls_name():
 def test_sequence_classification_explain_on_cls_name_not_in_dict():
     explainer_string = "I love you , I like you"
     seq_explainer = SequenceClassificationExplainer(explainer_string, MODEL, TOKENIZER)
-    attributions = seq_explainer.run(class_name="UNKNOWN")
+    attributions = seq_explainer._run(class_name="UNKNOWN")
     assert seq_explainer.selected_index == 1
     assert seq_explainer.predicted_class_index == 1
 
@@ -159,7 +159,7 @@ def test_sequence_classification_explain_callable():
     explainer_string = "I love you , I like you"
     seq_explainer = SequenceClassificationExplainer(explainer_string, MODEL, TOKENIZER)
 
-    seq_explainer.run()
+    seq_explainer._run()
     run_method_predicted_index = seq_explainer.predicted_class_index
 
     seq_explainer()

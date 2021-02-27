@@ -28,7 +28,7 @@ class DummyExplainer(BaseExplainer):
     def decode(self, input_ids):
         return self.tokenizer.convert_ids_to_tokens(input_ids[0])
 
-    def run(self):
+    def _run(self):
         pass
 
     def _calculate_attributions(self):
