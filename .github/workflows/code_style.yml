@@ -1,0 +1,4 @@
+name: Black Code Formatter
+# You may pin to the exact commit or the version.
+# uses: lgeiger/black-action@4379f39aa4b6a3bb1cceb46a7665b9c26647d82d
+uses: lgeiger/black-action@v1.0.1
