@@ -1,6 +1,10 @@
 # Transformers Interpret
 
-
+<p align="center">
+    <a id="transformers-intepret" href="#transformers-intepret">
+        <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/tight%401920x_transparent.png" alt="Transformers Intepret Title" title="Transformers Intepret Title" width="600"/>
+    </a>
+</p>
 
 
 <p align="center">
@@ -17,7 +21,7 @@
 </p>
 
 
-Transformers Interpret is a model explainability tool designed to work exclusively with the [transformers][transformers] package.
+Transformers Interpret is a model explainability tool designed to work exclusively with the 🤗  [transformers][transformers] package.
 
 In line with the philosophy of the transformers package Tranformers Interpret allows any transformers model to be explained in just two lines. It even supports visualizations in both notebooks and as savable html files.
 
@@ -28,12 +32,13 @@ In line with the philosophy of the transformers package Tranformers Interpret al
 pip install transformers-interpret
 ```
 
-Required:
+Supported:
 
-* Python 3.6 or higher
-* Pytorch 1.5.0 or higher
-* [transformers][transformers] v3.0.0 or higher
-* captum 0.3.1 
+* Python >= 3.6 
+* Pytorch >= 1.5.0 
+* [transformers][transformers] >= v3.0.0 
+* captum == 0.3.1 
+
 
 The package does not work with Python 2.7 or below.
 
@@ -45,7 +50,7 @@ The package does not work with Python 2.7 or below.
 
 Let's start by initializing a transformers' model and tokenizer, and running it through the `SequenceClassificationExplainer`.
 
-For this example we are using `distilbert-base-uncased-finetuned-sst-2-english`, a distilbert model fine-tuned on a sentiment analysis task.
+For this example we are using `distilbert-base-uncased-finetuned-sst-2-english`, a distilbert model finetuned on a sentiment analysis task.
 
 ```python
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
@@ -118,7 +123,7 @@ cls_explainer = SequenceClassificationExplainer("I love you, I like you, I also 
 attributions = cls_explainer(class_name="NEGATIVE")
 ```
 
-In this case, `predicted_class_name` still returns a prediction of the **POSITIVE** class, **because...?**
+In this case, `predicted_class_name` still returns a prediction of the **POSITIVE** class, because the model has generated the same prediction but nonetheless we are interested in looking at the attributions for the negative class regardless of the predicted result. 
 
 ```python
 >>> cls_explainer.predicted_class_name
@@ -136,7 +141,7 @@ cls_explainer.visualize("distilbert_negative_attr.html")
 
 Getting attributions for different classes is particularly insightful for multiclass problems as it allows you to inspect model predictions for a number of different classes and sanity-check that the model is "looking" at the right things.
 
-For a detailed explanatioon of this example please checkout this [multiclass classification notebook.](notebooks/multiclass_classification_example.ipynb)
+For a detailed explanation of this example please checkout this [multiclass classification notebook.](notebooks/multiclass_classification_example.ipynb)
 
 ## Future Development
 
