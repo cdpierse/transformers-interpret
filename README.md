@@ -1,4 +1,3 @@
-# Transformers Interpret
 
 <p align="center">
     <a id="transformers-intepret" href="#transformers-intepret">
@@ -89,7 +88,7 @@ You can use `predicted_class_index` in case you'd want to know what the predicte
 
 ```python
 >>> cls_explainer.predicted_class_index
-array(1) # this is a pretty ambiguous output, will this make sense to people?
+array(1) 
 ```
 
 And if the model has label names for each class, we can see these too using `predicted_class_name`:
