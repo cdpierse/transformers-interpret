@@ -1,1 +1,3 @@
-from .sequence_classification import SequenceClassificationExplainer
+from .sequence_classification import (
+    SequenceClassificationExplainer,
+)

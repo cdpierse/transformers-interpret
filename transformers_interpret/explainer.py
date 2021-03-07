@@ -1,4 +1,5 @@
 import abc
+import inspect
 import re
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Union
@@ -16,14 +17,41 @@ class BaseExplainer(ABC):
         text = self._clean_text(text)
         self.text = text
 
-        self.ref_token_id = self.tokenizer.pad_token_id
-        self.sep_token_id = self.tokenizer.sep_token_id
-        self.cls_token_id = self.tokenizer.cls_token_id
+        if self.model.config.model_type == "gpt2":
+            self.ref_token_id = self.tokenizer.eos_token_id
+        else:
+            self.ref_token_id = self.tokenizer.pad_token_id
+        self.sep_token_id = (
+            self.tokenizer.sep_token_id
+            if self.tokenizer.sep_token_id is not None
+            else self.tokenizer.eos_token_id
+        )
+        self.cls_token_id = (
+            self.tokenizer.cls_token_id
+            if self.tokenizer.cls_token_id is not None
+            else self.tokenizer.bos_token_id
+        )
 
         self.model_prefix = model.base_model_prefix
 
+        if self._model_forward_signature_accepts_parameter("position_ids"):
+            self.accepts_position_ids = True
+        else:
+            self.accepts_position_ids = False
+
+        if self._model_forward_signature_accepts_parameter("token_type_ids"):
+            self.accepts_token_type_ids = True
+        else:
+            self.accepts_token_type_ids = False
+
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
+
+        self.word_embeddings = self.model.get_input_embeddings()
+        self.position_embeddings = None
+        self.token_type_embeddings = None
+
+        self._set_available_embedding_types()
 
     @abstractmethod
     def encode(self, text: str = None):
@@ -46,7 +74,7 @@ class BaseExplainer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def run(self):  # Add abstract type return for attribution
+    def _run(self):  # Add abstract type return for attribution
         raise NotImplementedError
 
     @abstractmethod
@@ -89,12 +117,18 @@ class BaseExplainer(ABC):
             raise NotImplementedError("Lists of text are not currently supported.")
 
         text_ids = self.encode(text)
-        input_ids = [self.cls_token_id] + text_ids + [self.sep_token_id]
-        ref_input_ids = (
-            [self.cls_token_id]
-            + [self.ref_token_id] * len(text_ids)
-            + [self.sep_token_id]
-        )
+        input_ids = self.tokenizer.encode(text, add_special_tokens=True)
+
+        # if no special tokens were added
+        if len(text_ids) == len(input_ids):
+            ref_input_ids = [self.ref_token_id] * len(text_ids)
+        else:
+            ref_input_ids = (
+                [self.cls_token_id]
+                + [self.ref_token_id] * len(text_ids)
+                + [self.sep_token_id]
+            )
+
         return (
             torch.tensor([input_ids], device=self.device),
             torch.tensor([ref_input_ids], device=self.device),
@@ -117,8 +151,10 @@ class BaseExplainer(ABC):
         seq_len = input_ids.size(1)
         token_type_ids = torch.tensor(
             [0 if i <= sep_idx else 1 for i in range(seq_len)], device=self.device
-        )
-        ref_token_type_ids = torch.zeros_like(token_type_ids, device=self.device)
+        ).expand_as(input_ids)
+        ref_token_type_ids = torch.zeros_like(
+            token_type_ids, device=self.device
+        ).expand_as(input_ids)
 
         return (token_type_ids, ref_token_type_ids)
 
@@ -137,8 +173,8 @@ class BaseExplainer(ABC):
         seq_len = input_ids.size(1)
         position_ids = torch.arange(seq_len, dtype=torch.long, device=self.device)
         ref_position_ids = torch.zeros(seq_len, dtype=torch.long, device=self.device)
-        # position_ids = position_ids.unsqueeze(0).expand_as(input_ids)
-        # ref_position_ids = ref_position_ids.unsqueeze(0).expand_as(input_ids)
+        position_ids = position_ids.unsqueeze(0).expand_as(input_ids)
+        ref_position_ids = ref_position_ids.unsqueeze(0).expand_as(input_ids)
         return (position_ids, ref_position_ids)
 
     def _make_attention_mask(self, input_ids: torch.Tensor) -> torch.Tensor:
@@ -148,6 +184,23 @@ class BaseExplainer(ABC):
         text = re.sub("([.,!?()])", r" \1 ", text)
         text = re.sub("\s{2,}", " ", text)
         return text
+
+    def _model_forward_signature_accepts_parameter(self, parameter: str) -> bool:
+        signature = inspect.signature(self.model.forward)
+        parameters = signature.parameters
+        return parameter in parameters
+
+    def _set_available_embedding_types(self):
+        model_base = getattr(self.model, self.model_prefix)
+        if self.model.config.model_type == "gpt2" and hasattr(model_base, "wpe"):
+            self.position_embeddings = model_base.wpe.weight
+        else:
+            if hasattr(model_base, "embeddings"):
+                model_embeddings = getattr(model_base, "embeddings")
+            if hasattr(model_embeddings, "position_embeddings"):
+                self.position_embeddings = model_embeddings.position_embeddings
+            if hasattr(model_embeddings, "token_type_embeddings"):
+                self.token_type_embeddings = model_embeddings.token_type_embeddings
 
     def __str__(self):
         s = f"{self.__class__.__name__}("
