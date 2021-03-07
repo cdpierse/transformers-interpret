@@ -150,10 +150,10 @@ This package is still in its early days and there is much more planned. For a 1.
 - Support for Question Answering models
 - Support for NER models
 - Support for Multiple Choice models
-- Ability to show attributions for each layer, rather than a summary of all layers
+- Ability to show attributions for multiple embedding type, rather than just the word embeddings. 
 - Additional attribution methods
 - In depth examples
-- A nice logo
+- ~~A nice logo~~ (thanks @Voyz)
 - and more... feel free to submit your suggestions!
 
 ## Questions / Get In Touch
