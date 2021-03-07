@@ -78,8 +78,8 @@ def test_explainer_make_input_token_type_pair_no_sep_idx():
         ref_token_type_ids,
     ) = explainer._make_input_reference_token_type_pair(input_ids)
 
-    assert ref_token_type_ids[0] == torch.zeros(len(input_ids[0]))[0]
-    for i, val in enumerate(token_type_ids):
+    assert ref_token_type_ids[0][0] == torch.zeros(len(input_ids[0]))[0]
+    for i, val in enumerate(token_type_ids[0]):
         if i == 0:
             assert val == 0
         else:
@@ -96,8 +96,8 @@ def test_explainer_make_input_token_type_pair_sep_idx():
         ref_token_type_ids,
     ) = explainer._make_input_reference_token_type_pair(input_ids, 3)
 
-    assert ref_token_type_ids[0] == torch.zeros(len(input_ids[0]))[0]
-    for i, val in enumerate(token_type_ids):
+    assert ref_token_type_ids[0][0] == torch.zeros(len(input_ids[0]))[0]
+    for i, val in enumerate(token_type_ids[0]):
         if i <= 3:
             assert val == 0
         else:
@@ -113,8 +113,8 @@ def test_explainer_make_input_reference_position_id_pair():
         input_ids
     )
 
-    assert ref_position_ids[0] == torch.zeros(len(input_ids[0]))[0]
-    for i, val in enumerate(position_ids):
+    assert ref_position_ids[0][0] == torch.zeros(len(input_ids[0]))[0]
+    for i, val in enumerate(position_ids[0]):
         assert val == i
 
 

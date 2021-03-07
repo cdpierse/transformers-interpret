@@ -11,7 +11,10 @@ from transformers import (
     PreTrainedTokenizer,
     PreTrainedTokenizerFast,
 )
-from transformers_interpret import SequenceClassificationExplainer
+from transformers_interpret import (
+    SequenceClassificationExplainer,
+    SequenceClsAttributionMode,
+)
 from transformers_interpret.attributions import LIGAttributions
 from transformers_interpret.errors import (
     AttributionTypeNotSupportedError,
@@ -30,7 +33,7 @@ def test_sequence_classification_explainer_init():
     seq_explainer = SequenceClassificationExplainer(
         "I love you, I hate you", MODEL, TOKENIZER
     )
-    assert seq_explainer.attribution_type == "lig"
+    assert seq_explainer.attribution_type == SequenceClsAttributionMode.LIG
     assert seq_explainer.label2id == MODEL.config.label2id
     assert seq_explainer.id2label == MODEL.config.id2label
     assert seq_explainer.attributions == None
@@ -184,7 +187,7 @@ def test_sequence_classification_explainer_str():
     s += f'\n\ttext="{explainer_string[:10]}...",'
     s += f"\n\tmodel={MODEL.__class__.__name__},"
     s += f"\n\ttokenizer={TOKENIZER.__class__.__name__},"
-    s += "\n\tattribution_type='lig',"
+    s += "\n\tattribution_type='SequenceClsAttributionMode.LIG',"
     s += ")"
     assert s == seq_explainer.__str__()
 

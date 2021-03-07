@@ -128,3 +128,4 @@ test.html
 api.py
 .vscode
 notebooks/explore_captum.ipynb
+*.html
