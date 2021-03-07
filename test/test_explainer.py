@@ -90,7 +90,6 @@ def test_explainer_init_bert():
     assert explainer.token_type_embeddings != None
 
 
-
 def test_explainer_init_gpt2():
     explainer = DummyExplainer("testing", GPT2_MODEL, GPT2_TOKENIZER)
     assert explainer.text == "testing"
@@ -220,4 +219,3 @@ def test_explainer_str():
     s += f"\n\ttokenizer={DISTILBERT_TOKENIZER.__class__.__name__}"
     s += ")"
     assert s == explainer.__str__()
-
