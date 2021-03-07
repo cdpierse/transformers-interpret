@@ -17,7 +17,10 @@ class BaseExplainer(ABC):
         text = self._clean_text(text)
         self.text = text
 
-        self.ref_token_id = self.tokenizer.pad_token_id
+        if self.model.config.model_type == "gpt2":
+            self.ref_token_id = self.tokenizer.eos_token_id
+        else:
+            self.ref_token_id = self.tokenizer.pad_token_id
         self.sep_token_id = (
             self.tokenizer.sep_token_id
             if self.tokenizer.sep_token_id is not None
@@ -189,16 +192,15 @@ class BaseExplainer(ABC):
 
     def _set_available_embedding_types(self):
         model_base = getattr(self.model, self.model_prefix)
-        if self.model.config.model_type == "gpt2":
-            if hasattr(model_base, "wpe"):
-                self.position_embeddings = model_base.wpe.weight
+        if self.model.config.model_type == "gpt2" and hasattr(model_base, "wpe"):
+            self.position_embeddings = model_base.wpe.weight
         else:
             if hasattr(model_base, "embeddings"):
                 model_embeddings = getattr(model_base, "embeddings")
-                if hasattr(model_embeddings, "position_embeddings"):
-                    self.position_embeddings = model_embeddings.position_embeddings
-                if hasattr(model_embeddings, "token_type_embeddings"):
-                    self.token_type_embeddings = model_embeddings.token_type_embeddings
+            if hasattr(model_embeddings, "position_embeddings"):
+                self.position_embeddings = model_embeddings.position_embeddings
+            if hasattr(model_embeddings, "token_type_embeddings"):
+                self.token_type_embeddings = model_embeddings.token_type_embeddings
 
     def __str__(self):
         s = f"{self.__class__.__name__}("

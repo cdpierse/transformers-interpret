@@ -13,11 +13,7 @@ from transformers_interpret.errors import (
     InputIdsNotCalculatedError,
 )
 
-
-class SequenceClsAttributionMode(Enum):
-    """Enum defining the attribution modes supported by the sequence classification explainer"""
-
-    LIG: str = "lig"
+SUPPORTED_ATTRIBUTION_TYPES = ["lig"]
 
 
 class SequenceClassificationExplainer(BaseExplainer):
@@ -31,13 +27,13 @@ class SequenceClassificationExplainer(BaseExplainer):
         text: str,
         model: PreTrainedModel,
         tokenizer: PreTrainedTokenizer,
-        attribution_type: SequenceClsAttributionMode = SequenceClsAttributionMode.LIG,
+        attribution_type: str = "lig",
     ):
         super().__init__(text, model, tokenizer)
-        if attribution_type not in SequenceClsAttributionMode:
+        if attribution_type not in SUPPORTED_ATTRIBUTION_TYPES:
             raise AttributionTypeNotSupportedError(
                 f"""Attribution type '{attribution_type}' is not supported.
-                Supported types are {mode for mode in SequenceClsAttributionMode}"""
+                Supported types are {SUPPORTED_ATTRIBUTION_TYPES}"""
             )
         self.attribution_type = attribution_type
 
@@ -102,7 +98,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         try:
             index = self.predicted_class_index
             return self.id2label[int(index)]
-        except ValueError:
+        except Exception:
             return self.predicted_class_index
 
     def visualize(self, html_filepath: str = None, true_class: str = None):
@@ -119,7 +115,7 @@ class SequenceClassificationExplainer(BaseExplainer):
                 true_class = str(self.selected_index)
             predicted_class = self.predicted_class_name
 
-        score_viz = self.attributions.visualize_attributions( # type: ignore
+        score_viz = self.attributions.visualize_attributions(  # type: ignore
             self.pred_probs,
             predicted_class,
             true_class,
@@ -164,7 +160,7 @@ class SequenceClassificationExplainer(BaseExplainer):
                 self.selected_index = self.predicted_class_index
         else:
             self.selected_index = self.predicted_class_index
-        if self.attribution_type == SequenceClsAttributionMode.LIG:
+        if self.attribution_type == "lig":
             reference_tokens = [
                 token.replace("Ġ", "") for token in self.decode(self.input_ids)
             ]
