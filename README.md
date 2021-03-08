@@ -36,7 +36,7 @@ Supported:
 * Python >= 3.6 
 * Pytorch >= 1.5.0 
 * [transformers][transformers] >= v3.0.0 
-* captum == 0.3.1 
+* captum >= 0.3.1 
 
 
 The package does not work with Python 2.7 or below.
