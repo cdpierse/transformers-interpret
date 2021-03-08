@@ -36,7 +36,7 @@ Supported:
 * Python >= 3.6 
 * Pytorch >= 1.5.0 
 * [transformers][transformers] >= v3.0.0 
-* captum == 0.3.1 
+* captum >= 0.3.1 
 
 
 The package does not work with Python 2.7 or below.
@@ -108,7 +108,7 @@ If you are in a notebook, calls to the `visualize()` method will display the vis
 cls_explainer.visualize("distilbert_viz.html")
 ```
 
-<img src="images/distilbert_example.png" width="80%" height="80%" align="center"/>
+<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/distilbert_example.png" width="80%" height="80%" align="center"/>
 
 
 ### Explaining Attributions for Non Predicted Class
@@ -136,7 +136,7 @@ class.
 cls_explainer.visualize("distilbert_negative_attr.html")
 ```
 
-<img src="images/distilbert_example_negative.png" width="80%" height="80%" align="center" />
+<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/distilbert_example_negative.png" width="80%" height="80%" align="center" />
 
 Getting attributions for different classes is particularly insightful for multiclass problems as it allows you to inspect model predictions for a number of different classes and sanity-check that the model is "looking" at the right things.
 
