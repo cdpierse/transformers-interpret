@@ -96,7 +96,7 @@ class LIGAttributions(Attributions):
         )
 
     def visualize_attributions(
-        self, pred_prob, pred_class, true_class, attr_class, text, all_tokens
+        self, pred_prob, pred_class, true_class, attr_class, all_tokens
     ):
 
         return viz.VisualizationDataRecord(

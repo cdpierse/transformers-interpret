@@ -97,7 +97,7 @@ class SequenceClassificationExplainer(BaseExplainer):
 
         else:
             raise InputIdsNotCalculatedError(
-                "input_ids have not been created yet. Please call `get_attributions()`"
+                "input_ids have not been created yet.`"
             )
 
     @property
@@ -127,7 +127,6 @@ class SequenceClassificationExplainer(BaseExplainer):
             predicted_class,
             true_class,
             attr_class,
-            self.text,
             tokens,
         )
         html = viz.visualize_text([score_viz])

@@ -3,6 +3,7 @@ import warnings
 from typing import Union
 
 import torch
+from captum.attr import visualization as viz
 from torch.nn.modules.sparse import Embedding
 from transformers import PreTrainedModel, PreTrainedTokenizer
 from transformers_interpret import BaseExplainer, LIGAttributions
@@ -46,12 +47,98 @@ class QuestionAnsweringExplainer(BaseExplainer):
         self._single_node_output = False
         self.text = text
         self.question = question
+        self.position = 0
 
     def encode(self, text: str) -> list:  # type: ignore
         return self.tokenizer.encode(text, add_special_tokens=False)
 
     def decode(self, input_ids: torch.Tensor) -> list:
         return self.tokenizer.convert_ids_to_tokens(input_ids[0])
+
+    @property
+    def start_pos(self):
+        if len(self.input_ids) > 0:
+            preds = self.model(
+                self.input_ids,
+                position_ids=self.position_ids,
+                token_type_ids=self.token_type_ids,
+            )
+
+            preds = preds[0]
+            return int(preds.argmax())
+        else:
+            raise InputIdsNotCalculatedError("input_ids have not been created yet.`")
+
+    @property
+    def end_pos(self):
+        if len(self.input_ids) > 0:
+            preds = self.model(
+                self.input_ids,
+                position_ids=self.position_ids,
+                token_type_ids=self.token_type_ids,
+            )
+
+            preds = preds[1]
+            return int(preds.argmax())
+        else:
+            raise InputIdsNotCalculatedError("input_ids have not been created yet.`")
+
+    @property
+    def predicted_answer(self):
+        if len(self.input_ids) > 0:
+            preds = self.model(
+                self.input_ids,
+                position_ids=self.position_ids,
+                token_type_ids=self.token_type_ids,
+            )
+
+            start = preds[0].argmax()
+            end = preds[1].argmax()
+            return " ".join(self.decode(self.input_ids)[start : end + 1])
+        else:
+            raise InputIdsNotCalculatedError("input_ids have not been created yet.`")
+
+    def visualize(self, html_filepath: str = None):
+        tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
+        predicted_answer = self.predicted_answer
+
+        self.position = 0
+        start_pred_probs = self._forward(
+            self.input_ids, self.token_type_ids, self.position_ids
+        )
+        start_pos = self.start_pos
+        start_pos_str = tokens[start_pos] + " (" + str(start_pos) + ")"
+        start_score_viz = self.start_attributions.visualize_attributions(
+            float(start_pred_probs),
+            str(predicted_answer),
+            start_pos_str,
+            start_pos_str,
+            tokens,
+        )
+
+        self.position = 1
+
+        end_pred_probs = self._forward(
+            self.input_ids, self.token_type_ids, self.position_ids
+        )
+        end_pos = self.end_pos
+        end_pos_str = tokens[end_pos] + " (" + str(end_pos) + ")"
+        end_score_viz = self.end_attributions.visualize_attributions(
+            float(end_pred_probs),
+            str(predicted_answer),
+            end_pos_str,
+            end_pos_str,
+            tokens,
+        )
+
+        html = viz.visualize_text([start_score_viz, end_score_viz])
+
+        if html_filepath:
+            if not html_filepath.endswith(".html"):
+                html_filepath = html_filepath + ".html"
+            with open(html_filepath, "w") as html_file:
+                html_file.write(html.data)
+        return html
 
     def _make_input_reference_pair(self, question: str, text: str):  # type: ignore
         question_ids = self.encode(question)
@@ -82,20 +169,21 @@ class QuestionAnsweringExplainer(BaseExplainer):
     def _forward(  # type: ignore
         self,
         input_ids: torch.Tensor,
+        token_type_ids=None,
         position_ids: torch.Tensor = None,
         attention_mask: torch.Tensor = None,
-        position: int = 0,
     ):
-
 
         if self.accepts_position_ids:
             preds = self.model(
                 input_ids,
+                token_type_ids=token_type_ids,
                 position_ids=position_ids,
                 attention_mask=attention_mask,
             )
 
-            preds = preds[position]
+            preds = preds[self.position]
+
             return preds.max(1).values
 
     def _run(
@@ -137,12 +225,18 @@ class QuestionAnsweringExplainer(BaseExplainer):
             self.ref_position_ids,
         ) = self._make_input_reference_position_id_pair(self.input_ids)
 
+        (
+            self.token_type_ids,
+            self.ref_token_type_ids,
+        ) = self._make_input_reference_token_type_pair(self.input_ids, self.sep_idx)
+
         self.attention_mask = self._make_attention_mask(self.input_ids)
         if self.attribution_type == "lig":
             reference_tokens = [
                 token.replace("Ġ", "") for token in self.decode(self.input_ids)
             ]
-            lig = LIGAttributions(
+            self.position = 0
+            start_lig = LIGAttributions(
                 self._forward,
                 embeddings,
                 reference_tokens,
@@ -152,8 +246,33 @@ class QuestionAnsweringExplainer(BaseExplainer):
                 self.attention_mask,
                 position_ids=self.position_ids,
                 ref_position_ids=self.ref_position_ids,
+                token_type_ids=self.token_type_ids,
+                ref_token_type_ids=self.ref_token_type_ids,
             )
-            lig.summarize()
-            self.attributions = lig
+            start_lig.summarize()
+            self.start_attributions = start_lig
+
+            self.position = 1
+            end_lig = LIGAttributions(
+                self._forward,
+                embeddings,
+                reference_tokens,
+                self.input_ids,
+                self.ref_input_ids,
+                self.sep_idx,
+                self.attention_mask,
+                position_ids=self.position_ids,
+                ref_position_ids=self.ref_position_ids,
+                token_type_ids=self.token_type_ids,
+                ref_token_type_ids=self.ref_token_type_ids,
+            )
+            end_lig.summarize()
+            self.end_attributions = end_lig
+            self.attributions = [self.start_attributions, self.end_attributions]
         else:
             pass
+
+    def __call__(
+        self, question: str = None, text: str = None, embedding_type: int = None
+    ) -> LIGAttributions:
+        return self._run(question, text, embedding_type)
