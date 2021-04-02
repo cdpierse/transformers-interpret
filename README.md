@@ -61,10 +61,9 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 from transformers_interpret import SequenceClassificationExplainer
 cls_explainer = SequenceClassificationExplainer(
-    "I love you, I like you", 
     model, 
     tokenizer)
-attributions = cls_explainer()
+attributions = cls_explainer("I love you, I like you")
 ```
 
 Which will return the following list of tuples:
@@ -118,8 +117,8 @@ Attribution explanations are not limited to the predicted class. Let's test a mo
 In the example below we pass `class_name="NEGATIVE"` as an argument indicating we would like the attributions to be explained for the **NEGATIVE** class regardless of what the actual prediction is. Effectively because this is a binary classifier we are getting the inverse attributions.
 
 ```python
-cls_explainer = SequenceClassificationExplainer("I love you, I like you, I also kinda dislike you", model, tokenizer)
-attributions = cls_explainer(class_name="NEGATIVE")
+cls_explainer = SequenceClassificationExplainer(model, tokenizer)
+attributions = cls_explainer("I love you, I like you, I also kinda dislike you", class_name="NEGATIVE")
 ```
 
 In this case, `predicted_class_name` still returns a prediction of the **POSITIVE** class, because the model has generated the same prediction but nonetheless we are interested in looking at the attributions for the negative class regardless of the predicted result. 
