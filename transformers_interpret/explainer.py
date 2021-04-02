@@ -10,12 +10,10 @@ from transformers import PreTrainedModel, PreTrainedTokenizer
 
 class BaseExplainer(ABC):
     def __init__(
-        self, text: str, model: PreTrainedModel, tokenizer: PreTrainedTokenizer
+        self, model: PreTrainedModel, tokenizer: PreTrainedTokenizer
     ):
         self.model = model
         self.tokenizer = tokenizer
-        text = self._clean_text(text)
-        self.text = text
 
         if self.model.config.model_type == "gpt2":
             self.ref_token_id = self.tokenizer.eos_token_id
@@ -204,7 +202,6 @@ class BaseExplainer(ABC):
 
     def __str__(self):
         s = f"{self.__class__.__name__}("
-        s += f'\n\ttext="{str(self.text[:10])}...",'
         s += f"\n\tmodel={self.model.__class__.__name__},"
         s += f"\n\ttokenizer={self.tokenizer.__class__.__name__}"
         s += ")"

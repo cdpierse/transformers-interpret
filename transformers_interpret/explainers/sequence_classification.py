@@ -24,12 +24,11 @@ class SequenceClassificationExplainer(BaseExplainer):
 
     def __init__(
         self,
-        text: str,
         model: PreTrainedModel,
         tokenizer: PreTrainedTokenizer,
         attribution_type: str = "lig",
     ):
-        super().__init__(text, model, tokenizer)
+        super().__init__(model, tokenizer)
         if attribution_type not in SUPPORTED_ATTRIBUTION_TYPES:
             raise AttributionTypeNotSupportedError(
                 f"""Attribution type '{attribution_type}' is not supported.
@@ -46,8 +45,6 @@ class SequenceClassificationExplainer(BaseExplainer):
         self._single_node_output = False
 
     def encode(self, text: str = None) -> list:
-        if text is None:
-            text = self.text
         return self.tokenizer.encode(text, add_special_tokens=False)
 
     def decode(self, input_ids: torch.Tensor) -> list:
@@ -182,7 +179,7 @@ class SequenceClassificationExplainer(BaseExplainer):
 
     def _run(
         self,
-        text: str = None,
+        text: str,
         index: int = None,
         class_name: str = None,
         embedding_type: int = None,
@@ -203,8 +200,7 @@ class SequenceClassificationExplainer(BaseExplainer):
             else:
                 embeddings = self.word_embeddings
 
-        if text is not None:
-            self.text = text
+        self.text = self._clean_text(text)
 
         self._calculate_attributions(
             embeddings=embeddings, index=index, class_name=class_name
@@ -213,15 +209,14 @@ class SequenceClassificationExplainer(BaseExplainer):
 
     def __call__(
         self,
-        text: str = None,
+        text: str,
         index: int = None,
         class_name: str = None,
         embedding_type: int = 0,
     ) -> LIGAttributions:
         """
-        Calculates attribution for `text` or `self.text` using the given model
-        and tokenizer. If `text` is not passed it is expected that text was passed
-        in the constructor.
+        Calculates attribution for `text` using the model
+        and tokenizer given in the constructor. 
 
         Attributions can be forced along the axis of a particular output index or class name.
         To do this provide either a valid `index` for the class label's output or if the outputs
@@ -234,7 +229,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         occur and the default word_embeddings will be chosen instead.
 
         Args:
-            text (str, optional): Text to provide attributions for. Defaults to None.
+            text (str): Text to provide attributions for.
             index (int, optional): Optional output index to provide attributions for. Defaults to None.
             class_name (str, optional): Optional output class name to provide attributions for. Defaults to None.
             embedding_type (int, optional): The embedding type word(0) or position(1) to calculate attributions for. Defaults to 0.
@@ -246,7 +241,6 @@ class SequenceClassificationExplainer(BaseExplainer):
 
     def __str__(self):
         s = f"{self.__class__.__name__}("
-        s += f'\n\ttext="{str(self.text[:10])}...",'
         s += f"\n\tmodel={self.model.__class__.__name__},"
         s += f"\n\ttokenizer={self.tokenizer.__class__.__name__},"
         s += f"\n\tattribution_type='{self.attribution_type}',"
