@@ -78,7 +78,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         return torch.softmax(preds, dim=1)[:, self.selected_index]
 
     @property
-    def predicted_class_index(self):
+    def predicted_class_index(self) -> int:
         if len(self.input_ids) > 0:
             # we call this before _forward() so it has to be calculated twice
             preds = self.model(self.input_ids)[0]
@@ -98,9 +98,18 @@ class SequenceClassificationExplainer(BaseExplainer):
         except Exception:
             return self.predicted_class_index
 
+    @property
+    def word_attributions(self) -> list:
+        if self.attributions != None:
+            return self.attributions.word_attributions
+        else:
+            raise ValueError(
+                "Attributions have not yet been calculated. Please call the explainer on text first."
+            )
+
     def visualize(self, html_filepath: str = None, true_class: str = None):
         tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
-        attr_class = self.id2label[int(self.selected_index)]
+        attr_class = self.id2label[self.selected_index]
 
         if self._single_node_output:
             if true_class is None:
@@ -109,7 +118,7 @@ class SequenceClassificationExplainer(BaseExplainer):
             attr_class = round(float(self.pred_probs))
         else:
             if true_class is None:
-                true_class = str(self.selected_index)
+                true_class = self.selected_index
             predicted_class = self.predicted_class_name
 
         score_viz = self.attributions.visualize_attributions(  # type: ignore
@@ -149,14 +158,14 @@ class SequenceClassificationExplainer(BaseExplainer):
             self.selected_index = index
         elif class_name is not None:
             if class_name in self.label2id.keys():
-                self.selected_index = self.label2id[class_name]
+                self.selected_index = int(self.label2id[class_name])
             else:
                 s = f"'{class_name}' is not found in self.label2id keys."
                 s += "Defaulting to predicted index instead."
                 warnings.warn(s)
-                self.selected_index = self.predicted_class_index
+                self.selected_index = int(self.predicted_class_index)
         else:
-            self.selected_index = self.predicted_class_index
+            self.selected_index = int(self.predicted_class_index)
         if self.attribution_type == "lig":
             reference_tokens = [
                 token.replace("Ġ", "") for token in self.decode(self.input_ids)
@@ -183,7 +192,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         index: int = None,
         class_name: str = None,
         embedding_type: int = None,
-    ) -> LIGAttributions:
+    ) -> LIGAttributions:  # type: ignore
         if embedding_type is None:
             embeddings = self.word_embeddings
         else:
@@ -216,7 +225,7 @@ class SequenceClassificationExplainer(BaseExplainer):
     ) -> LIGAttributions:
         """
         Calculates attribution for `text` using the model
-        and tokenizer given in the constructor. 
+        and tokenizer given in the constructor.
 
         Attributions can be forced along the axis of a particular output index or class name.
         To do this provide either a valid `index` for the class label's output or if the outputs

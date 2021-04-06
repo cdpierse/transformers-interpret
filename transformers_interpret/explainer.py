@@ -1,7 +1,7 @@
 import abc
 import inspect
 import re
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 from typing import List, Tuple, Union
 
 import torch
@@ -9,9 +9,7 @@ from transformers import PreTrainedModel, PreTrainedTokenizer
 
 
 class BaseExplainer(ABC):
-    def __init__(
-        self, model: PreTrainedModel, tokenizer: PreTrainedTokenizer
-    ):
+    def __init__(self, model: PreTrainedModel, tokenizer: PreTrainedTokenizer):
         self.model = model
         self.tokenizer = tokenizer
 
@@ -69,6 +67,10 @@ class BaseExplainer(ABC):
             word tokens for a sentence/document.
 
         """
+        raise NotImplementedError
+
+    @abstractproperty
+    def word_attributions(self):
         raise NotImplementedError
 
     @abstractmethod

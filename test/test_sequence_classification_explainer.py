@@ -217,6 +217,26 @@ def test_sequence_classification_explain_raises_on_input_ids_not_calculated():
         seq_explainer.predicted_class_index
 
 
+def test_sequence_classification_word_attributions():
+    explainer_string = "I love you , I like you"
+    seq_explainer = SequenceClassificationExplainer(
+        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
+    )
+    seq_explainer(explainer_string)
+    assert isinstance(seq_explainer.word_attributions, list)
+    for element in seq_explainer.word_attributions:
+        assert isinstance(element, tuple)
+
+
+def test_sequence_classification_word_attributions_not_calculated_raises():
+    explainer_string = "I love you , I like you"
+    seq_explainer = SequenceClassificationExplainer(
+        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
+    )
+    with pytest.raises(ValueError):
+        seq_explainer.word_attributions
+
+
 def test_sequence_classification_explainer_str():
     seq_explainer = SequenceClassificationExplainer(
         DISTILBERT_MODEL, DISTILBERT_TOKENIZER
