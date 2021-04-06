@@ -1,7 +1,7 @@
 import abc
 import inspect
 import re
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 from typing import List, Tuple, Union
 
 import torch
@@ -9,13 +9,9 @@ from transformers import PreTrainedModel, PreTrainedTokenizer
 
 
 class BaseExplainer(ABC):
-    def __init__(
-        self, text: str, model: PreTrainedModel, tokenizer: PreTrainedTokenizer
-    ):
+    def __init__(self, model: PreTrainedModel, tokenizer: PreTrainedTokenizer):
         self.model = model
         self.tokenizer = tokenizer
-        text = self._clean_text(text)
-        self.text = text
 
         if self.model.config.model_type == "gpt2":
             self.ref_token_id = self.tokenizer.eos_token_id
@@ -73,8 +69,12 @@ class BaseExplainer(ABC):
         """
         raise NotImplementedError
 
+    @abstractproperty
+    def word_attributions(self):
+        raise NotImplementedError
+
     @abstractmethod
-    def _run(self):  # Add abstract type return for attribution
+    def _run(self) -> list:
         raise NotImplementedError
 
     @abstractmethod
@@ -204,7 +204,6 @@ class BaseExplainer(ABC):
 
     def __str__(self):
         s = f"{self.__class__.__name__}("
-        s += f'\n\ttext="{str(self.text[:10])}...",'
         s += f"\n\tmodel={self.model.__class__.__name__},"
         s += f"\n\ttokenizer={self.tokenizer.__class__.__name__}"
         s += ")"

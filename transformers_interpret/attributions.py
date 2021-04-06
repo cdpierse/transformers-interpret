@@ -77,7 +77,7 @@ class LIGAttributions(Attributions):
             )
 
     @property
-    def word_attributions(self):
+    def word_attributions(self) -> list:
         wa = []
         if len(self.attributions_sum) >= 1:
             for i, (word, attribution) in enumerate(
