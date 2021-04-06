@@ -63,13 +63,13 @@ from transformers_interpret import SequenceClassificationExplainer
 cls_explainer = SequenceClassificationExplainer(
     model, 
     tokenizer)
-attributions = cls_explainer("I love you, I like you")
+word_attributions = cls_explainer("I love you, I like you")
 ```
 
 Which will return the following list of tuples:
 
 ```python
->>> attributions.word_attributions
+>>> word_attributions
 [('[CLS]', 0.0),
  ('i', 0.2778544699186709),
  ('love', 0.7792370723380415),
