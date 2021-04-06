@@ -183,8 +183,6 @@ class SequenceClassificationExplainer(BaseExplainer):
             )
             lig.summarize()
             self.attributions = lig
-        else:
-            pass
 
     def _run(
         self,
@@ -214,7 +212,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         self._calculate_attributions(
             embeddings=embeddings, index=index, class_name=class_name
         )
-        return self.attributions  # type: ignore
+        return self.word_attributions  # type: ignore
 
     def __call__(
         self,
@@ -222,7 +220,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         index: int = None,
         class_name: str = None,
         embedding_type: int = 0,
-    ) -> LIGAttributions:
+    ) -> list:
         """
         Calculates attribution for `text` using the model
         and tokenizer given in the constructor.

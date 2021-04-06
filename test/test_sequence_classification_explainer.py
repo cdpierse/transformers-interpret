@@ -69,9 +69,9 @@ def test_sequence_classification_explainer_attribution_type_unset_before_run():
     assert seq_explainer.attribution_type == "lig"
     assert seq_explainer.attributions == None
     seq_explainer.attribution_type = "UNSUPPORTED"
-    attr = seq_explainer(explainer_string)
-    assert attr == None
-    assert seq_explainer.attributions == None
+    with pytest.raises(ValueError):
+        seq_explainer(explainer_string)
+        assert seq_explainer.attributions == None
 
 
 def test_sequence_classification_encode():
@@ -103,10 +103,10 @@ def test_sequence_classification_run_text_given():
     seq_explainer = SequenceClassificationExplainer(
         DISTILBERT_MODEL, DISTILBERT_TOKENIZER
     )
-    attributions = seq_explainer._run("I love you, I just love you")
-    assert isinstance(attributions, LIGAttributions)
+    word_attributions = seq_explainer._run("I love you, I just love you")
+    assert isinstance(word_attributions, list)
 
-    actual_tokens = [token for token, _ in attributions.word_attributions]
+    actual_tokens = [token for token, _ in word_attributions]
     expected_tokens = [
         "[CLS]",
         "i",
@@ -127,7 +127,7 @@ def test_sequence_classification_explain_on_cls_index():
     seq_explainer = SequenceClassificationExplainer(
         DISTILBERT_MODEL, DISTILBERT_TOKENIZER
     )
-    attributions = seq_explainer._run(explainer_string, index=0)
+    word_attributions = seq_explainer._run(explainer_string, index=0)
     assert seq_explainer.predicted_class_index == 1
     assert seq_explainer.predicted_class_index != seq_explainer.selected_index
     assert (
@@ -144,7 +144,7 @@ def test_sequence_classification_explain_position_embeddings():
     pos_attributions = seq_explainer(explainer_string, embedding_type=1)
     word_attributions = seq_explainer(explainer_string, embedding_type=0)
 
-    assert pos_attributions.word_attributions != word_attributions.word_attributions
+    assert pos_attributions != word_attributions
 
 
 def test_sequence_classification_explain_position_embeddings_not_available():
@@ -155,7 +155,7 @@ def test_sequence_classification_explain_position_embeddings_not_available():
     pos_attributions = seq_explainer(explainer_string, embedding_type=1)
     word_attributions = seq_explainer(explainer_string, embedding_type=0)
 
-    assert pos_attributions.word_attributions == word_attributions.word_attributions
+    assert pos_attributions == word_attributions
 
 
 def test_sequence_classification_explain_embedding_incorrect_value():
@@ -165,11 +165,11 @@ def test_sequence_classification_explain_embedding_incorrect_value():
     )
 
     word_attributions = seq_explainer(explainer_string, embedding_type=0)
-    incorrect_value_attributions = seq_explainer(explainer_string, embedding_type=-42)
+    incorrect_word_attributions = seq_explainer(explainer_string, embedding_type=-42)
 
     assert (
-        incorrect_value_attributions.word_attributions
-        == word_attributions.word_attributions
+        incorrect_word_attributions
+        == word_attributions
     )
 
 
