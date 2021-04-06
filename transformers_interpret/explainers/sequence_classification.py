@@ -190,7 +190,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         index: int = None,
         class_name: str = None,
         embedding_type: int = None,
-    ) -> LIGAttributions:  # type: ignore
+    ) -> list:  # type: ignore
         if embedding_type is None:
             embeddings = self.word_embeddings
         else:
@@ -242,7 +242,7 @@ class SequenceClassificationExplainer(BaseExplainer):
             embedding_type (int, optional): The embedding type word(0) or position(1) to calculate attributions for. Defaults to 0.
 
         Returns:
-            LIGAttributions:
+            list: List of tuples containing words and their associated attribution scores. 
         """
         return self._run(text, index, class_name, embedding_type=embedding_type)
 
