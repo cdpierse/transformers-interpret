@@ -29,12 +29,14 @@ class DummyExplainer(BaseExplainer):
         super().__init__(*args, **kwargs)
 
     def encode(self, text: str = None):
-        if text is None:
-            text = self.text
         return self.tokenizer.encode(text, add_special_tokens=False)
 
     def decode(self, input_ids):
         return self.tokenizer.convert_ids_to_tokens(input_ids[0])
+
+    @property
+    def word_attributions(self):
+        pass
 
     def _run(self):
         pass
@@ -47,8 +49,7 @@ class DummyExplainer(BaseExplainer):
 
 
 def test_explainer_init_distilbert():
-    explainer = DummyExplainer("testing", DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
-    assert explainer.text == "testing"
+    explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     assert isinstance(explainer.model, PreTrainedModel)
     assert isinstance(explainer.tokenizer, PreTrainedTokenizerFast) | isinstance(
         explainer.tokenizer, PreTrainedTokenizer
@@ -69,8 +70,7 @@ def test_explainer_init_distilbert():
 
 
 def test_explainer_init_bert():
-    explainer = DummyExplainer("testing", BERT_MODEL, BERT_TOKENIZER)
-    assert explainer.text == "testing"
+    explainer = DummyExplainer(BERT_MODEL, BERT_TOKENIZER)
     assert isinstance(explainer.model, PreTrainedModel)
     assert isinstance(explainer.tokenizer, PreTrainedTokenizerFast) | isinstance(
         explainer.tokenizer, PreTrainedTokenizer
@@ -91,8 +91,7 @@ def test_explainer_init_bert():
 
 
 def test_explainer_init_gpt2():
-    explainer = DummyExplainer("testing", GPT2_MODEL, GPT2_TOKENIZER)
-    assert explainer.text == "testing"
+    explainer = DummyExplainer(GPT2_MODEL, GPT2_TOKENIZER)
     assert isinstance(explainer.model, PreTrainedModel)
     assert isinstance(explainer.tokenizer, PreTrainedTokenizerFast) | isinstance(
         explainer.tokenizer, PreTrainedTokenizer
@@ -112,9 +111,7 @@ def test_explainer_init_gpt2():
 
 
 def test_explainer_make_input_reference_pair():
-    explainer = DummyExplainer(
-        "this is a test string", DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair(
         "this is a test string"
     )
@@ -130,7 +127,7 @@ def test_explainer_make_input_reference_pair():
 
 
 def test_explainer_make_input_reference_pair_gpt2():
-    explainer = DummyExplainer("this is a test string", GPT2_MODEL, GPT2_TOKENIZER)
+    explainer = DummyExplainer(GPT2_MODEL, GPT2_TOKENIZER)
     input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair(
         "this is a test string"
     )
@@ -142,9 +139,7 @@ def test_explainer_make_input_reference_pair_gpt2():
 
 
 def test_explainer_make_input_token_type_pair_no_sep_idx():
-    explainer = DummyExplainer(
-        "this is a test string", DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair(
         "this is a test string"
     )
@@ -162,9 +157,7 @@ def test_explainer_make_input_token_type_pair_no_sep_idx():
 
 
 def test_explainer_make_input_token_type_pair_sep_idx():
-    explainer = DummyExplainer(
-        "this is a test string", DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair(
         "this is a test string"
     )
@@ -182,9 +175,7 @@ def test_explainer_make_input_token_type_pair_sep_idx():
 
 
 def test_explainer_make_input_reference_position_id_pair():
-    explainer = DummyExplainer(
-        "this is a test string", DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair(
         "this is a test string"
     )
@@ -198,9 +189,7 @@ def test_explainer_make_input_reference_position_id_pair():
 
 
 def test_explainer_make_attention_mask():
-    explainer = DummyExplainer(
-        "this is a test string", DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair(
         "this is a test string"
     )
@@ -211,10 +200,8 @@ def test_explainer_make_attention_mask():
 
 
 def test_explainer_str():
-    test_string = "this is a test string"
-    explainer = DummyExplainer(test_string, DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
+    explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     s = "DummyExplainer("
-    s += f'\n\ttext="{test_string[:10]}...",'
     s += f"\n\tmodel={DISTILBERT_MODEL.__class__.__name__},"
     s += f"\n\ttokenizer={DISTILBERT_TOKENIZER.__class__.__name__}"
     s += ")"

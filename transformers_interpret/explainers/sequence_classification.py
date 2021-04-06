@@ -24,12 +24,11 @@ class SequenceClassificationExplainer(BaseExplainer):
 
     def __init__(
         self,
-        text: str,
         model: PreTrainedModel,
         tokenizer: PreTrainedTokenizer,
         attribution_type: str = "lig",
     ):
-        super().__init__(text, model, tokenizer)
+        super().__init__(model, tokenizer)
         if attribution_type not in SUPPORTED_ATTRIBUTION_TYPES:
             raise AttributionTypeNotSupportedError(
                 f"""Attribution type '{attribution_type}' is not supported.
@@ -46,8 +45,6 @@ class SequenceClassificationExplainer(BaseExplainer):
         self._single_node_output = False
 
     def encode(self, text: str = None) -> list:
-        if text is None:
-            text = self.text
         return self.tokenizer.encode(text, add_special_tokens=False)
 
     def decode(self, input_ids: torch.Tensor) -> list:
@@ -81,7 +78,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         return torch.softmax(preds, dim=1)[:, self.selected_index]
 
     @property
-    def predicted_class_index(self):
+    def predicted_class_index(self) -> int:
         if len(self.input_ids) > 0:
             # we call this before _forward() so it has to be calculated twice
             preds = self.model(self.input_ids)[0]
@@ -101,9 +98,18 @@ class SequenceClassificationExplainer(BaseExplainer):
         except Exception:
             return self.predicted_class_index
 
+    @property
+    def word_attributions(self) -> list:
+        if self.attributions != None:
+            return self.attributions.word_attributions
+        else:
+            raise ValueError(
+                "Attributions have not yet been calculated. Please call the explainer on text first."
+            )
+
     def visualize(self, html_filepath: str = None, true_class: str = None):
         tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
-        attr_class = self.id2label[int(self.selected_index)]
+        attr_class = self.id2label[self.selected_index]
 
         if self._single_node_output:
             if true_class is None:
@@ -112,7 +118,7 @@ class SequenceClassificationExplainer(BaseExplainer):
             attr_class = round(float(self.pred_probs))
         else:
             if true_class is None:
-                true_class = str(self.selected_index)
+                true_class = self.selected_index
             predicted_class = self.predicted_class_name
 
         score_viz = self.attributions.visualize_attributions(  # type: ignore
@@ -152,14 +158,14 @@ class SequenceClassificationExplainer(BaseExplainer):
             self.selected_index = index
         elif class_name is not None:
             if class_name in self.label2id.keys():
-                self.selected_index = self.label2id[class_name]
+                self.selected_index = int(self.label2id[class_name])
             else:
                 s = f"'{class_name}' is not found in self.label2id keys."
                 s += "Defaulting to predicted index instead."
                 warnings.warn(s)
-                self.selected_index = self.predicted_class_index
+                self.selected_index = int(self.predicted_class_index)
         else:
-            self.selected_index = self.predicted_class_index
+            self.selected_index = int(self.predicted_class_index)
         if self.attribution_type == "lig":
             reference_tokens = [
                 token.replace("Ġ", "") for token in self.decode(self.input_ids)
@@ -177,16 +183,14 @@ class SequenceClassificationExplainer(BaseExplainer):
             )
             lig.summarize()
             self.attributions = lig
-        else:
-            pass
 
     def _run(
         self,
-        text: str = None,
+        text: str,
         index: int = None,
         class_name: str = None,
         embedding_type: int = None,
-    ) -> LIGAttributions:
+    ) -> list:  # type: ignore
         if embedding_type is None:
             embeddings = self.word_embeddings
         else:
@@ -203,25 +207,23 @@ class SequenceClassificationExplainer(BaseExplainer):
             else:
                 embeddings = self.word_embeddings
 
-        if text is not None:
-            self.text = text
+        self.text = self._clean_text(text)
 
         self._calculate_attributions(
             embeddings=embeddings, index=index, class_name=class_name
         )
-        return self.attributions  # type: ignore
+        return self.word_attributions  # type: ignore
 
     def __call__(
         self,
-        text: str = None,
+        text: str,
         index: int = None,
         class_name: str = None,
         embedding_type: int = 0,
-    ) -> LIGAttributions:
+    ) -> list:
         """
-        Calculates attribution for `text` or `self.text` using the given model
-        and tokenizer. If `text` is not passed it is expected that text was passed
-        in the constructor.
+        Calculates attribution for `text` using the model
+        and tokenizer given in the constructor.
 
         Attributions can be forced along the axis of a particular output index or class name.
         To do this provide either a valid `index` for the class label's output or if the outputs
@@ -234,19 +236,18 @@ class SequenceClassificationExplainer(BaseExplainer):
         occur and the default word_embeddings will be chosen instead.
 
         Args:
-            text (str, optional): Text to provide attributions for. Defaults to None.
+            text (str): Text to provide attributions for.
             index (int, optional): Optional output index to provide attributions for. Defaults to None.
             class_name (str, optional): Optional output class name to provide attributions for. Defaults to None.
             embedding_type (int, optional): The embedding type word(0) or position(1) to calculate attributions for. Defaults to 0.
 
         Returns:
-            LIGAttributions:
+            list: List of tuples containing words and their associated attribution scores. 
         """
         return self._run(text, index, class_name, embedding_type=embedding_type)
 
     def __str__(self):
         s = f"{self.__class__.__name__}("
-        s += f'\n\ttext="{str(self.text[:10])}...",'
         s += f"\n\tmodel={self.model.__class__.__name__},"
         s += f"\n\ttokenizer={self.tokenizer.__class__.__name__},"
         s += f"\n\tattribution_type='{self.attribution_type}',"
