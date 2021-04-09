@@ -1,4 +1,3 @@
-import sys
 import warnings
 from typing import Union
 
@@ -23,14 +22,12 @@ class QuestionAnsweringExplainer(BaseExplainer):
 
     def __init__(
         self,
-        question: str,
-        text: str,
         model: PreTrainedModel,
         tokenizer: PreTrainedTokenizer,
         attribution_type: str = "lig",
     ):
 
-        super().__init__(question, model, tokenizer)
+        super().__init__(model, tokenizer)
         if attribution_type not in SUPPORTED_ATTRIBUTION_TYPES:
             raise AttributionTypeNotSupportedError(
                 f"""Attribution type '{attribution_type}' is not supported.
@@ -38,15 +35,9 @@ class QuestionAnsweringExplainer(BaseExplainer):
             )
         self.attribution_type = attribution_type
 
-        self.label2id = model.config.label2id
-        self.id2label = model.config.id2label
-
         self.attributions: Union[None, LIGAttributions] = None
         self.input_ids: torch.Tensor = torch.Tensor()
 
-        self._single_node_output = False
-        self.text = text
-        self.question = question
         self.position = 0
 
     def encode(self, text: str) -> list:  # type: ignore
@@ -54,6 +45,19 @@ class QuestionAnsweringExplainer(BaseExplainer):
 
     def decode(self, input_ids: torch.Tensor) -> list:
         return self.tokenizer.convert_ids_to_tokens(input_ids[0])
+
+    @property
+    def word_attributions(self) -> dict:
+        if self.start_attributions is not None and self.end_attributions is not None:
+            return {
+                "start": self.start_attributions.word_attributions,
+                "end": self.end_attributions.word_attributions,
+            }
+
+        else:
+            raise ValueError(
+                "Attributions have not yet been calculated. Please call the explainer on text first."
+            )
 
     @property
     def start_pos(self):
@@ -186,9 +190,7 @@ class QuestionAnsweringExplainer(BaseExplainer):
 
             return preds.max(1).values
 
-    def _run(
-        self, question: str = None, text: str = None, embedding_type: int = None
-    ) -> LIGAttributions:
+    def _run(self, question: str, text: str, embedding_type: int = None) -> dict:
         if embedding_type is None:
             embeddings = self.word_embeddings
         elif embedding_type == 0:
@@ -198,19 +200,17 @@ class QuestionAnsweringExplainer(BaseExplainer):
                 embeddings = self.position_embeddings
             else:
                 warnings.warn(
-                    f"This model doesn't support position embeddings for attributions. Defaulting to word embeddings"
+                    "This model doesn't support position embeddings for attributions. Defaulting to word embeddings"
                 )
                 embeddings = self.word_embeddings
         else:
             embeddings = self.word_embeddings
 
-        if question is not None:
-            self.question = question
-        if text is not None:
-            self.text = text
+        self.question = question
+        self.text = text
 
         self._calculate_attributions(embeddings)
-        return self.attributions  # type: ignore
+        return self.word_attributions
 
     def _calculate_attributions(self, embeddings: Embedding):  # type: ignore
 
@@ -272,7 +272,5 @@ class QuestionAnsweringExplainer(BaseExplainer):
         else:
             pass
 
-    def __call__(
-        self, question: str = None, text: str = None, embedding_type: int = None
-    ) -> LIGAttributions:
+    def __call__(self, question: str, text: str, embedding_type: int = 0) -> dict:
         return self._run(question, text, embedding_type)

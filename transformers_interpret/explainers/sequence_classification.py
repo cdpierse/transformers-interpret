@@ -58,7 +58,7 @@ class SequenceClassificationExplainer(BaseExplainer):
             attribution_type (str, optional): The attribution method to calculate on. Defaults to "lig".
 
         Raises:
-            AttributionTypeNotSupportedError: 
+            AttributionTypeNotSupportedError:
         """
         super().__init__(model, tokenizer)
         if attribution_type not in SUPPORTED_ATTRIBUTION_TYPES:
@@ -91,9 +91,7 @@ class SequenceClassificationExplainer(BaseExplainer):
             return torch.argmax(torch.softmax(preds, dim=1)[0]).cpu().detach().numpy()
 
         else:
-            raise InputIdsNotCalculatedError(
-                "input_ids have not been created yet.`"
-            )
+            raise InputIdsNotCalculatedError("input_ids have not been created yet.`")
 
     @property
     def predicted_class_name(self):
@@ -105,7 +103,7 @@ class SequenceClassificationExplainer(BaseExplainer):
 
     @property
     def word_attributions(self) -> list:
-        if self.attributions != None:
+        if self.attributions is not None:
             return self.attributions.word_attributions
         else:
             raise ValueError(
@@ -273,7 +271,7 @@ class SequenceClassificationExplainer(BaseExplainer):
             embedding_type (int, optional): The embedding type word(0) or position(1) to calculate attributions for. Defaults to 0.
 
         Returns:
-            list: List of tuples containing words and their associated attribution scores. 
+            list: List of tuples containing words and their associated attribution scores.
         """
         return self._run(text, index, class_name, embedding_type=embedding_type)
 
