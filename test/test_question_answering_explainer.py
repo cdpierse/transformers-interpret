@@ -7,10 +7,10 @@ from transformers_interpret.errors import (
 )
 
 DISTILBERT_QA_MODEL = AutoModelForQuestionAnswering.from_pretrained(
-    "sshleifer/tiny-distilbert-base-cased-distilled-squad"
+    "mrm8488/bert-tiny-5-finetuned-squadv2"
 )
 DISTILBERT_QA_TOKENIZER = AutoTokenizer.from_pretrained(
-    "sshleifer/tiny-distilbert-base-cased-distilled-squad"
+    "mrm8488/bert-tiny-5-finetuned-squadv2"
 )
 
 
@@ -49,8 +49,8 @@ def test_question_answering_decode():
     qa_explainer = QuestionAnsweringExplainer(
         DISTILBERT_QA_MODEL, DISTILBERT_QA_TOKENIZER
     )
-    explainer_question = "what is the question ?"
-    explainer_text = "this is the text the text that contains the answer"
+    explainer_question = "what is his name ?"
+    explainer_text = "his name is bob"
     input_ids, _, _ = qa_explainer._make_input_reference_pair(
         explainer_question, explainer_text
     )
@@ -67,12 +67,86 @@ def test_question_answering_word_attributions():
     qa_explainer = QuestionAnsweringExplainer(
         DISTILBERT_QA_MODEL, DISTILBERT_QA_TOKENIZER
     )
-    explainer_question = "what is the question ?"
-    explainer_text = "this is the text the text that contains the answer"
-    word_attributions = qa_explainer(
-        explainer_question, explainer_text, embedding_type=0
-    )
+    explainer_question = "what is his name ?"
+    explainer_text = "his name is bob"
+    word_attributions = qa_explainer(explainer_question, explainer_text)
     assert isinstance(word_attributions, dict)
     assert "start" in word_attributions.keys()
     assert "end" in word_attributions.keys()
     assert len(word_attributions["start"]) == len(word_attributions["end"])
+
+
+def test_question_answering_word_attributions_input_ids_not_calculated():
+    qa_explainer = QuestionAnsweringExplainer(
+        DISTILBERT_QA_MODEL, DISTILBERT_QA_TOKENIZER
+    )
+
+    with pytest.raises(ValueError):
+        qa_explainer.word_attributions
+
+
+def test_question_answering_start_pos():
+    qa_explainer = QuestionAnsweringExplainer(
+        DISTILBERT_QA_MODEL, DISTILBERT_QA_TOKENIZER
+    )
+    explainer_question = "what is his name ?"
+    explainer_text = "his name is Bob"
+    qa_explainer(explainer_question, explainer_text)
+    start_pos = qa_explainer.start_pos
+    assert start_pos == 10
+
+
+def test_question_answering_end_pos():
+    qa_explainer = QuestionAnsweringExplainer(
+        DISTILBERT_QA_MODEL, DISTILBERT_QA_TOKENIZER
+    )
+    explainer_question = "what is his name ?"
+    explainer_text = "his name is Bob"
+    qa_explainer(explainer_question, explainer_text)
+    end_pos = qa_explainer.end_pos
+    assert end_pos == 10
+
+
+def test_question_answering_start_pos_input_ids_not_calculated():
+    qa_explainer = QuestionAnsweringExplainer(
+        DISTILBERT_QA_MODEL, DISTILBERT_QA_TOKENIZER
+    )
+    with pytest.raises(InputIdsNotCalculatedError):
+        qa_explainer.start_pos
+
+
+def test_question_answering_end_pos_input_ids_not_calculated():
+    qa_explainer = QuestionAnsweringExplainer(
+        DISTILBERT_QA_MODEL, DISTILBERT_QA_TOKENIZER
+    )
+    with pytest.raises(InputIdsNotCalculatedError):
+        qa_explainer.end_pos
+
+
+def test_question_answering_predicted_answer():
+    qa_explainer = QuestionAnsweringExplainer(
+        DISTILBERT_QA_MODEL, DISTILBERT_QA_TOKENIZER
+    )
+    explainer_question = "what is his name ?"
+    explainer_text = "his name is Bob"
+    qa_explainer(explainer_question, explainer_text)
+    predicted_answer = qa_explainer.predicted_answer
+    assert predicted_answer == "bob"
+
+
+def test_question_answering_predicted_answer_input_ids_not_calculated():
+    qa_explainer = QuestionAnsweringExplainer(
+        DISTILBERT_QA_MODEL, DISTILBERT_QA_TOKENIZER
+    )
+    with pytest.raises(InputIdsNotCalculatedError):
+        qa_explainer.predicted_answer
+
+
+def test_question_answering_visualize():
+    qa_explainer = QuestionAnsweringExplainer(
+        DISTILBERT_QA_MODEL, DISTILBERT_QA_TOKENIZER
+    )
+    explainer_question = "what is his name ?"
+    explainer_text = "his name is Bob"
+    qa_explainer(explainer_question, explainer_text)
+    qa_explainer.visualize()

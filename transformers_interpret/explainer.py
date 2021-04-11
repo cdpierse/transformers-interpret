@@ -196,11 +196,11 @@ class BaseExplainer(ABC):
             self.position_embeddings = model_base.wpe.weight
         else:
             if hasattr(model_base, "embeddings"):
-                model_embeddings = getattr(model_base, "embeddings")
-            if hasattr(model_embeddings, "position_embeddings"):
-                self.position_embeddings = model_embeddings.position_embeddings
-            if hasattr(model_embeddings, "token_type_embeddings"):
-                self.token_type_embeddings = model_embeddings.token_type_embeddings
+                self.model_embeddings = getattr(model_base, "embeddings")
+            if hasattr(self.model_embeddings, "position_embeddings"):
+                self.position_embeddings = self.model_embeddings.position_embeddings
+            if hasattr(self.model_embeddings, "token_type_embeddings"):
+                self.token_type_embeddings = self.model_embeddings.token_type_embeddings
 
     def __str__(self):
         s = f"{self.__class__.__name__}("

@@ -36,6 +36,8 @@ class QuestionAnsweringExplainer(BaseExplainer):
         self.attribution_type = attribution_type
 
         self.attributions: Union[None, LIGAttributions] = None
+        self.start_attributions = None
+        self.end_attributions = None
         self.input_ids: torch.Tensor = torch.Tensor()
 
         self.position = 0
@@ -228,10 +230,8 @@ class QuestionAnsweringExplainer(BaseExplainer):
 
         return preds.max(1).values
 
-    def _run(self, question: str, text: str, embedding_type: int = None) -> dict:
-        if embedding_type is None:
-            embeddings = self.word_embeddings
-        elif embedding_type == 0:
+    def _run(self, question: str, text: str, embedding_type: int) -> dict:
+        if embedding_type == 0:
             embeddings = self.word_embeddings
         elif embedding_type == 1:
             if self.accepts_position_ids and self.position_embeddings is not None:
@@ -241,6 +241,9 @@ class QuestionAnsweringExplainer(BaseExplainer):
                     "This model doesn't support position embeddings for attributions. Defaulting to word embeddings"
                 )
                 embeddings = self.word_embeddings
+        elif embedding_type == 2:
+            embeddings = self.model_embeddings
+
         else:
             embeddings = self.word_embeddings
 
@@ -310,5 +313,5 @@ class QuestionAnsweringExplainer(BaseExplainer):
         else:
             pass
 
-    def __call__(self, question: str, text: str, embedding_type: int = 0) -> dict:
+    def __call__(self, question: str, text: str, embedding_type: int = 2) -> dict:
         return self._run(question, text, embedding_type)
