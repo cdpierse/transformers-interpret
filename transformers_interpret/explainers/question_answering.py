@@ -62,10 +62,11 @@ class QuestionAnsweringExplainer(BaseExplainer):
     @property
     def start_pos(self):
         if len(self.input_ids) > 0:
-            preds = self.model(
+            preds = self._get_preds(
                 self.input_ids,
-                position_ids=self.position_ids,
-                token_type_ids=self.token_type_ids,
+                self.token_type_ids,
+                self.position_ids,
+                self.attention_mask,
             )
 
             preds = preds[0]
@@ -76,10 +77,11 @@ class QuestionAnsweringExplainer(BaseExplainer):
     @property
     def end_pos(self):
         if len(self.input_ids) > 0:
-            preds = self.model(
+            preds = self._get_preds(
                 self.input_ids,
-                position_ids=self.position_ids,
-                token_type_ids=self.token_type_ids,
+                self.token_type_ids,
+                self.position_ids,
+                self.attention_mask,
             )
 
             preds = preds[1]
@@ -90,10 +92,11 @@ class QuestionAnsweringExplainer(BaseExplainer):
     @property
     def predicted_answer(self):
         if len(self.input_ids) > 0:
-            preds = self.model(
+            preds = self._get_preds(
                 self.input_ids,
-                position_ids=self.position_ids,
-                token_type_ids=self.token_type_ids,
+                self.token_type_ids,
+                self.position_ids,
+                self.attention_mask,
             )
 
             start = preds[0].argmax()
@@ -170,6 +173,47 @@ class QuestionAnsweringExplainer(BaseExplainer):
             len(question_ids),
         )
 
+    def _get_preds(
+        self,
+        input_ids: torch.Tensor,
+        token_type_ids=None,
+        position_ids: torch.Tensor = None,
+        attention_mask: torch.Tensor = None,
+    ):
+        if self.accepts_position_ids and self.accepts_token_type_ids:
+            preds = self.model(
+                input_ids,
+                token_type_ids=token_type_ids,
+                position_ids=position_ids,
+                attention_mask=attention_mask,
+            )
+
+            return preds
+
+        elif self.accepts_position_ids:
+            preds = self.model(
+                input_ids,
+                position_ids=position_ids,
+                attention_mask=attention_mask,
+            )
+
+            return preds
+        elif self.accepts_token_type_ids:
+            preds = self.model(
+                input_ids,
+                token_type_ids=token_type_ids,
+                attention_mask=attention_mask,
+            )
+
+            return preds
+        else:
+            preds = self.model(
+                input_ids,
+                attention_mask=attention_mask,
+            )
+
+            return preds
+
     def _forward(  # type: ignore
         self,
         input_ids: torch.Tensor,
@@ -178,17 +222,11 @@ class QuestionAnsweringExplainer(BaseExplainer):
         attention_mask: torch.Tensor = None,
     ):
 
-        if self.accepts_position_ids:
-            preds = self.model(
-                input_ids,
-                token_type_ids=token_type_ids,
-                position_ids=position_ids,
-                attention_mask=attention_mask,
-            )
+        preds = self._get_preds(input_ids, token_type_ids, position_ids, attention_mask)
 
-            preds = preds[self.position]
+        preds = preds[self.position]
 
-            return preds.max(1).values
+        return preds.max(1).values
 
     def _run(self, question: str, text: str, embedding_type: int = None) -> dict:
         if embedding_type is None:
