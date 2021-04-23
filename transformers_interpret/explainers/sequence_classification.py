@@ -20,6 +20,29 @@ class SequenceClassificationExplainer(BaseExplainer):
     """
     Explainer for explaining attributions for models of type
     `{MODEL_NAME}ForSequenceClassification` from the Transformers package.
+
+    Calculates attribution for `text` or `self.text` using the given model
+    and tokenizer. If `text` is not passed to the instantiated explainer
+    it is expected that text was passed in the constructor.
+
+    Attributions can be forced along the axis of a particular output index or class name.
+    To do this provide either a valid `index` for the class label's output or if the outputs
+    have provided labels you can pass a `class_name`.
+
+    This explainer also allows for attributions with respect to a particlar embedding type.
+    This can be selected by passing a `embedding_type`. The default value is `0` which
+    is for word_embeddings, if `1` is passed then attributions are w.r.t to position_embeddings.
+    If a model does not take position ids in its forward method (distilbert) a warning will
+    occur and the default word_embeddings will be chosen instead.
+
+    Args:
+        text (str, optional): Text to provide attributions for. Defaults to None.
+        index (int, optional): Optional output index to provide attributions for. Defaults to None.
+        class_name (str, optional): Optional output class name to provide attributions for. Defaults to None.
+        embedding_type (int, optional): The embedding type word(0) or position(1) to calculate attributions for. Defaults to 0.
+
+    Returns:
+        LIGAttributions:
     """
 
     def __init__(
@@ -28,6 +51,15 @@ class SequenceClassificationExplainer(BaseExplainer):
         tokenizer: PreTrainedTokenizer,
         attribution_type: str = "lig",
     ):
+        """
+        Args:
+            model (PreTrainedModel): Pretrained huggingface Sequence Classification model.
+            tokenizer (PreTrainedTokenizer): Pretrained huggingface tokenizer
+            attribution_type (str, optional): The attribution method to calculate on. Defaults to "lig".
+
+        Raises:
+            AttributionTypeNotSupportedError:
+        """
         super().__init__(model, tokenizer)
         if attribution_type not in SUPPORTED_ATTRIBUTION_TYPES:
             raise AttributionTypeNotSupportedError(
@@ -49,6 +81,64 @@ class SequenceClassificationExplainer(BaseExplainer):
 
     def decode(self, input_ids: torch.Tensor) -> list:
         return self.tokenizer.convert_ids_to_tokens(input_ids[0])
+
+    @property
+    def predicted_class_index(self) -> int:
+        if len(self.input_ids) > 0:
+            # we call this before _forward() so it has to be calculated twice
+            preds = self.model(self.input_ids)[0]
+            self.pred_class = torch.argmax(torch.softmax(preds, dim=0)[0])
+            return torch.argmax(torch.softmax(preds, dim=1)[0]).cpu().detach().numpy()
+
+        else:
+            raise InputIdsNotCalculatedError("input_ids have not been created yet.`")
+
+    @property
+    def predicted_class_name(self):
+        try:
+            index = self.predicted_class_index
+            return self.id2label[int(index)]
+        except Exception:
+            return self.predicted_class_index
+
+    @property
+    def word_attributions(self) -> list:
+        if self.attributions is not None:
+            return self.attributions.word_attributions
+        else:
+            raise ValueError(
+                "Attributions have not yet been calculated. Please call the explainer on text first."
+            )
+
+    def visualize(self, html_filepath: str = None, true_class: str = None):
+        tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
+        attr_class = self.id2label[self.selected_index]
+
+        if self._single_node_output:
+            if true_class is None:
+                true_class = round(float(self.pred_probs))
+            predicted_class = round(float(self.pred_probs))
+            attr_class = round(float(self.pred_probs))
+        else:
+            if true_class is None:
+                true_class = self.selected_index
+            predicted_class = self.predicted_class_name
+
+        score_viz = self.attributions.visualize_attributions(  # type: ignore
+            self.pred_probs,
+            predicted_class,
+            true_class,
+            attr_class,
+            tokens,
+        )
+        html = viz.visualize_text([score_viz])
+
+        if html_filepath:
+            if not html_filepath.endswith(".html"):
+                html_filepath = html_filepath + ".html"
+            with open(html_filepath, "w") as html_file:
+                html_file.write(html.data)
+        return html
 
     def _forward(  # type: ignore
         self,
@@ -76,67 +166,6 @@ class SequenceClassificationExplainer(BaseExplainer):
 
         self.pred_probs = torch.softmax(preds, dim=1)[0][self.selected_index]
         return torch.softmax(preds, dim=1)[:, self.selected_index]
-
-    @property
-    def predicted_class_index(self) -> int:
-        if len(self.input_ids) > 0:
-            # we call this before _forward() so it has to be calculated twice
-            preds = self.model(self.input_ids)[0]
-            self.pred_class = torch.argmax(torch.softmax(preds, dim=0)[0])
-            return torch.argmax(torch.softmax(preds, dim=1)[0]).cpu().detach().numpy()
-
-        else:
-            raise InputIdsNotCalculatedError(
-                "input_ids have not been created yet. Please call `get_attributions()`"
-            )
-
-    @property
-    def predicted_class_name(self):
-        try:
-            index = self.predicted_class_index
-            return self.id2label[int(index)]
-        except Exception:
-            return self.predicted_class_index
-
-    @property
-    def word_attributions(self) -> list:
-        if self.attributions != None:
-            return self.attributions.word_attributions
-        else:
-            raise ValueError(
-                "Attributions have not yet been calculated. Please call the explainer on text first."
-            )
-
-    def visualize(self, html_filepath: str = None, true_class: str = None):
-        tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
-        attr_class = self.id2label[self.selected_index]
-
-        if self._single_node_output:
-            if true_class is None:
-                true_class = round(float(self.pred_probs))
-            predicted_class = round(float(self.pred_probs))
-            attr_class = round(float(self.pred_probs))
-        else:
-            if true_class is None:
-                true_class = self.selected_index
-            predicted_class = self.predicted_class_name
-
-        score_viz = self.attributions.visualize_attributions(  # type: ignore
-            self.pred_probs,
-            predicted_class,
-            true_class,
-            attr_class,
-            self.text,
-            tokens,
-        )
-        html = viz.visualize_text([score_viz])
-
-        if html_filepath:
-            if not html_filepath.endswith(".html"):
-                html_filepath = html_filepath + ".html"
-            with open(html_filepath, "w") as html_file:
-                html_file.write(html.data)
-        return html
 
     def _calculate_attributions(  # type: ignore
         self, embeddings: Embedding, index: int = None, class_name: str = None
@@ -242,7 +271,7 @@ class SequenceClassificationExplainer(BaseExplainer):
             embedding_type (int, optional): The embedding type word(0) or position(1) to calculate attributions for. Defaults to 0.
 
         Returns:
-            list: List of tuples containing words and their associated attribution scores. 
+            list: List of tuples containing words and their associated attribution scores.
         """
         return self._run(text, index, class_name, embedding_type=embedding_type)
 

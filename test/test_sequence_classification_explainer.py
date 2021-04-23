@@ -1,18 +1,7 @@
-from unittest.mock import patch
-
 import pytest
-import torch
 from IPython.core.display import HTML
-from torch import Tensor
-from transformers import (
-    AutoModelForSequenceClassification,
-    AutoTokenizer,
-    PreTrainedModel,
-    PreTrainedTokenizer,
-    PreTrainedTokenizerFast,
-)
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from transformers_interpret import SequenceClassificationExplainer
-from transformers_interpret.attributions import LIGAttributions
 from transformers_interpret.errors import (
     AttributionTypeNotSupportedError,
     InputIdsNotCalculatedError,
@@ -40,7 +29,7 @@ def test_sequence_classification_explainer_init_distilbert():
     assert seq_explainer.attribution_type == "lig"
     assert seq_explainer.label2id == DISTILBERT_MODEL.config.label2id
     assert seq_explainer.id2label == DISTILBERT_MODEL.config.id2label
-    assert seq_explainer.attributions == None
+    assert seq_explainer.attributions is None
 
 
 def test_sequence_classification_explainer_init_bert():
@@ -167,10 +156,7 @@ def test_sequence_classification_explain_embedding_incorrect_value():
     word_attributions = seq_explainer(explainer_string, embedding_type=0)
     incorrect_word_attributions = seq_explainer(explainer_string, embedding_type=-42)
 
-    assert (
-        incorrect_word_attributions
-        == word_attributions
-    )
+    assert incorrect_word_attributions == word_attributions
 
 
 def test_sequence_classification_predicted_class_name_no_id2label_defaults_idx():

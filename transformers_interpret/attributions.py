@@ -68,8 +68,18 @@ class LIGAttributions(Attributions):
                 return_convergence_delta=True,
                 additional_forward_args=(self.attention_mask),
             )
-        else:
+        elif self.token_type_ids is not None:
+            self._attributions, self.delta = self.lig.attribute(
+                inputs=(self.input_ids, self.token_type_ids),
+                baselines=(
+                    self.ref_input_ids,
+                    self.ref_token_type_ids,
+                ),
+                return_convergence_delta=True,
+                additional_forward_args=(self.attention_mask),
+            )
 
+        else:
             self._attributions, self.delta = self.lig.attribute(
                 inputs=self.input_ids,
                 baselines=self.ref_input_ids,
@@ -96,7 +106,7 @@ class LIGAttributions(Attributions):
         )
 
     def visualize_attributions(
-        self, pred_prob, pred_class, true_class, attr_class, text, all_tokens
+        self, pred_prob, pred_class, true_class, attr_class, all_tokens
     ):
 
         return viz.VisualizationDataRecord(
