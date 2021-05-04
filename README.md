@@ -31,7 +31,7 @@ In line with the philosophy of the transformers package Tranformers Interpret al
       - [Visualize Classification attributions](#visualize-classification-attributions)
       - [Explaining Attributions for Non Predicted Class](#explaining-attributions-for-non-predicted-class)
     - [Question Answering Explainer (Experimental)](#question-answering-explainer-experimental)
-      - [Visualizing Question Answering attributions](#visualizing-question-answering-attributions)
+      - [Visualize Question Answering attributions](#visualize-question-answering-attributions)
   - [Future Development](#future-development)
   - [Questions / Get In Touch](#questions--get-in-touch)
   - [Miscellaneous](#miscellaneous)
@@ -280,7 +280,7 @@ We can get the text span for the predicted answer with:
 'usage of machines to process and understand human language'
 ```
 
-#### Visualizing Question Answering attributions
+#### Visualize Question Answering attributions
 
 Sometimes the numeric attributions can be difficult to read particularly in instances where there is a lot of text. To help with that we also provide the `visualize()` method that utilizes Captum's in built viz library to create a HTML file highlighting the attributions.
 
