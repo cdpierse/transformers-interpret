@@ -99,7 +99,7 @@ And if the model has label names for each class, we can see these too using `pre
 'POSITIVE'
 ```
 
-### Visualizing Sequence Classification attributions
+#### Visualizing Sequence Classification attributions
 
 Sometimes the numeric attributions can be difficult to read particularly in instances where there is a lot of text. To help with that we also provide the `visualize()` method that utilizes Captum's in built viz library to create a HTML file highlighting the attributions.
 
@@ -112,7 +112,7 @@ cls_explainer.visualize("distilbert_viz.html")
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/distilbert_example.png" width="80%" height="80%" align="center"/>
 
 
-### Explaining Attributions for Non Predicted Class
+#### Explaining Attributions for Non Predicted Class
 
 Attribution explanations are not limited to the predicted class. Let's test a more complex sentence that contains mixed sentiments.
 
@@ -267,7 +267,7 @@ We can get the text span for the predicted answer with:
 'usage of machines to process and understand human language'
 ```
 
-### Visualizing Question Answering attributions
+#### Visualizing Question Answering attributions
 
 Sometimes the numeric attributions can be difficult to read particularly in instances where there is a lot of text. To help with that we also provide the `visualize()` method that utilizes Captum's in built viz library to create a HTML file highlighting the attributions.
 
