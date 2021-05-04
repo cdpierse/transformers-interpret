@@ -27,8 +27,8 @@ In line with the philosophy of the transformers package Tranformers Interpret al
 
 - [Documentation](#documentation)
   - [Quick Start](#quick-start)
-    - [Classification Explainer](#classification-explainer)
-      - [Visualizing Sequence Classification attributions](#visualizing-sequence-classification-attributions)
+    - [Sequence Classification Explainer](#sequence-classification-explainer)
+      - [Visualize Classification attributions](#visualize-classification-attributions)
       - [Explaining Attributions for Non Predicted Class](#explaining-attributions-for-non-predicted-class)
     - [Question Answering Explainer (Experimental)](#question-answering-explainer-experimental)
       - [Visualizing Question Answering attributions](#visualizing-question-answering-attributions)
@@ -59,7 +59,7 @@ The package does not work with Python 2.7 or below.
 
 <a name="classification"/>
 
-### Classification Explainer
+### Sequence Classification Explainer
 
 Let's start by initializing a transformers' model and tokenizer, and running it through the `SequenceClassificationExplainer`.
 
@@ -111,7 +111,7 @@ And if the model has label names for each class, we can see these too using `pre
 'POSITIVE'
 ```
 
-#### Visualizing Sequence Classification attributions
+#### Visualize Classification attributions
 
 Sometimes the numeric attributions can be difficult to read particularly in instances where there is a lot of text. To help with that we also provide the `visualize()` method that utilizes Captum's in built viz library to create a HTML file highlighting the attributions.
 
