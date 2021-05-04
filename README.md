@@ -292,7 +292,7 @@ For the `QuestionAnsweringExplainer` the visualize() method returns a table with
 cls_explainer.visualize("bert_qa_viz.html")
 ```
 
-<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_qa_explainer.png" width="80%" height="80%" align="center" />
+<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_qa_explainer.png" width="100%" height="100%" align="center" />
 
 <a name="future"/>
 
