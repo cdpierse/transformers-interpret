@@ -120,8 +120,9 @@ If you are in a notebook, calls to the `visualize()` method will display the vis
 ```python
 cls_explainer.visualize("distilbert_viz.html")
 ```
-
+<a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/distilbert_example.png">
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/distilbert_example.png" width="80%" height="80%" align="center"/>
+</a>
 
 #### Explaining Attributions for Non Predicted Class
 
@@ -147,8 +148,9 @@ class.
 ```python
 cls_explainer.visualize("distilbert_negative_attr.html")
 ```
-
+<a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/distilbert_example_negative.png">
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/distilbert_example_negative.png" width="80%" height="80%" align="center" />
+</a>
 
 Getting attributions for different classes is particularly insightful for multiclass problems as it allows you to inspect model predictions for a number of different classes and sanity-check that the model is "looking" at the right things.
 
@@ -291,8 +293,9 @@ For the `QuestionAnsweringExplainer` the visualize() method returns a table with
 ```python
 cls_explainer.visualize("bert_qa_viz.html")
 ```
-
+<a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/distilbert_example.png">
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_qa_explainer.png" width="120%" height="120%" align="center" />
+</a>
 
 <a name="future"/>
 
