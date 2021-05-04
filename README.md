@@ -287,7 +287,7 @@ We can get the text span for the predicted answer with:
 For the `QuestionAnsweringExplainer` the visualize() method returns a table with two rows. The first row represents the attributions for the answers' start position and the second row represents the attributions for the answers' end position.
 
 ```python
-cls_explainer.visualize("bert_qa_viz.html")
+qa_explainer.visualize("bert_qa_viz.html")
 ```
 <a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_qa_explainer.png">
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_qa_explainer.png" width="120%" height="120%" align="center" />
