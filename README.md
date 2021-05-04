@@ -26,11 +26,11 @@ In line with the philosophy of the transformers package Tranformers Interpret al
 
 #### Table of Contents  
 
-[Install](#install)  
-[Classification Explainer](#classification)
-[Question Answering Explainer](#qa)
-[Future Work](#future)
-[Contact](#contact)
+[Install](#install)\\
+[Classification Explainer](#classification)\\
+[Question Answering Explainer](#qa)\\
+[Future Work](#future)\\
+[Contact](#contact)\\
 
 
 <a name="install"/>
