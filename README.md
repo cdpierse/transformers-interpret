@@ -25,10 +25,15 @@ Transformers Interpret is a model explainability tool designed to work exclusive
 In line with the philosophy of the transformers package Tranformers Interpret allows any transformers model to be explained in just two lines. It even supports visualizations in both notebooks and as savable html files.
 #### Table of Contents  
 [Install](#install)  
+
 [Classification Explainer](#classification)
+
 [Question Answering Explainer](#qa)
+
 [Future Work](#future)
+
 [Contact](#contact)  
+
 
 <a name="install"/>
 
