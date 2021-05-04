@@ -23,7 +23,14 @@
 Transformers Interpret is a model explainability tool designed to work exclusively with the 🤗  [transformers][transformers] package.
 
 In line with the philosophy of the transformers package Tranformers Interpret allows any transformers model to be explained in just two lines. It even supports visualizations in both notebooks and as savable html files.
+#### Table of Contents  
+[Install](#install)  
+[Classification Explainer](#classification)
+[Question Answering Explainer](#qa)
+[Future Work](#future)
+[Contact](#contact)  
 
+<a name="install"/>
 
 ## Install
 
@@ -46,6 +53,8 @@ The package does not work with Python 2.7 or below.
 # Documentation
 
 ## Quick Start
+
+<a name="classification"/>
 
 ### Classification Explainer 
 
@@ -142,6 +151,8 @@ cls_explainer.visualize("distilbert_negative_attr.html")
 Getting attributions for different classes is particularly insightful for multiclass problems as it allows you to inspect model predictions for a number of different classes and sanity-check that the model is "looking" at the right things.
 
 For a detailed explanation of this example please checkout this [multiclass classification notebook.](notebooks/multiclass_classification_example.ipynb)
+
+<a name="qa"/>
 
 ### Question Answering Explainer (Experimental)
 
@@ -282,6 +293,7 @@ cls_explainer.visualize("bert_qa_viz.html")
 
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_qa_explainer.png" width="80%" height="80%" align="center" />
 
+<a name="future"/>
 
 ## Future Development
 
@@ -296,6 +308,8 @@ This package is still in its early days and there is much more planned. For a 1.
 * In depth examples
 * ~~A nice logo~~ (thanks @Voyz)
 * and more... feel free to submit your suggestions!
+
+<a name="contact"/>
 
 ## Questions / Get In Touch
 
