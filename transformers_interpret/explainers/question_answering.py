@@ -233,18 +233,24 @@ class QuestionAnsweringExplainer(BaseExplainer):
     def _run(self, question: str, text: str, embedding_type: int) -> dict:
         if embedding_type == 0:
             embeddings = self.word_embeddings
-        elif embedding_type == 1:
-            if self.accepts_position_ids and self.position_embeddings is not None:
-                embeddings = self.position_embeddings
-            else:
-                warnings.warn(
-                    "This model doesn't support position embeddings for attributions. Defaulting to word embeddings"
-                )
-                embeddings = self.word_embeddings
-        elif embedding_type == 2:
-            embeddings = self.model_embeddings
+        try:
+            if embedding_type == 1:
+                if self.accepts_position_ids and self.position_embeddings is not None:
+                    embeddings = self.position_embeddings
+                else:
+                    warnings.warn(
+                        "This model doesn't support position embeddings for attributions. Defaulting to word embeddings"
+                    )
+                    embeddings = self.word_embeddings
+            elif embedding_type == 2:
+                embeddings = self.model_embeddings
 
-        else:
+            else:
+                embeddings = self.word_embeddings
+        except Exception:
+            warnings.warn(
+                "This model doesn't support the embedding type you selected for attributions. Defaulting to word embeddings"
+            )
             embeddings = self.word_embeddings
 
         self.question = question
