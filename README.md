@@ -47,6 +47,8 @@ The package does not work with Python 2.7 or below.
 
 ## Quick Start
 
+### Classification Explainer 
+
 Let's start by initializing a transformers' model and tokenizer, and running it through the `SequenceClassificationExplainer`.
 
 For this example we are using `distilbert-base-uncased-finetuned-sst-2-english`, a distilbert model finetuned on a sentiment analysis task.
@@ -97,7 +99,7 @@ And if the model has label names for each class, we can see these too using `pre
 'POSITIVE'
 ```
 
-### Visualizing attributions
+### Visualizing Sequence Classification attributions
 
 Sometimes the numeric attributions can be difficult to read particularly in instances where there is a lot of text. To help with that we also provide the `visualize()` method that utilizes Captum's in built viz library to create a HTML file highlighting the attributions.
 
@@ -141,19 +143,159 @@ Getting attributions for different classes is particularly insightful for multic
 
 For a detailed explanation of this example please checkout this [multiclass classification notebook.](notebooks/multiclass_classification_example.ipynb)
 
+### Question Answering Explainer (Experimental)
+
+*This is currently an experimental explainer  under active development and is not yet fully tested. The explainers' API is subject to change as are the attribution methods, if you find any bugs please let me know.*
+
+Let's start by initializing a transformers' Question Answering model and tokenizer, and running it through the `QuestionAnsweringExplainer`.
+
+For this example we are using `bert-large-uncased-whole-word-masking-finetuned-squad`, a bert model finetuned on a SQuAD.
+
+```python
+from transformers import AutoModelForQuestionAnswering, AutoTokenizer
+from transformers_interpret import QuestionAnsweringExplainer
+
+tokenizer = AutoTokenizer.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad")
+model = AutoModelForQuestionAnswering.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad")
+
+qa_explainer = QuestionAnsweringExplainer(
+    model,
+    tokenizer,
+)
+
+context = """
+In Artificial Intelligence and machine learning, Natural Language Processing relates to the usage of machines to process and understand human language. 
+Many researchers currently work in this space.
+"""
+
+word_attributions = qa_explainer(
+    "What is natural language processing ?",
+    context,
+)
+```
+
+Which will return the following dict containing word attributions for both the predicted start and end positions for the answer.
+
+```python
+>>> word_attributions
+{'start': [('[CLS]', 0.0),
+  ('what', 0.9177170660377296),
+  ('is', 0.13382234898765258),
+  ('natural', 0.08061747350142005),
+  ('language', 0.013138062762511409),
+  ('processing', 0.11135923869816286),
+  ('?', 0.00858057388924361),
+  ('[SEP]', -0.09646373141894966),
+  ('in', 0.01545633993975799),
+  ('artificial', 0.0472082598707737),
+  ('intelligence', 0.026687249355110867),
+  ('and', 0.01675371260058537),
+  ('machine', -0.08429502436554961),
+  ('learning', 0.0044827685126163355),
+  (',', -0.02401013152520878),
+  ('natural', -0.0016756080249823537),
+  ('language', 0.0026815068421401885),
+  ('processing', 0.06773157580722854),
+  ('relates', 0.03884601576992908),
+  ('to', 0.009783797821526368),
+  ('the', -0.026650922910540952),
+  ('usage', -0.010675019721821147),
+  ('of', 0.015346787885898537),
+  ('machines', -0.08278008270160107),
+  ('to', 0.12861387892768839),
+  ('process', 0.19540146386642743),
+  ('and', 0.009942879959615826),
+  ('understand', 0.006836894853320319),
+  ('human', 0.05020451122579102),
+  ('language', -0.012980795199301),
+  ('.', 0.00804358248127772),
+  ('many', 0.02259009321498161),
+  ('researchers', -0.02351650942555469),
+  ('currently', 0.04484573078852946),
+  ('work', 0.00990399948294476),
+  ('in', 0.01806961211334615),
+  ('this', 0.13075899776164499),
+  ('space', 0.004298315347838973),
+  ('.', -0.003767904539347979),
+  ('[SEP]', -0.08891544093454595)],
+ 'end': [('[CLS]', 0.0),
+  ('what', 0.8227231947501547),
+  ('is', 0.0586864942952253),
+  ('natural', 0.0938903563379123),
+  ('language', 0.058596976016400674),
+  ('processing', 0.1632374290269829),
+  ('?', 0.09695686057123237),
+  ('[SEP]', -0.11644447033554006),
+  ('in', -0.03769172371919206),
+  ('artificial', 0.06736158404049886),
+  ('intelligence', 0.02496399001288386),
+  ('and', -0.03526028847762427),
+  ('machine', -0.20846431491771975),
+  ('learning', 0.00904892847529654),
+  (',', -0.02949905488474854),
+  ('natural', 0.011024507784743872),
+  ('language', 0.0870741751282507),
+  ('processing', 0.11482449622317169),
+  ('relates', 0.05008962090922852),
+  ('to', 0.04079118393166258),
+  ('the', -0.005069048880616451),
+  ('usage', -0.011992752445836278),
+  ('of', 0.01715183316135495),
+  ('machines', -0.29823535624026265),
+  ('to', -0.0043760160855057925),
+  ('process', 0.10503217484645223),
+  ('and', 0.06840313586976698),
+  ('understand', 0.057184000619403944),
+  ('human', 0.0976805947708315),
+  ('language', 0.07031163646606695),
+  ('.', 0.10494566513897102),
+  ('many', 0.019227154676079487),
+  ('researchers', -0.038173913797800885),
+  ('currently', 0.03916641120002003),
+  ('work', 0.03705371672439422),
+  ('in', -0.0003155975107591203),
+  ('this', 0.17254932354022232),
+  ('space', 0.0014311439625599323),
+  ('.', 0.060637932829867736),
+  ('[SEP]', -0.09186286505530596)]}
+```
+
+We can get the text span for the predicted answer with:
+
+```python
+>>> qa_explainer.predicted_answer
+'usage of machines to process and understand human language'
+```
+
+### Visualizing Question Answering attributions
+
+Sometimes the numeric attributions can be difficult to read particularly in instances where there is a lot of text. To help with that we also provide the `visualize()` method that utilizes Captum's in built viz library to create a HTML file highlighting the attributions.
+
+If you are in a notebook, calls to the `visualize()` method will display the visualization in-line. Alternatively you can pass a filepath in as an argument and an HTML file will be created, allowing you to view the explanation HTML in your browser.
+
+For the `QuestionAnsweringExplainer` the visualize() method returns a table with two rows. The first row represents the attributions for the answers' start position and the second row represents the attributions for the answers' end position.
+
+```python
+cls_explainer.visualize("bert_qa_viz.html")
+```
+
+
+<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_qa_explainer.png" width="80%" height="80%" align="center" />
+
+
 ## Future Development
 
 This package is still in its early days and there is much more planned. For a 1.0.0 release we're aiming to have:
 
-- Clean and thorough documentation
-- Support for Question Answering models
-- Support for NER models
-- Support for Multiple Choice models
-- Ability to show attributions for multiple embedding type, rather than just the word embeddings. 
-- Additional attribution methods
-- In depth examples
-- ~~A nice logo~~ (thanks @Voyz)
-- and more... feel free to submit your suggestions!
+* Clean and thorough documentation
+* ~~Support for Question Answering models~~
+* Support for NER models
+* Support for Multiple Choice models
+* ~~Ability to show attributions for multiple embedding type, rather than just the word embeddings.~~
+* Additional attribution methods
+* In depth examples
+* ~~A nice logo~~ (thanks @Voyz)
+* and more... feel free to submit your suggestions!
 
 ## Questions / Get In Touch
 
