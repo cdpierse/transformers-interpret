@@ -293,7 +293,7 @@ For the `QuestionAnsweringExplainer` the visualize() method returns a table with
 ```python
 cls_explainer.visualize("bert_qa_viz.html")
 ```
-<a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/distilbert_example.png">
+<a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_qa_explainer.png">
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_qa_explainer.png" width="120%" height="120%" align="center" />
 </a>
 
