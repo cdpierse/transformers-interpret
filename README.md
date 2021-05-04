@@ -1,10 +1,8 @@
-
 <p align="center">
     <a id="transformers-intepret" href="#transformers-intepret">
         <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/tight%401920x_transparent.png" alt="Transformers Intepret Title" title="Transformers Intepret Title" width="600"/>
     </a>
 </p>
-
 
 <p align="center">
     <a href="https://opensource.org/licenses/Apache-2.0">
@@ -19,19 +17,24 @@
     </a>
 </p>
 
-
-Transformers Interpret is a model explainability tool designed to work exclusively with the 🤗  [transformers][transformers] package.
+Transformers Interpret is a model explainability tool designed to work exclusively with the 🤗 [transformers][transformers] package.
 
 In line with the philosophy of the transformers package Tranformers Interpret allows any transformers model to be explained in just two lines. It even supports visualizations in both notebooks and as savable html files.
 
-#### Table of Contents  
+#### Table of Contents
 
-[Install](#install)\\
-[Classification Explainer](#classification)\\
-[Question Answering Explainer](#qa)\\
-[Future Work](#future)\\
-[Contact](#contact)\\
+- [Install](#install)
 
+- [Documentation](#documentation)
+  - [Quick Start](#quick-start)
+    - [Classification Explainer](#classification-explainer)
+      - [Visualizing Sequence Classification attributions](#visualizing-sequence-classification-attributions)
+      - [Explaining Attributions for Non Predicted Class](#explaining-attributions-for-non-predicted-class)
+    - [Question Answering Explainer (Experimental)](#question-answering-explainer-experimental)
+      - [Visualizing Question Answering attributions](#visualizing-question-answering-attributions)
+  - [Future Development](#future-development)
+  - [Questions / Get In Touch](#questions--get-in-touch)
+  - [Miscellaneous](#miscellaneous)
 
 <a name="install"/>
 
@@ -43,15 +46,12 @@ pip install transformers-interpret
 
 Supported:
 
-* Python >= 3.6 
-* Pytorch >= 1.5.0 
-* [transformers][transformers] >= v3.0.0 
-* captum >= 0.3.1 
-
+- Python >= 3.6
+- Pytorch >= 1.5.0
+- [transformers][transformers] >= v3.0.0
+- captum >= 0.3.1
 
 The package does not work with Python 2.7 or below.
-
-
 
 # Documentation
 
@@ -59,7 +59,7 @@ The package does not work with Python 2.7 or below.
 
 <a name="classification"/>
 
-### Classification Explainer 
+### Classification Explainer
 
 Let's start by initializing a transformers' model and tokenizer, and running it through the `SequenceClassificationExplainer`.
 
@@ -75,7 +75,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 from transformers_interpret import SequenceClassificationExplainer
 cls_explainer = SequenceClassificationExplainer(
-    model, 
+    model,
     tokenizer)
 word_attributions = cls_explainer("I love you, I like you")
 ```
@@ -101,7 +101,7 @@ You can use `predicted_class_index` in case you'd want to know what the predicte
 
 ```python
 >>> cls_explainer.predicted_class_index
-array(1) 
+array(1)
 ```
 
 And if the model has label names for each class, we can see these too using `predicted_class_name`:
@@ -123,7 +123,6 @@ cls_explainer.visualize("distilbert_viz.html")
 
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/distilbert_example.png" width="80%" height="80%" align="center"/>
 
-
 #### Explaining Attributions for Non Predicted Class
 
 Attribution explanations are not limited to the predicted class. Let's test a more complex sentence that contains mixed sentiments.
@@ -135,7 +134,7 @@ cls_explainer = SequenceClassificationExplainer(model, tokenizer)
 attributions = cls_explainer("I love you, I like you, I also kinda dislike you", class_name="NEGATIVE")
 ```
 
-In this case, `predicted_class_name` still returns a prediction of the **POSITIVE** class, because the model has generated the same prediction but nonetheless we are interested in looking at the attributions for the negative class regardless of the predicted result. 
+In this case, `predicted_class_name` still returns a prediction of the **POSITIVE** class, because the model has generated the same prediction but nonetheless we are interested in looking at the attributions for the negative class regardless of the predicted result.
 
 ```python
 >>> cls_explainer.predicted_class_name
@@ -159,7 +158,7 @@ For a detailed explanation of this example please checkout this [multiclass clas
 
 ### Question Answering Explainer (Experimental)
 
-*This is currently an experimental explainer  under active development and is not yet fully tested. The explainers' API is subject to change as are the attribution methods, if you find any bugs please let me know.*
+_This is currently an experimental explainer under active development and is not yet fully tested. The explainers' API is subject to change as are the attribution methods, if you find any bugs please let me know._
 
 Let's start by initializing a transformers' Question Answering model and tokenizer, and running it through the `QuestionAnsweringExplainer`.
 
@@ -178,7 +177,7 @@ qa_explainer = QuestionAnsweringExplainer(
 )
 
 context = """
-In Artificial Intelligence and machine learning, Natural Language Processing relates to the usage of machines to process and understand human language. 
+In Artificial Intelligence and machine learning, Natural Language Processing relates to the usage of machines to process and understand human language.
 Many researchers currently work in this space.
 """
 
@@ -293,7 +292,6 @@ For the `QuestionAnsweringExplainer` the visualize() method returns a table with
 cls_explainer.visualize("bert_qa_viz.html")
 ```
 
-
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_qa_explainer.png" width="80%" height="80%" align="center" />
 
 <a name="future"/>
@@ -302,15 +300,15 @@ cls_explainer.visualize("bert_qa_viz.html")
 
 This package is still in its early days and there is much more planned. For a 1.0.0 release we're aiming to have:
 
-* Clean and thorough documentation
-* ~~Support for Question Answering models~~
-* Support for NER models
-* Support for Multiple Choice models
-* ~~Ability to show attributions for multiple embedding type, rather than just the word embeddings.~~
-* Additional attribution methods
-* In depth examples
-* ~~A nice logo~~ (thanks @Voyz)
-* and more... feel free to submit your suggestions!
+- Clean and thorough documentation
+- ~~Support for Question Answering models~~
+- Support for NER models
+- Support for Multiple Choice models
+- ~~Ability to show attributions for multiple embedding type, rather than just the word embeddings.~~
+- Additional attribution methods
+- In depth examples
+- ~~A nice logo~~ (thanks @Voyz)
+- and more... feel free to submit your suggestions!
 
 <a name="contact"/>
 
