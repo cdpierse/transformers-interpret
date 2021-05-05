@@ -5,7 +5,7 @@
 </p>
 
 
-<p align="center"> Explainability for Transformers models in 2 lines.</p>
+<p align="center"> Explainability for Transformer models in 2 lines.</p>
 
 <h1 align="center"></h1>
 
