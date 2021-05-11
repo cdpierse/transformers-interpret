@@ -1,8 +1,6 @@
 import warnings
-from enum import Enum
 from typing import Union
 
-import captum
 import torch
 from captum.attr import visualization as viz
 from torch.nn.modules.sparse import Embedding
