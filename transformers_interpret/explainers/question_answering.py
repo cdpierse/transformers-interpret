@@ -26,7 +26,15 @@ class QuestionAnsweringExplainer(BaseExplainer):
         tokenizer: PreTrainedTokenizer,
         attribution_type: str = "lig",
     ):
+        """
+        Args:
+            model (PreTrainedModel): Pretrained huggingface Question Answering model.
+            tokenizer (PreTrainedTokenizer): Pretrained huggingface tokenizer
+            attribution_type (str, optional): The attribution method to calculate on. Defaults to "lig".
 
+        Raises:
+            AttributionTypeNotSupportedError: [description]
+        """
         super().__init__(model, tokenizer)
         if attribution_type not in SUPPORTED_ATTRIBUTION_TYPES:
             raise AttributionTypeNotSupportedError(
@@ -103,7 +111,7 @@ class QuestionAnsweringExplainer(BaseExplainer):
 
     @property
     def predicted_answer(self):
-        "Returns predicted answer span from provided `context`"
+        "Returns predicted answer span from provided `text`"
         if len(self.input_ids) > 0:
             preds = self._get_preds(
                 self.input_ids,
@@ -337,4 +345,23 @@ class QuestionAnsweringExplainer(BaseExplainer):
             pass
 
     def __call__(self, question: str, text: str, embedding_type: int = 2) -> dict:
+        """
+        Calculates start and end attributions for `question` and `text` using the model
+        and tokenizer given in the constructor.
+
+        This explainer also allows for attributions with respect to a particlar embedding type.
+        This can be selected by passing a `embedding_type`. The default value is `2` which
+        attempts to calculate for all embeddings. If `0` is passed then attributions are w.r.t word_embeddings,
+        if `1` is passed then attributions are w.r.t position_embeddings.
+
+
+        Args:
+            question (str): The question text
+            text (str): The text or context from which the model finds an answers
+            embedding_type (int, optional): The embedding type word(0), position(1), all(2) to calculate attributions for.
+            Defaults to 2.
+
+        Returns:
+            dict: Dict for start and end position word attributions.
+        """
         return self._run(question, text, embedding_type)
