@@ -120,7 +120,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         as a html file.
 
         If the true class is known for the text that can be passed to `true_class`
-        
+
         """
         tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
         attr_class = self.id2label[self.selected_index]

@@ -346,7 +346,7 @@ class QuestionAnsweringExplainer(BaseExplainer):
 
     def __call__(self, question: str, text: str, embedding_type: int = 2) -> dict:
         """
-        Calculates start and end attributions for `question` and `text` using the model
+        Calculates start and end position word attributions for `question` and `text` using the model
         and tokenizer given in the constructor.
 
         This explainer also allows for attributions with respect to a particlar embedding type.

@@ -200,7 +200,9 @@ class BaseExplainer(ABC):
                 if hasattr(self.model_embeddings, "position_embeddings"):
                     self.position_embeddings = self.model_embeddings.position_embeddings
                 if hasattr(self.model_embeddings, "token_type_embeddings"):
-                    self.token_type_embeddings = self.model_embeddings.token_type_embeddings
+                    self.token_type_embeddings = (
+                        self.model_embeddings.token_type_embeddings
+                    )
 
     def __str__(self):
         s = f"{self.__class__.__name__}("
