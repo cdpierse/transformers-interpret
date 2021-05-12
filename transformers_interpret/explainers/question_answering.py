@@ -43,13 +43,21 @@ class QuestionAnsweringExplainer(BaseExplainer):
         self.position = 0
 
     def encode(self, text: str) -> list:  # type: ignore
+        "Encode 'text' using tokenizer, special tokens are not added"
         return self.tokenizer.encode(text, add_special_tokens=False)
 
     def decode(self, input_ids: torch.Tensor) -> list:
+        "Decode 'input_ids' to string using tokenizer"
         return self.tokenizer.convert_ids_to_tokens(input_ids[0])
 
     @property
     def word_attributions(self) -> dict:
+        """
+        Returns the word attributions (as `dict`) for both start and end positions of QA model.
+
+        Raises error if attributions not calculated.
+
+        """
         if self.start_attributions is not None and self.end_attributions is not None:
             return {
                 "start": self.start_attributions.word_attributions,
@@ -63,6 +71,7 @@ class QuestionAnsweringExplainer(BaseExplainer):
 
     @property
     def start_pos(self):
+        "Returns predicted start position for answer"
         if len(self.input_ids) > 0:
             preds = self._get_preds(
                 self.input_ids,
@@ -78,6 +87,7 @@ class QuestionAnsweringExplainer(BaseExplainer):
 
     @property
     def end_pos(self):
+        "Returns predicted end position for answer"
         if len(self.input_ids) > 0:
             preds = self._get_preds(
                 self.input_ids,
@@ -93,6 +103,7 @@ class QuestionAnsweringExplainer(BaseExplainer):
 
     @property
     def predicted_answer(self):
+        "Returns predicted answer span from provided `context`"
         if len(self.input_ids) > 0:
             preds = self._get_preds(
                 self.input_ids,
@@ -108,6 +119,12 @@ class QuestionAnsweringExplainer(BaseExplainer):
             raise InputIdsNotCalculatedError("input_ids have not been created yet.`")
 
     def visualize(self, html_filepath: str = None):
+        """
+        Visualizes word attributions. If in a notebook table will be displayed inline.
+
+        Otherwise pass a valid path to `html_filepath` and the visualization will be saved
+        as a html file.
+        """
         tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
         predicted_answer = self.predicted_answer
 
@@ -321,6 +338,3 @@ class QuestionAnsweringExplainer(BaseExplainer):
 
     def __call__(self, question: str, text: str, embedding_type: int = 2) -> dict:
         return self._run(question, text, embedding_type)
-
-
-
