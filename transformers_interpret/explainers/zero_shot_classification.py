@@ -176,7 +176,7 @@ class ZeroShotClassificationExplainer(
                 position_ids=self.position_ids,
                 ref_position_ids=self.ref_position_ids,
             )
-            lig.summarize()
+            lig.summarize(self.sep_idx)
             self.attributions = lig
 
     def __call__(
