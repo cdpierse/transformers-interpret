@@ -93,10 +93,10 @@ class LIGAttributions(Attributions):
         else:
             raise AttributionsNotCalculatedError("Attributions are not yet calculated")
 
-    def summarize(self):
+    def summarize(self, end_idx=None):
         self.attributions_sum = self._attributions.sum(dim=-1).squeeze(0)
-        self.attributions_sum = self.attributions_sum / torch.norm(
-            self.attributions_sum
+        self.attributions_sum = self.attributions_sum[:end_idx] / torch.norm(
+            self.attributions_sum[:end_idx]
         )
 
     def visualize_attributions(
