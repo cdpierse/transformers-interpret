@@ -2,13 +2,7 @@ from typing import Callable, Dict, List, Tuple, Union
 
 import torch
 import torch.nn as nn
-from captum.attr import (
-    IntegratedGradients,
-    LayerConductance,
-    LayerIntegratedGradients,
-    configure_interpretable_embedding_layer,
-    remove_interpretable_embedding_layer,
-)
+from captum.attr import LayerIntegratedGradients
 from captum.attr import visualization as viz
 
 from transformers_interpret.errors import AttributionsNotCalculatedError
