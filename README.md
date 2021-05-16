@@ -22,9 +22,13 @@
     </a>
 </p>
 
+
 Transformers Interpret is a model explainability tool designed to work exclusively with the 🤗 [transformers][transformers] package.
 
 In line with the philosophy of the transformers package Tranformers Interpret allows any transformers model to be explained in just two lines. It even supports visualizations in both notebooks and as savable html files.
+
+Check out the streamlit [demo app here](https://share.streamlit.io/cdpierse/transformers-interpret-streamlit/main/app.py)
+
 
 #### Table of Contents
 
