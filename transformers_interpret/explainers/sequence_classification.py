@@ -48,7 +48,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         model: PreTrainedModel,
         tokenizer: PreTrainedTokenizer,
         attribution_type: str = "lig",
-        custom_labels: Optional[List[str]] = None
+        custom_labels: Optional[List[str]] = None,
     ):
         """
         Args:
@@ -77,7 +77,9 @@ class SequenceClassificationExplainer(BaseExplainer):
                     '{len(model.config.label2id)}'"""
                 )
 
-            self.id2label, self.label2id = self._get_id2label_and_label2id_dict(custom_labels)
+            self.id2label, self.label2id = self._get_id2label_and_label2id_dict(
+                custom_labels
+            )
         else:
             self.label2id = model.config.label2id
             self.id2label = model.config.id2label
@@ -87,9 +89,10 @@ class SequenceClassificationExplainer(BaseExplainer):
 
         self._single_node_output = False
 
-
     @staticmethod
-    def _get_id2label_and_label2id_dict(labels: List[str]) -> Tuple[Dict[int, str], Dict[str, int]]:
+    def _get_id2label_and_label2id_dict(
+        labels: List[str],
+    ) -> Tuple[Dict[int, str], Dict[str, int]]:
         id2label: Dict[int, str] = dict()
         label2id: Dict[str, int] = dict()
         for idx, label in enumerate(labels):

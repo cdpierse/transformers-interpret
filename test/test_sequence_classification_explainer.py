@@ -52,22 +52,20 @@ def test_sequence_classification_explainer_init_attribution_type_error():
 def test_sequence_classification_explainer_init_with_custom_labels():
     labels = ["label_1", "label_2"]
     seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL,
-        DISTILBERT_TOKENIZER,
-        custom_labels=labels
+        DISTILBERT_MODEL, DISTILBERT_TOKENIZER, custom_labels=labels
     )
     assert len(labels) == len(seq_explainer.id2label)
     assert len(labels) == len(seq_explainer.label2id)
-    for (k1, v1), (k2, v2) in zip(seq_explainer.id2label.items(), seq_explainer.label2id.items()):
+    for (k1, v1), (k2, v2) in zip(
+        seq_explainer.id2label.items(), seq_explainer.label2id.items()
+    ):
         assert v1 in labels and k2 in labels
 
 
 def test_sequence_classification_explainer_init_custom_labels_size_error():
     with pytest.raises(ValueError):
         SequenceClassificationExplainer(
-            DISTILBERT_MODEL,
-            DISTILBERT_TOKENIZER,
-            custom_labels=["few_labels"]
+            DISTILBERT_MODEL, DISTILBERT_TOKENIZER, custom_labels=["few_labels"]
         )
 
 
