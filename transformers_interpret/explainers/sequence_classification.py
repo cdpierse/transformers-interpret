@@ -55,7 +55,9 @@ class SequenceClassificationExplainer(BaseExplainer):
             model (PreTrainedModel): Pretrained huggingface Sequence Classification model.
             tokenizer (PreTrainedTokenizer): Pretrained huggingface tokenizer
             attribution_type (str, optional): The attribution method to calculate on. Defaults to "lig".
-            custom_labels (List[str], optional): To use custom labels instead Pretrained Model configured
+            custom_labels (List[str], optional): Applies custom labels to label2id and id2label configs.
+                                                 Labels must be same length as the base model configs' labels.
+                                                 Labels and ids are applied index-wise. Defaults to None.
 
         Raises:
             AttributionTypeNotSupportedError:
