@@ -41,6 +41,7 @@ class ZeroShotClassificationExplainer(
     def word_attributions(self) -> list:
         "Returns the word attributions for model and the text provided. Raises error if attributions not calculated."
         if self.attributions is not None:
+            # return self.attributions.word_attributions
             return self.attributions.word_attributions[: self.sep_idx]
         else:
             raise ValueError(
@@ -58,13 +59,13 @@ class ZeroShotClassificationExplainer(
 
         """
         tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
-        attr_class = self.id2label[self.selected_index]
 
         score_viz = self.attributions.visualize_attributions(  # type: ignore
             self.pred_probs,
             self.predicted_label,
-            self.entailment_key,
-            attr_class,
+            self.predicted_label,
+            self.predicted_label,
+            # tokens
             tokens[: self.sep_idx],
         )
         html = viz.visualize_text([score_viz])
@@ -176,6 +177,7 @@ class ZeroShotClassificationExplainer(
                 position_ids=self.position_ids,
                 ref_position_ids=self.ref_position_ids,
             )
+            # lig.summarize()
             lig.summarize(self.sep_idx)
             self.attributions = lig
 
@@ -184,13 +186,15 @@ class ZeroShotClassificationExplainer(
         text: str,
         labels: List[str],
         embedding_type: int = 0,
-        hypothesis_template="this text is about {}",
+        hypothesis_template="this text is about {} .",
     ) -> list:
         hypothesis_labels = [hypothesis_template.format(label) for label in labels]
 
         text_idx = self._get_top_predicted_label_idx(text, hypothesis_labels)
         self.hypothesis_text = hypothesis_labels[text_idx]
-        self.predicted_label = labels[text_idx]
+        self.predicted_label = (
+            labels[text_idx] + " (" + self.entailment_key.lower() + ")"
+        )
 
         return super().__call__(
             text,
