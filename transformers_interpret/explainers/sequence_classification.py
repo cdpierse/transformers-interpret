@@ -1,8 +1,6 @@
 import warnings
-from enum import Enum
-from typing import Union
+from typing import Dict, List, Optional, Tuple, Union
 
-import captum
 import torch
 from captum.attr import visualization as viz
 from torch.nn.modules.sparse import Embedding
@@ -50,12 +48,16 @@ class SequenceClassificationExplainer(BaseExplainer):
         model: PreTrainedModel,
         tokenizer: PreTrainedTokenizer,
         attribution_type: str = "lig",
+        custom_labels: Optional[List[str]] = None,
     ):
         """
         Args:
             model (PreTrainedModel): Pretrained huggingface Sequence Classification model.
             tokenizer (PreTrainedTokenizer): Pretrained huggingface tokenizer
             attribution_type (str, optional): The attribution method to calculate on. Defaults to "lig".
+            custom_labels (List[str], optional): Applies custom labels to label2id and id2label configs.
+                                                 Labels must be same length as the base model configs' labels.
+                                                 Labels and ids are applied index-wise. Defaults to None.
 
         Raises:
             AttributionTypeNotSupportedError:
@@ -68,13 +70,36 @@ class SequenceClassificationExplainer(BaseExplainer):
             )
         self.attribution_type = attribution_type
 
-        self.label2id = model.config.label2id
-        self.id2label = model.config.id2label
+        if custom_labels is not None:
+            if len(custom_labels) != len(model.config.label2id):
+                raise ValueError(
+                    f"""`custom_labels` size '{len(custom_labels)}' should match pretrained model's label2id size 
+                    '{len(model.config.label2id)}'"""
+                )
+
+            self.id2label, self.label2id = self._get_id2label_and_label2id_dict(
+                custom_labels
+            )
+        else:
+            self.label2id = model.config.label2id
+            self.id2label = model.config.id2label
 
         self.attributions: Union[None, LIGAttributions] = None
         self.input_ids: torch.Tensor = torch.Tensor()
 
         self._single_node_output = False
+
+    @staticmethod
+    def _get_id2label_and_label2id_dict(
+        labels: List[str],
+    ) -> Tuple[Dict[int, str], Dict[str, int]]:
+        id2label: Dict[int, str] = dict()
+        label2id: Dict[str, int] = dict()
+        for idx, label in enumerate(labels):
+            id2label[idx] = label
+            label2id[label] = idx
+
+        return id2label, label2id
 
     def encode(self, text: str = None) -> list:
         return self.tokenizer.encode(text, add_special_tokens=False)
