@@ -4,7 +4,6 @@
     </a>
 </p>
 
-
 <p align="center"> Explainability for 🤗 Transformers models in 2 lines.</p>
 
 <h1 align="center"></h1>
@@ -22,13 +21,11 @@
     </a>
 </p>
 
-
 Transformers Interpret is a model explainability tool designed to work exclusively with the 🤗 [transformers][transformers] package.
 
 In line with the philosophy of the transformers package Tranformers Interpret allows any transformers model to be explained in just two lines. It even supports visualizations in both notebooks and as savable html files.
 
 Check out the streamlit [demo app here](https://share.streamlit.io/cdpierse/transformers-interpret-streamlit/main/app.py)
-
 
 #### Table of Contents
 
@@ -42,6 +39,7 @@ Check out the streamlit [demo app here](https://share.streamlit.io/cdpierse/tran
     - [Question Answering Explainer (Experimental)](#question-answering-explainer-experimental)
       - [Visualize Question Answering attributions](#visualize-question-answering-attributions)
   - [Future Development](#future-development)
+  - [Contributing](#contributing)
   - [Questions / Get In Touch](#questions--get-in-touch)
   - [Miscellaneous](#miscellaneous)
 
@@ -129,6 +127,7 @@ If you are in a notebook, calls to the `visualize()` method will display the vis
 ```python
 cls_explainer.visualize("distilbert_viz.html")
 ```
+
 <a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/distilbert_example.png">
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/distilbert_example.png" width="80%" height="80%" align="center"/>
 </a>
@@ -157,6 +156,7 @@ class.
 ```python
 cls_explainer.visualize("distilbert_negative_attr.html")
 ```
+
 <a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/distilbert_example_negative.png">
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/distilbert_example_negative.png" width="80%" height="80%" align="center" />
 </a>
@@ -298,6 +298,7 @@ For the `QuestionAnsweringExplainer` the visualize() method returns a table with
 ```python
 qa_explainer.visualize("bert_qa_viz.html")
 ```
+
 <a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_qa_explainer.png">
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_qa_explainer.png" width="120%" height="120%" align="center" />
 </a>
@@ -317,6 +318,12 @@ This package is still in its early days and there is much more planned. For a 1.
 - In depth examples
 - ~~A nice logo~~ (thanks @Voyz)
 - and more... feel free to submit your suggestions!
+
+<a name="contributing"/>
+
+## Contributing
+
+If you would like to make a contribution please checkout out our [contribution guidelines]()
 
 <a name="contact"/>
 
