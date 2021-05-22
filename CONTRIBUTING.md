@@ -1,6 +1,6 @@
 # 👐 Contributing to Transformers Interpret
 
-First off, thank you for even considering contributing this package, every contribution big or small is greatly appreciated. Contributions are what keep projects like this fueled and constantly improving, so a big thanks to you!
+First off, thank you for even considering contributing to this package, every contribution big or small is greatly appreciated. Community contributions are what keep projects like this fueled and constantly improving, so a big thanks to you!
 
 Below are some sections detailing the guidelines we'd like you to follow to make your contribution as seamless as possible.
 
@@ -12,7 +12,7 @@ Below are some sections detailing the guidelines we'd like you to follow to make
 
 ## 📜 <a name="coc"></a> Code of Conduct
 
-As contributors and maintainers of the Transformers Interpret, we pledge to respect everyone who contributes by posting issues, updating documentation, submitting pull requests, providing feedback in comments, and any other activities.
+As contributors and maintainers of Transformers Interpret, we pledge to respect everyone who contributes by posting issues, updating documentation, submitting pull requests, providing feedback in comments, and any other activities.
 
 Communication within our community must be constructive and never resort to personal attacks, trolling, public or private harassment, insults, or other unprofessional conduct.
 
@@ -20,13 +20,13 @@ We promise to extend courtesy and respect to everyone involved in this project r
 
 If any member of the community violates this code of conduct, the maintainers of Transformers Interpret may take action, removing issues, comments, and PRs or blocking accounts as deemed appropriate.
 
-If you are subject to or witness unacceptable behavior, or have any other concerns, please drop us a line at [charlespierse@gmail.com](charles_email)
+If you are subject to or witness unacceptable behavior, or have any other concerns, please drop us a line at [charlespierse@gmail.com](mailto://charlespierse@gmail.com)
 
 ## 🗣️ <a name="question"></a> Got a Question ? Want to start a Discussion ?
 
-We would like to use [Github discussions](https://github.com/cdpierse/transformers-interpret/discussions) as the central hub for all community discussions, questions, and everything else in between. While Github discussions is a new (as of 2021) service we believe that it really helps keep this repo as one single source to find all relevant information. Our hope is that this page functions as a record of all the conversations that help contribute to the project's development.
+We would like to use [Github discussions](https://github.com/cdpierse/transformers-interpret/discussions) as the central hub for all community discussions, questions, and everything else in between. While Github discussions is a new service (as of 2021) we believe that it really helps keep this repo as one single source to find all relevant information. Our hope is that this page functions as a record of all the conversations that help contribute to the project's development.
 
-We also highly encourage general and theoretical discussion. Much of the Transformers Interpret package implements algorithms in the field of explainable ai (XAI) which is itself very nascent, so discussions around the topic are very welcome. Everyone has something to learn and to teach !
+We also highly encourage general and theoretical discussion. Much of the Transformers Interpret package implements algorithms in the field of explainable AI (XAI) which is itself very nascent, so discussions around the topic are very welcome. Everyone has something to learn and to teach !
 
 If you are new to [Github discussions](https://github.com/cdpierse/transformers-interpret/discussions) it is a very similar experience to Stack Overflow with an added element of general discussion and discourse rather than solely being question and answer based.
 
@@ -74,7 +74,7 @@ Before you submit your pull request consider the following guidelines:
 - There are three typical branch name conventions we try to stick to, there are of course always exceptions to the rule but generally the branch name format is one of:
 
   - **fix/my-branch-name** - this is for fixes or patches
-  - **doc/my-branch-name** - this is for a contribution to some form of documentation i.e. Readme etc
+  - **docs/my-branch-name** - this is for a contribution to some form of documentation i.e. Readme etc
   - **feature/my-branch-name** - this is for new features or additions to the code base
 
 - Create your patch, **including appropriate test cases**.
@@ -103,7 +103,7 @@ Before you submit your pull request consider the following guidelines:
   git push origin fix/my-fix-branch
   ```
 
-* In GitHub, send a pull request to `transformers-interpret:master`.
+* In GitHub, send a pull request to `transformers-interpret:dev`.
 * If we suggest changes then:
 
   - Make the required updates.

@@ -323,7 +323,7 @@ This package is still in its early days and there is much more planned. For a 1.
 
 ## Contributing
 
-If you would like to make a contribution please checkout out our [contribution guidelines]()
+If you would like to make a contribution please checkout our [contribution guidelines](https://github.com/cdpierse/transformers-interpret/blob/master/CONTRIBUTING.md)
 
 <a name="contact"/>
 
