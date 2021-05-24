@@ -36,13 +36,16 @@ class ZeroShotClassificationExplainer(
             raise ValueError('Expected label "entailment" in `model.label2id` ')
 
         self.entailment_idx = self.label2id[self.entailment_key]
+        self.include_hypothesis = False
 
     @property
     def word_attributions(self) -> list:
         "Returns the word attributions for model and the text provided. Raises error if attributions not calculated."
         if self.attributions is not None:
-            # return self.attributions.word_attributions
-            return self.attributions.word_attributions[: self.sep_idx]
+            if self.include_hypothesis:
+                return self.attributions.word_attributions
+            else:
+                return self.attributions.word_attributions[: self.sep_idx]
         else:
             raise ValueError(
                 "Attributions have not yet been calculated. Please call the explainer on text first."
@@ -60,13 +63,15 @@ class ZeroShotClassificationExplainer(
         """
         tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
 
+        if not self.include_hypothesis:
+            tokens = tokens[: self.sep_idx]
+
         score_viz = self.attributions.visualize_attributions(  # type: ignore
             self.pred_probs,
             self.predicted_label,
             self.predicted_label,
             self.predicted_label,
-            # tokens
-            tokens[: self.sep_idx],
+            tokens,
         )
         html = viz.visualize_text([score_viz])
 
@@ -177,8 +182,10 @@ class ZeroShotClassificationExplainer(
                 position_ids=self.position_ids,
                 ref_position_ids=self.ref_position_ids,
             )
-            # lig.summarize()
-            lig.summarize(self.sep_idx)
+            if self.include_hypothesis:
+                lig.summarize()
+            else:
+                lig.summarize(self.sep_idx)
             self.attributions = lig
 
     def __call__(
@@ -187,7 +194,9 @@ class ZeroShotClassificationExplainer(
         labels: List[str],
         embedding_type: int = 0,
         hypothesis_template="this text is about {} .",
+        include_hypothesis: bool = False,
     ) -> list:
+        self.include_hypothesis = include_hypothesis
         hypothesis_labels = [hypothesis_template.format(label) for label in labels]
 
         text_idx = self._get_top_predicted_label_idx(text, hypothesis_labels)
