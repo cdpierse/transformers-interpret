@@ -245,7 +245,7 @@ zero_shot_explainer.visualize("zero_shot.html")
 ```
 
 <a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/zero_shot_example.png">
-<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/zero_shot_example.png" width="80%" height="150%" align="center" />
+<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/zero_shot_example.png" width="100%" height="100%" align="center" />
 </a>
 
 ### Question Answering Explainer (Experimental)
@@ -390,10 +390,11 @@ qa_explainer.visualize("bert_qa_viz.html")
 
 This package is still in its early days and there is much more planned. For a 1.0.0 release we're aiming to have:
 
-- Clean and thorough documentation
+- Clean and thorough documentation website (__In Progress__)
 - ~~Support for Question Answering models~~
 - Support for NER models
 - Support for Multiple Choice models
+- ~~Support for Zero Shot Classification models.~~
 - ~~Ability to show attributions for multiple embedding type, rather than just the word embeddings.~~
 - Additional attribution methods
 - In depth examples
