@@ -341,8 +341,6 @@ class QuestionAnsweringExplainer(BaseExplainer):
             end_lig.summarize()
             self.end_attributions = end_lig
             self.attributions = [self.start_attributions, self.end_attributions]
-        else:
-            pass
 
     def __call__(self, question: str, text: str, embedding_type: int = 2) -> dict:
         """
