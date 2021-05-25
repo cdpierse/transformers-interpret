@@ -1,2 +1,3 @@
 from .question_answering import QuestionAnsweringExplainer
 from .sequence_classification import SequenceClassificationExplainer
+from .zero_shot_classification import ZeroShotClassificationExplainer

@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from transformers import AutoModelForQuestionAnswering, AutoTokenizer
 from transformers_interpret import QuestionAnsweringExplainer
@@ -150,3 +152,31 @@ def test_question_answering_visualize():
     explainer_text = "his name is Bob"
     qa_explainer(explainer_question, explainer_text)
     qa_explainer.visualize()
+
+
+def test_question_answering_visualize_save():
+    qa_explainer = QuestionAnsweringExplainer(
+        DISTILBERT_QA_MODEL, DISTILBERT_QA_TOKENIZER
+    )
+    explainer_question = "what is his name ?"
+    explainer_text = "his name is Bob"
+    qa_explainer(explainer_question, explainer_text)
+
+    html_filename = "./test/qa_test.html"
+    qa_explainer.visualize(html_filename)
+    assert os.path.exists(html_filename)
+    os.remove(html_filename)
+
+
+def test_question_answering_visualize_save_append_html_file_ending():
+    qa_explainer = QuestionAnsweringExplainer(
+        DISTILBERT_QA_MODEL, DISTILBERT_QA_TOKENIZER
+    )
+    explainer_question = "what is his name ?"
+    explainer_text = "his name is Bob"
+    qa_explainer(explainer_question, explainer_text)
+
+    html_filename = "./test/qa_test"
+    qa_explainer.visualize(html_filename)
+    assert os.path.exists(html_filename + ".html")
+    os.remove(html_filename + ".html")
