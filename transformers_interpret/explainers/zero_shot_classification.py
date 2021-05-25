@@ -140,7 +140,7 @@ class ZeroShotClassificationExplainer(
         )
 
     def _calculate_attributions(  # type: ignore
-        self, embeddings: Embedding, index: int = None, class_name: str = None
+        self, embeddings: Embedding, class_name: str, index: int = None
     ):
         (
             self.input_ids,
@@ -155,38 +155,27 @@ class ZeroShotClassificationExplainer(
 
         self.attention_mask = self._make_attention_mask(self.input_ids)
 
-        if index is not None:
-            self.selected_index = index
-        elif class_name is not None:
-            if class_name in self.label2id.keys():
-                self.selected_index = int(self.label2id[class_name])
-            else:
-                s = f"'{class_name}' is not found in self.label2id keys."
-                s += "Defaulting to predicted index instead."
-                warnings.warn(s)
-                self.selected_index = int(self.predicted_class_index)
+        self.selected_index = int(self.label2id[class_name])
+
+        reference_tokens = [
+            token.replace("Ġ", "") for token in self.decode(self.input_ids)
+        ]
+        lig = LIGAttributions(
+            self._forward,
+            embeddings,
+            reference_tokens,
+            self.input_ids,
+            self.ref_input_ids,
+            self.sep_idx,
+            self.attention_mask,
+            position_ids=self.position_ids,
+            ref_position_ids=self.ref_position_ids,
+        )
+        if self.include_hypothesis:
+            lig.summarize()
         else:
-            self.selected_index = int(self.predicted_class_index)
-        if self.attribution_type == "lig":
-            reference_tokens = [
-                token.replace("Ġ", "") for token in self.decode(self.input_ids)
-            ]
-            lig = LIGAttributions(
-                self._forward,
-                embeddings,
-                reference_tokens,
-                self.input_ids,
-                self.ref_input_ids,
-                self.sep_idx,
-                self.attention_mask,
-                position_ids=self.position_ids,
-                ref_position_ids=self.ref_position_ids,
-            )
-            if self.include_hypothesis:
-                lig.summarize()
-            else:
-                lig.summarize(self.sep_idx)
-            self.attributions = lig
+            lig.summarize(self.sep_idx)
+        self.attributions = lig
 
     def __call__(
         self,
