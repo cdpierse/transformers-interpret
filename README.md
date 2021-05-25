@@ -245,7 +245,7 @@ zero_shot_explainer.visualize("zero_shot.html")
 ```
 
 <a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/zero_shot_example.png">
-<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/zero_shot_example.png" width="80%" height="150%" align="center" />
+<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/zero_shot_example.png" width="100%" height="100%" align="center" />
 </a>
 
 ### Question Answering Explainer (Experimental)
