@@ -36,6 +36,8 @@ Check out the streamlit [demo app here](https://share.streamlit.io/cdpierse/tran
     - [Sequence Classification Explainer](#sequence-classification-explainer)
       - [Visualize Classification attributions](#visualize-classification-attributions)
       - [Explaining Attributions for Non Predicted Class](#explaining-attributions-for-non-predicted-class)
+    - [Zero Shot Classification Explainer](#zero-shot-classification-explainer)
+      - [Visualize Zero Shot Classification attributions](#visualize-zero-shot-classification-attributions)
     - [Question Answering Explainer (Experimental)](#question-answering-explainer-experimental)
       - [Visualize Question Answering attributions](#visualize-question-answering-attributions)
   - [Future Development](#future-development)
@@ -166,6 +168,85 @@ Getting attributions for different classes is particularly insightful for multic
 For a detailed explanation of this example please checkout this [multiclass classification notebook.](notebooks/multiclass_classification_example.ipynb)
 
 <a name="qa"/>
+
+### Zero Shot Classification Explainer
+
+_Models using this explainer must be previously trained on NLI classification downstream tasks and have a label in the model's config called either "entailment" or "ENTAILMENT"._
+
+This explainer allows for attributions to be calculated for zero shot classification like models. In order to achieve this we use the same methodology employed by Hugging face. For those not familiar method employed by Hugging Face to achieve zero shot classification the way this works is by exploiting the "entailment" label of NLI models. Here is a [link](https://arxiv.org/abs/1909.00161) to a paper explaining more about it.
+
+Let's start by initializing a transformers' sequence classification model and tokenizer trained specifically on a NLI task, and passing it to the ZeroShotClassificationExplainer.
+
+For this example we are using `facebook/bart-large-mnli` which is a checkpoint for a bart-large model trained on the
+[MNLI dataset](https://huggingface.co/datasets/multi_nli). This model typically predicts whether a sentence pair are an entailment, neutral, or a contradiction, however for zero-shot we only look the entailment label.
+
+Notice that we pass our own custom labels `["finance", "technology", "sports"]` to the class instance. Any number of labels can be passed including as little as one. Whichever label scores highest for entailment is the predicted class. If you want to see the attributions for a particular label it is recommended just to pass in that one label and then the attributions will be guaranteed to be calculated w.r.t. that label.
+
+```python
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from transformers_interpret import ZeroShotClassificationExplainer
+
+tokenizer = AutoTokenizer.from_pretrained("facebook/bart-large-mnli")
+
+model = AutoModelForSequenceClassification.from_pretrained("facebook/bart-large-mnli")
+
+
+zero_shot_explainer = ZeroShotClassificationExplainer(model, tokenizer)
+
+
+word_attributions = zero_shot_explainer(
+    "Today apple released the new Macbook showing off a range of new features found in the proprietary silicon chip computer. ",
+    labels = ["finance", "technology", "sports"],
+)
+
+```
+
+Which will return the following list of tuples:
+
+```python
+>>> word_attributions
+[('<s>', 0.0),
+ ('Today', 0.0),
+ ('apple', 0.22505152647747717),
+ ('released', -0.16164146624851905),
+ ('the', 0.5026975657258089),
+ ('new', 0.052589263167955536),
+ ('Mac', 0.2528325960993759),
+ ('book', -0.06445090203729663),
+ ('showing', -0.21204922293777534),
+ ('off', 0.06319714817612732),
+ ('a', 0.032048012090796815),
+ ('range', 0.08553079346908955),
+ ('of', 0.1409201107994034),
+ ('new', 0.0515261917112576),
+ ('features', -0.09656406466213506),
+ ('found', 0.02336613296843605),
+ ('in', -0.0011649894272190678),
+ ('the', 0.14229640664777807),
+ ('proprietary', -0.23169065661847646),
+ ('silicon', 0.5963924257008087),
+ ('chip', -0.19908474233975806),
+ ('computer', 0.030620295844734646),
+ ('.', 0.1995076958535378)]
+```
+
+We can find out which label was predicted with:
+
+```python
+>>> zero_shot_explainer.predicted_label   
+'technology (entailment)'
+```
+#### Visualize Zero Shot Classification attributions
+
+For the `ZeroShotClassificationExplainer` the visualize() method returns a table similar to the `SequenceClassificationExplainer`.
+
+```python
+zero_shot_explainer.visualize("zero_shot.html")
+```
+
+<a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/zero_shot_example.png">
+<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/zero_shot_example.png" width="120%" height="120%" align="center" />
+</a>
 
 ### Question Answering Explainer (Experimental)
 
