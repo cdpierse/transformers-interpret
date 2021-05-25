@@ -9,7 +9,6 @@ from transformers import PreTrainedModel, PreTrainedTokenizer
 
 
 class BaseExplainer(ABC):
-    
     def __init__(
         self,
         model: PreTrainedModel,

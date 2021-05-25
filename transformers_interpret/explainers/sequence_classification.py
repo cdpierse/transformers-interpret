@@ -32,14 +32,7 @@ class SequenceClassificationExplainer(BaseExplainer):
     If a model does not take position ids in its forward method (distilbert) a warning will
     occur and the default word_embeddings will be chosen instead.
 
-    Args:
-        text (str): Text to provide attributions for.
-        index (int, optional): Optional output index to provide attributions for. Defaults to None.
-        class_name (str, optional): Optional output class name to provide attributions for. Defaults to None.
-        embedding_type (int, optional): The embedding type word(0) or position(1) to calculate attributions for. Defaults to 0.
 
-    Returns:
-        LIGAttributions:
     """
 
     def __init__(
