@@ -1,4 +1,3 @@
-import abc
 import inspect
 import re
 from abc import ABC, abstractmethod, abstractproperty

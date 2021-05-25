@@ -65,7 +65,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         if custom_labels is not None:
             if len(custom_labels) != len(model.config.label2id):
                 raise ValueError(
-                    f"""`custom_labels` size '{len(custom_labels)}' should match pretrained model's label2id size 
+                    f"""`custom_labels` size '{len(custom_labels)}' should match pretrained model's label2id size
                     '{len(model.config.label2id)}'"""
                 )
 
@@ -225,23 +225,23 @@ class SequenceClassificationExplainer(BaseExplainer):
                 self.selected_index = int(self.predicted_class_index)
         else:
             self.selected_index = int(self.predicted_class_index)
-        if self.attribution_type == "lig":
-            reference_tokens = [
-                token.replace("Ġ", "") for token in self.decode(self.input_ids)
-            ]
-            lig = LIGAttributions(
-                self._forward,
-                embeddings,
-                reference_tokens,
-                self.input_ids,
-                self.ref_input_ids,
-                self.sep_idx,
-                self.attention_mask,
-                position_ids=self.position_ids,
-                ref_position_ids=self.ref_position_ids,
-            )
-            lig.summarize()
-            self.attributions = lig
+
+        reference_tokens = [
+            token.replace("Ġ", "") for token in self.decode(self.input_ids)
+        ]
+        lig = LIGAttributions(
+            self._forward,
+            embeddings,
+            reference_tokens,
+            self.input_ids,
+            self.ref_input_ids,
+            self.sep_idx,
+            self.attention_mask,
+            position_ids=self.position_ids,
+            ref_position_ids=self.ref_position_ids,
+        )
+        lig.summarize()
+        self.attributions = lig
 
     def _run(
         self,
@@ -260,7 +260,7 @@ class SequenceClassificationExplainer(BaseExplainer):
                     embeddings = self.position_embeddings
                 else:
                     warnings.warn(
-                        f"This model doesn't support position embeddings for attributions. Defaulting to word embeddings"
+                        "This model doesn't support position embeddings for attributions. Defaulting to word embeddings"
                     )
                     embeddings = self.word_embeddings
             else:

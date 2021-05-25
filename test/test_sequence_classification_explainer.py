@@ -1,5 +1,4 @@
 import pytest
-
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from transformers_interpret import SequenceClassificationExplainer
 from transformers_interpret.errors import (
@@ -69,19 +68,6 @@ def test_sequence_classification_explainer_init_custom_labels_size_error():
         )
 
 
-def test_sequence_classification_explainer_attribution_type_unset_before_run():
-    explainer_string = "I love you , I like you"
-
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
-    assert seq_explainer.attribution_type == "lig"
-    assert seq_explainer.attributions == None
-    seq_explainer.attribution_type = "UNSUPPORTED"
-    with pytest.raises(ValueError):
-        seq_explainer(explainer_string)
-        assert seq_explainer.attributions == None
-
 
 def test_sequence_classification_encode():
     seq_explainer = SequenceClassificationExplainer(
@@ -136,7 +122,7 @@ def test_sequence_classification_explain_on_cls_index():
     seq_explainer = SequenceClassificationExplainer(
         DISTILBERT_MODEL, DISTILBERT_TOKENIZER
     )
-    word_attributions = seq_explainer._run(explainer_string, index=0)
+    seq_explainer._run(explainer_string, index=0)
     assert seq_explainer.predicted_class_index == 1
     assert seq_explainer.predicted_class_index != seq_explainer.selected_index
     assert (
@@ -185,7 +171,7 @@ def test_sequence_classification_predicted_class_name_no_id2label_defaults_idx()
         DISTILBERT_MODEL, DISTILBERT_TOKENIZER
     )
     seq_explainer.id2label = {"test": "value"}
-    attributions = seq_explainer._run(explainer_string)
+    seq_explainer._run(explainer_string)
     assert seq_explainer.predicted_class_name == 1
 
 
@@ -194,7 +180,7 @@ def test_sequence_classification_explain_on_cls_name():
     seq_explainer = SequenceClassificationExplainer(
         DISTILBERT_MODEL, DISTILBERT_TOKENIZER
     )
-    attributions = seq_explainer._run(explainer_string, class_name="NEGATIVE")
+    seq_explainer._run(explainer_string, class_name="NEGATIVE")
     assert seq_explainer.predicted_class_index == 1
     assert seq_explainer.predicted_class_index != seq_explainer.selected_index
     assert (
@@ -226,7 +212,7 @@ def test_sequence_classification_explain_on_cls_name_not_in_dict():
     seq_explainer = SequenceClassificationExplainer(
         DISTILBERT_MODEL, DISTILBERT_TOKENIZER
     )
-    attributions = seq_explainer._run(explainer_string, class_name="UNKNOWN")
+    seq_explainer._run(explainer_string, class_name="UNKNOWN")
     assert seq_explainer.selected_index == 1
     assert seq_explainer.predicted_class_index == 1
 
@@ -251,7 +237,6 @@ def test_sequence_classification_word_attributions():
 
 
 def test_sequence_classification_word_attributions_not_calculated_raises():
-    explainer_string = "I love you , I like you"
     seq_explainer = SequenceClassificationExplainer(
         DISTILBERT_MODEL, DISTILBERT_TOKENIZER
     )
