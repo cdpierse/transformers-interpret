@@ -1,6 +1,3 @@
-from unittest.mock import patch
-
-import pytest
 import torch
 from torch import Tensor
 from transformers import (
@@ -60,13 +57,13 @@ def test_explainer_init_distilbert():
     else:
         assert explainer.device.type == "cpu"
 
-    assert explainer.accepts_position_ids == False
-    assert explainer.accepts_token_type_ids == False
+    assert explainer.accepts_position_ids is False
+    assert explainer.accepts_token_type_ids is False
 
     assert explainer.model.config.model_type == "distilbert"
-    assert explainer.position_embeddings != None
-    assert explainer.word_embeddings != None
-    assert explainer.token_type_embeddings == None
+    assert explainer.position_embeddings is not None
+    assert explainer.word_embeddings is not None
+    assert explainer.token_type_embeddings is None
 
 
 def test_explainer_init_bert():
@@ -81,13 +78,13 @@ def test_explainer_init_bert():
     else:
         assert explainer.device.type == "cpu"
 
-    assert explainer.accepts_position_ids == True
-    assert explainer.accepts_token_type_ids == True
+    assert explainer.accepts_position_ids is True
+    assert explainer.accepts_token_type_ids is True
 
     assert explainer.model.config.model_type == "bert"
-    assert explainer.position_embeddings != None
-    assert explainer.word_embeddings != None
-    assert explainer.token_type_embeddings != None
+    assert explainer.position_embeddings is not None
+    assert explainer.word_embeddings is not None
+    assert explainer.token_type_embeddings is not None
 
 
 def test_explainer_init_gpt2():
@@ -102,12 +99,12 @@ def test_explainer_init_gpt2():
     else:
         assert explainer.device.type == "cpu"
 
-    assert explainer.accepts_position_ids == True
-    assert explainer.accepts_token_type_ids == True
+    assert explainer.accepts_position_ids is True
+    assert explainer.accepts_token_type_ids is True
 
     assert explainer.model.config.model_type == "gpt2"
-    assert explainer.position_embeddings != None
-    assert explainer.word_embeddings != None
+    assert explainer.position_embeddings is not None
+    assert explainer.word_embeddings is not None
 
 
 def test_explainer_make_input_reference_pair():

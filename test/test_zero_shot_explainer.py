@@ -4,10 +4,7 @@ from unittest.mock import patch
 import pytest
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from transformers_interpret import ZeroShotClassificationExplainer
-from transformers_interpret.errors import (
-    AttributionTypeNotSupportedError,
-    InputIdsNotCalculatedError,
-)
+from transformers_interpret.errors import AttributionTypeNotSupportedError
 
 DISTILBERT_MNLI_MODEL = AutoModelForSequenceClassification.from_pretrained(
     "typeform/distilbert-base-uncased-mnli"

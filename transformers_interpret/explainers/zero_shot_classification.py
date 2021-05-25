@@ -1,5 +1,4 @@
-import warnings
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 import torch
 from captum.attr import visualization as viz

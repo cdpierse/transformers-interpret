@@ -65,7 +65,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         if custom_labels is not None:
             if len(custom_labels) != len(model.config.label2id):
                 raise ValueError(
-                    f"""`custom_labels` size '{len(custom_labels)}' should match pretrained model's label2id size 
+                    f"""`custom_labels` size '{len(custom_labels)}' should match pretrained model's label2id size
                     '{len(model.config.label2id)}'"""
                 )
 
@@ -260,7 +260,7 @@ class SequenceClassificationExplainer(BaseExplainer):
                     embeddings = self.position_embeddings
                 else:
                     warnings.warn(
-                        f"This model doesn't support position embeddings for attributions. Defaulting to word embeddings"
+                        "This model doesn't support position embeddings for attributions. Defaulting to word embeddings"
                     )
                     embeddings = self.word_embeddings
             else:
