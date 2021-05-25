@@ -173,7 +173,7 @@ For a detailed explanation of this example please checkout this [multiclass clas
 
 _Models using this explainer must be previously trained on NLI classification downstream tasks and have a label in the model's config called either "entailment" or "ENTAILMENT"._
 
-This explainer allows for attributions to be calculated for zero shot classification like models. In order to achieve this we use the same methodology employed by Hugging face. For those not familiar method employed by Hugging Face to achieve zero shot classification the way this works is by exploiting the "entailment" label of NLI models. Here is a [link](https://arxiv.org/abs/1909.00161) to a paper explaining more about it.
+This explainer allows for attributions to be calculated for zero shot classification like models. In order to achieve this we use the same methodology employed by Hugging face. For those not familiar method employed by Hugging Face to achieve zero shot classification the way this works is by exploiting the "entailment" label of NLI models. Here is a [link](https://arxiv.org/abs/1909.00161) to a paper explaining more about it. A list of NLI models guaranteed to be compatible with this explainer can be found on the [model hub](https://huggingface.co/models?filter=pytorch&pipeline_tag=zero-shot-classification).
 
 Let's start by initializing a transformers' sequence classification model and tokenizer trained specifically on a NLI task, and passing it to the ZeroShotClassificationExplainer.
 
