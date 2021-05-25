@@ -303,44 +303,44 @@ class QuestionAnsweringExplainer(BaseExplainer):
         ) = self._make_input_reference_token_type_pair(self.input_ids, self.sep_idx)
 
         self.attention_mask = self._make_attention_mask(self.input_ids)
-        if self.attribution_type == "lig":
-            reference_tokens = [
-                token.replace("Ġ", "") for token in self.decode(self.input_ids)
-            ]
-            self.position = 0
-            start_lig = LIGAttributions(
-                self._forward,
-                embeddings,
-                reference_tokens,
-                self.input_ids,
-                self.ref_input_ids,
-                self.sep_idx,
-                self.attention_mask,
-                position_ids=self.position_ids,
-                ref_position_ids=self.ref_position_ids,
-                token_type_ids=self.token_type_ids,
-                ref_token_type_ids=self.ref_token_type_ids,
-            )
-            start_lig.summarize()
-            self.start_attributions = start_lig
 
-            self.position = 1
-            end_lig = LIGAttributions(
-                self._forward,
-                embeddings,
-                reference_tokens,
-                self.input_ids,
-                self.ref_input_ids,
-                self.sep_idx,
-                self.attention_mask,
-                position_ids=self.position_ids,
-                ref_position_ids=self.ref_position_ids,
-                token_type_ids=self.token_type_ids,
-                ref_token_type_ids=self.ref_token_type_ids,
-            )
-            end_lig.summarize()
-            self.end_attributions = end_lig
-            self.attributions = [self.start_attributions, self.end_attributions]
+        reference_tokens = [
+            token.replace("Ġ", "") for token in self.decode(self.input_ids)
+        ]
+        self.position = 0
+        start_lig = LIGAttributions(
+            self._forward,
+            embeddings,
+            reference_tokens,
+            self.input_ids,
+            self.ref_input_ids,
+            self.sep_idx,
+            self.attention_mask,
+            position_ids=self.position_ids,
+            ref_position_ids=self.ref_position_ids,
+            token_type_ids=self.token_type_ids,
+            ref_token_type_ids=self.ref_token_type_ids,
+        )
+        start_lig.summarize()
+        self.start_attributions = start_lig
+
+        self.position = 1
+        end_lig = LIGAttributions(
+            self._forward,
+            embeddings,
+            reference_tokens,
+            self.input_ids,
+            self.ref_input_ids,
+            self.sep_idx,
+            self.attention_mask,
+            position_ids=self.position_ids,
+            ref_position_ids=self.ref_position_ids,
+            token_type_ids=self.token_type_ids,
+            ref_token_type_ids=self.ref_token_type_ids,
+        )
+        end_lig.summarize()
+        self.end_attributions = end_lig
+        self.attributions = [self.start_attributions, self.end_attributions]
 
     def __call__(self, question: str, text: str, embedding_type: int = 2) -> dict:
         """

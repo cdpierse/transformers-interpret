@@ -68,19 +68,6 @@ def test_sequence_classification_explainer_init_custom_labels_size_error():
         )
 
 
-def test_sequence_classification_explainer_attribution_type_unset_before_run():
-    explainer_string = "I love you , I like you"
-
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
-    assert seq_explainer.attribution_type == "lig"
-    assert seq_explainer.attributions is None
-    seq_explainer.attribution_type = "UNSUPPORTED"
-    with pytest.raises(ValueError):
-        seq_explainer(explainer_string)
-        assert seq_explainer.attributions is None
-
 
 def test_sequence_classification_encode():
     seq_explainer = SequenceClassificationExplainer(

@@ -225,23 +225,23 @@ class SequenceClassificationExplainer(BaseExplainer):
                 self.selected_index = int(self.predicted_class_index)
         else:
             self.selected_index = int(self.predicted_class_index)
-        if self.attribution_type == "lig":
-            reference_tokens = [
-                token.replace("Ġ", "") for token in self.decode(self.input_ids)
-            ]
-            lig = LIGAttributions(
-                self._forward,
-                embeddings,
-                reference_tokens,
-                self.input_ids,
-                self.ref_input_ids,
-                self.sep_idx,
-                self.attention_mask,
-                position_ids=self.position_ids,
-                ref_position_ids=self.ref_position_ids,
-            )
-            lig.summarize()
-            self.attributions = lig
+
+        reference_tokens = [
+            token.replace("Ġ", "") for token in self.decode(self.input_ids)
+        ]
+        lig = LIGAttributions(
+            self._forward,
+            embeddings,
+            reference_tokens,
+            self.input_ids,
+            self.ref_input_ids,
+            self.sep_idx,
+            self.attention_mask,
+            position_ids=self.position_ids,
+            ref_position_ids=self.ref_position_ids,
+        )
+        lig.summarize()
+        self.attributions = lig
 
     def _run(
         self,
