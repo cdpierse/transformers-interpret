@@ -1,8 +1,6 @@
 import warnings
-from enum import Enum
-from typing import Union
+from typing import Dict, List, Optional, Tuple, Union
 
-import captum
 import torch
 from captum.attr import visualization as viz
 from torch.nn.modules.sparse import Embedding
@@ -21,9 +19,8 @@ class SequenceClassificationExplainer(BaseExplainer):
     Explainer for explaining attributions for models of type
     `{MODEL_NAME}ForSequenceClassification` from the Transformers package.
 
-    Calculates attribution for `text` or `self.text` using the given model
-    and tokenizer. If `text` is not passed to the instantiated explainer
-    it is expected that text was passed in the constructor.
+    Calculates attribution for `text` using the given model
+    and tokenizer.
 
     Attributions can be forced along the axis of a particular output index or class name.
     To do this provide either a valid `index` for the class label's output or if the outputs
@@ -35,14 +32,7 @@ class SequenceClassificationExplainer(BaseExplainer):
     If a model does not take position ids in its forward method (distilbert) a warning will
     occur and the default word_embeddings will be chosen instead.
 
-    Args:
-        text (str, optional): Text to provide attributions for. Defaults to None.
-        index (int, optional): Optional output index to provide attributions for. Defaults to None.
-        class_name (str, optional): Optional output class name to provide attributions for. Defaults to None.
-        embedding_type (int, optional): The embedding type word(0) or position(1) to calculate attributions for. Defaults to 0.
 
-    Returns:
-        LIGAttributions:
     """
 
     def __init__(
@@ -50,12 +40,16 @@ class SequenceClassificationExplainer(BaseExplainer):
         model: PreTrainedModel,
         tokenizer: PreTrainedTokenizer,
         attribution_type: str = "lig",
+        custom_labels: Optional[List[str]] = None,
     ):
         """
         Args:
             model (PreTrainedModel): Pretrained huggingface Sequence Classification model.
             tokenizer (PreTrainedTokenizer): Pretrained huggingface tokenizer
             attribution_type (str, optional): The attribution method to calculate on. Defaults to "lig".
+            custom_labels (List[str], optional): Applies custom labels to label2id and id2label configs.
+                                                 Labels must be same length as the base model configs' labels.
+                                                 Labels and ids are applied index-wise. Defaults to None.
 
         Raises:
             AttributionTypeNotSupportedError:
@@ -68,22 +62,47 @@ class SequenceClassificationExplainer(BaseExplainer):
             )
         self.attribution_type = attribution_type
 
-        self.label2id = model.config.label2id
-        self.id2label = model.config.id2label
+        if custom_labels is not None:
+            if len(custom_labels) != len(model.config.label2id):
+                raise ValueError(
+                    f"""`custom_labels` size '{len(custom_labels)}' should match pretrained model's label2id size
+                    '{len(model.config.label2id)}'"""
+                )
+
+            self.id2label, self.label2id = self._get_id2label_and_label2id_dict(
+                custom_labels
+            )
+        else:
+            self.label2id = model.config.label2id
+            self.id2label = model.config.id2label
 
         self.attributions: Union[None, LIGAttributions] = None
         self.input_ids: torch.Tensor = torch.Tensor()
 
         self._single_node_output = False
 
+    @staticmethod
+    def _get_id2label_and_label2id_dict(
+        labels: List[str],
+    ) -> Tuple[Dict[int, str], Dict[str, int]]:
+        id2label: Dict[int, str] = dict()
+        label2id: Dict[str, int] = dict()
+        for idx, label in enumerate(labels):
+            id2label[idx] = label
+            label2id[label] = idx
+
+        return id2label, label2id
+
     def encode(self, text: str = None) -> list:
         return self.tokenizer.encode(text, add_special_tokens=False)
 
     def decode(self, input_ids: torch.Tensor) -> list:
+        "Decode 'input_ids' to string using tokenizer"
         return self.tokenizer.convert_ids_to_tokens(input_ids[0])
 
     @property
     def predicted_class_index(self) -> int:
+        "Returns predicted class index (int) for model with last calculated `input_ids`"
         if len(self.input_ids) > 0:
             # we call this before _forward() so it has to be calculated twice
             preds = self.model(self.input_ids)[0]
@@ -95,6 +114,7 @@ class SequenceClassificationExplainer(BaseExplainer):
 
     @property
     def predicted_class_name(self):
+        "Returns predicted class name (str) for model with last calculated `input_ids`"
         try:
             index = self.predicted_class_index
             return self.id2label[int(index)]
@@ -103,6 +123,7 @@ class SequenceClassificationExplainer(BaseExplainer):
 
     @property
     def word_attributions(self) -> list:
+        "Returns the word attributions for model and the text provided. Raises error if attributions not calculated."
         if self.attributions is not None:
             return self.attributions.word_attributions
         else:
@@ -111,6 +132,15 @@ class SequenceClassificationExplainer(BaseExplainer):
             )
 
     def visualize(self, html_filepath: str = None, true_class: str = None):
+        """
+        Visualizes word attributions. If in a notebook table will be displayed inline.
+
+        Otherwise pass a valid path to `html_filepath` and the visualization will be saved
+        as a html file.
+
+        If the true class is known for the text that can be passed to `true_class`
+
+        """
         tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
         attr_class = self.id2label[self.selected_index]
 
@@ -195,23 +225,23 @@ class SequenceClassificationExplainer(BaseExplainer):
                 self.selected_index = int(self.predicted_class_index)
         else:
             self.selected_index = int(self.predicted_class_index)
-        if self.attribution_type == "lig":
-            reference_tokens = [
-                token.replace("Ġ", "") for token in self.decode(self.input_ids)
-            ]
-            lig = LIGAttributions(
-                self._forward,
-                embeddings,
-                reference_tokens,
-                self.input_ids,
-                self.ref_input_ids,
-                self.sep_idx,
-                self.attention_mask,
-                position_ids=self.position_ids,
-                ref_position_ids=self.ref_position_ids,
-            )
-            lig.summarize()
-            self.attributions = lig
+
+        reference_tokens = [
+            token.replace("Ġ", "") for token in self.decode(self.input_ids)
+        ]
+        lig = LIGAttributions(
+            self._forward,
+            embeddings,
+            reference_tokens,
+            self.input_ids,
+            self.ref_input_ids,
+            self.sep_idx,
+            self.attention_mask,
+            position_ids=self.position_ids,
+            ref_position_ids=self.ref_position_ids,
+        )
+        lig.summarize()
+        self.attributions = lig
 
     def _run(
         self,
@@ -230,7 +260,7 @@ class SequenceClassificationExplainer(BaseExplainer):
                     embeddings = self.position_embeddings
                 else:
                     warnings.warn(
-                        f"This model doesn't support position embeddings for attributions. Defaulting to word embeddings"
+                        "This model doesn't support position embeddings for attributions. Defaulting to word embeddings"
                     )
                     embeddings = self.word_embeddings
             else:

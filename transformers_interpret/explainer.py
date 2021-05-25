@@ -1,4 +1,3 @@
-import abc
 import inspect
 import re
 from abc import ABC, abstractmethod, abstractproperty
@@ -9,7 +8,11 @@ from transformers import PreTrainedModel, PreTrainedTokenizer
 
 
 class BaseExplainer(ABC):
-    def __init__(self, model: PreTrainedModel, tokenizer: PreTrainedTokenizer):
+    def __init__(
+        self,
+        model: PreTrainedModel,
+        tokenizer: PreTrainedTokenizer,
+    ):
         self.model = model
         self.tokenizer = tokenizer
 
@@ -17,6 +20,7 @@ class BaseExplainer(ABC):
             self.ref_token_id = self.tokenizer.eos_token_id
         else:
             self.ref_token_id = self.tokenizer.pad_token_id
+
         self.sep_token_id = (
             self.tokenizer.sep_token_id
             if self.tokenizer.sep_token_id is not None

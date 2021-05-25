@@ -26,7 +26,15 @@ class QuestionAnsweringExplainer(BaseExplainer):
         tokenizer: PreTrainedTokenizer,
         attribution_type: str = "lig",
     ):
+        """
+        Args:
+            model (PreTrainedModel): Pretrained huggingface Question Answering model.
+            tokenizer (PreTrainedTokenizer): Pretrained huggingface tokenizer
+            attribution_type (str, optional): The attribution method to calculate on. Defaults to "lig".
 
+        Raises:
+            AttributionTypeNotSupportedError: [description]
+        """
         super().__init__(model, tokenizer)
         if attribution_type not in SUPPORTED_ATTRIBUTION_TYPES:
             raise AttributionTypeNotSupportedError(
@@ -43,13 +51,21 @@ class QuestionAnsweringExplainer(BaseExplainer):
         self.position = 0
 
     def encode(self, text: str) -> list:  # type: ignore
+        "Encode 'text' using tokenizer, special tokens are not added"
         return self.tokenizer.encode(text, add_special_tokens=False)
 
     def decode(self, input_ids: torch.Tensor) -> list:
+        "Decode 'input_ids' to string using tokenizer"
         return self.tokenizer.convert_ids_to_tokens(input_ids[0])
 
     @property
     def word_attributions(self) -> dict:
+        """
+        Returns the word attributions (as `dict`) for both start and end positions of QA model.
+
+        Raises error if attributions not calculated.
+
+        """
         if self.start_attributions is not None and self.end_attributions is not None:
             return {
                 "start": self.start_attributions.word_attributions,
@@ -63,6 +79,7 @@ class QuestionAnsweringExplainer(BaseExplainer):
 
     @property
     def start_pos(self):
+        "Returns predicted start position for answer"
         if len(self.input_ids) > 0:
             preds = self._get_preds(
                 self.input_ids,
@@ -78,6 +95,7 @@ class QuestionAnsweringExplainer(BaseExplainer):
 
     @property
     def end_pos(self):
+        "Returns predicted end position for answer"
         if len(self.input_ids) > 0:
             preds = self._get_preds(
                 self.input_ids,
@@ -93,6 +111,7 @@ class QuestionAnsweringExplainer(BaseExplainer):
 
     @property
     def predicted_answer(self):
+        "Returns predicted answer span from provided `text`"
         if len(self.input_ids) > 0:
             preds = self._get_preds(
                 self.input_ids,
@@ -108,6 +127,12 @@ class QuestionAnsweringExplainer(BaseExplainer):
             raise InputIdsNotCalculatedError("input_ids have not been created yet.`")
 
     def visualize(self, html_filepath: str = None):
+        """
+        Visualizes word attributions. If in a notebook table will be displayed inline.
+
+        Otherwise pass a valid path to `html_filepath` and the visualization will be saved
+        as a html file.
+        """
         tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
         predicted_answer = self.predicted_answer
 
@@ -278,46 +303,63 @@ class QuestionAnsweringExplainer(BaseExplainer):
         ) = self._make_input_reference_token_type_pair(self.input_ids, self.sep_idx)
 
         self.attention_mask = self._make_attention_mask(self.input_ids)
-        if self.attribution_type == "lig":
-            reference_tokens = [
-                token.replace("Ġ", "") for token in self.decode(self.input_ids)
-            ]
-            self.position = 0
-            start_lig = LIGAttributions(
-                self._forward,
-                embeddings,
-                reference_tokens,
-                self.input_ids,
-                self.ref_input_ids,
-                self.sep_idx,
-                self.attention_mask,
-                position_ids=self.position_ids,
-                ref_position_ids=self.ref_position_ids,
-                token_type_ids=self.token_type_ids,
-                ref_token_type_ids=self.ref_token_type_ids,
-            )
-            start_lig.summarize()
-            self.start_attributions = start_lig
 
-            self.position = 1
-            end_lig = LIGAttributions(
-                self._forward,
-                embeddings,
-                reference_tokens,
-                self.input_ids,
-                self.ref_input_ids,
-                self.sep_idx,
-                self.attention_mask,
-                position_ids=self.position_ids,
-                ref_position_ids=self.ref_position_ids,
-                token_type_ids=self.token_type_ids,
-                ref_token_type_ids=self.ref_token_type_ids,
-            )
-            end_lig.summarize()
-            self.end_attributions = end_lig
-            self.attributions = [self.start_attributions, self.end_attributions]
-        else:
-            pass
+        reference_tokens = [
+            token.replace("Ġ", "") for token in self.decode(self.input_ids)
+        ]
+        self.position = 0
+        start_lig = LIGAttributions(
+            self._forward,
+            embeddings,
+            reference_tokens,
+            self.input_ids,
+            self.ref_input_ids,
+            self.sep_idx,
+            self.attention_mask,
+            position_ids=self.position_ids,
+            ref_position_ids=self.ref_position_ids,
+            token_type_ids=self.token_type_ids,
+            ref_token_type_ids=self.ref_token_type_ids,
+        )
+        start_lig.summarize()
+        self.start_attributions = start_lig
+
+        self.position = 1
+        end_lig = LIGAttributions(
+            self._forward,
+            embeddings,
+            reference_tokens,
+            self.input_ids,
+            self.ref_input_ids,
+            self.sep_idx,
+            self.attention_mask,
+            position_ids=self.position_ids,
+            ref_position_ids=self.ref_position_ids,
+            token_type_ids=self.token_type_ids,
+            ref_token_type_ids=self.ref_token_type_ids,
+        )
+        end_lig.summarize()
+        self.end_attributions = end_lig
+        self.attributions = [self.start_attributions, self.end_attributions]
 
     def __call__(self, question: str, text: str, embedding_type: int = 2) -> dict:
+        """
+        Calculates start and end position word attributions for `question` and `text` using the model
+        and tokenizer given in the constructor.
+
+        This explainer also allows for attributions with respect to a particlar embedding type.
+        This can be selected by passing a `embedding_type`. The default value is `2` which
+        attempts to calculate for all embeddings. If `0` is passed then attributions are w.r.t word_embeddings,
+        if `1` is passed then attributions are w.r.t position_embeddings.
+
+
+        Args:
+            question (str): The question text
+            text (str): The text or context from which the model finds an answers
+            embedding_type (int, optional): The embedding type word(0), position(1), all(2) to calculate attributions for.
+            Defaults to 2.
+
+        Returns:
+            dict: Dict for start and end position word attributions.
+        """
         return self._run(question, text, embedding_type)
