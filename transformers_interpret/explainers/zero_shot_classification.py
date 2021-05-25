@@ -19,12 +19,41 @@ SUPPORTED_ATTRIBUTION_TYPES = ["lig"]
 class ZeroShotClassificationExplainer(
     SequenceClassificationExplainer, QuestionAnsweringExplainer
 ):
+    """
+    Explainer for explaining attributions for models that can perform
+    zero-shot classification, specifically models trained on nli downstream tasks.
+
+    This explainer uses the same "trick" as Huggingface to achieve attributions on
+    arbitrary labels provided at inference time.
+
+    Model's provided to this explainer must be nli sequence classification models
+    and must have the label "entailment" or "ENTAILMENT" in
+    `model.config.label2id.keys()` in order for it to work correctly.
+
+    This explainer works by forcing the model to explain it's output with respect to
+    the entailment class. For each label passed at inference the explainer forms a hypothesis with each and
+    determines which has the highest predicted probability and then feeds that label as
+    a hypothesis to the model for attribution.
+
+    """
+
     def __init__(
         self,
         model: PreTrainedModel,
         tokenizer: PreTrainedTokenizer,
         attribution_type: str = "lig",
     ):
+        """
+
+        Args:
+            model (PreTrainedModel):Pretrained huggingface Sequence Classification model. Must be a NLI model.
+            tokenizer (PreTrainedTokenizer): Pretrained huggingface tokenizer
+            attribution_type (str, optional): The attribution method to calculate on. Defaults to "lig".
+
+        Raises:
+            AttributionTypeNotSupportedError: [description]
+            ValueError: [description]
+        """
         super().__init__(model, tokenizer)
         if attribution_type not in SUPPORTED_ATTRIBUTION_TYPES:
             raise AttributionTypeNotSupportedError(
@@ -185,6 +214,44 @@ class ZeroShotClassificationExplainer(
         hypothesis_template="this text is about {} .",
         include_hypothesis: bool = False,
     ) -> list:
+        """
+        Calculates attribution for `text` using the model and
+        tokenizer given in the constructor. Since `self.model` is
+        a NLI type model each label in `labels` is formatted to the
+        `hypothesis_template`. Whichever label gets the highest prediction
+        score for entailment is selected as the predicted label.
+
+        Attribution is then forced to be on the axis of whatever index
+        the entailment class resolves to. e.g. {"entailment": 0, "neutral": 1, "contradiction": 2 }
+        in the above case attributions would be for the label at index 0.
+
+        This explainer also allows for attributions with respect to a particlar embedding type.
+        This can be selected by passing a `embedding_type`. The default value is `0` which
+        is for word_embeddings, if `1` is passed then attributions are w.r.t to position_embeddings.
+        If a model does not take position ids in its forward method (distilbert) a warning will
+        occur and the default word_embeddings will be chosen instead.
+
+        The default `hypothesis_template` can also be overridden by providing a formattable
+        string which accepts exactly one formattable value for the label.
+
+        If `include_hypothesis` is set to `True` then the word attributions and visualization
+        of the attributions will also included the hypothesis text which gives a complete indication
+        of what the model sees at inference.
+
+        Args:
+            text (str): Text to provide attributions for.
+            labels (List[str]): The labels to classify the text to. If only one label is provided in the list then
+                attributions are guaranteed to be for that label.
+            embedding_type (int, optional): The embedding type word(0) or position(1) to calculate attributions for.
+                Defaults to 0.
+            hypothesis_template (str, optional): Hypothesis presetned to NLI model given text.
+                Defaults to "this text is about {} .".
+            include_hypothesis (bool, optional): Alternative option to include hypothesis text in attributions
+                and visualization. Defaults to False.
+
+        Returns:
+            list: List of tuples containing words and their associated attribution scores.
+        """
         self.include_hypothesis = include_hypothesis
         hypothesis_labels = [hypothesis_template.format(label) for label in labels]
 
