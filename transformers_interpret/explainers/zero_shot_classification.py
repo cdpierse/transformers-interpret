@@ -65,6 +65,7 @@ class ZeroShotClassificationExplainer(
 
         self.entailment_idx = self.label2id[self.entailment_key]
         self.include_hypothesis = False
+        self.attributions = []
 
     @property
     def word_attributions(self) -> list:
@@ -73,7 +74,7 @@ class ZeroShotClassificationExplainer(
             if self.include_hypothesis:
                 return self.attributions.word_attributions
             else:
-                return self.attributions.word_attributions[: self.sep_idx]
+                return self.attributions[0].word_attributions[: self.sep_idx]
         else:
             raise ValueError(
                 "Attributions have not yet been calculated. Please call the explainer on text first."
@@ -94,14 +95,17 @@ class ZeroShotClassificationExplainer(
         if not self.include_hypothesis:
             tokens = tokens[: self.sep_idx]
 
-        score_viz = self.attributions.visualize_attributions(  # type: ignore
-            self.pred_probs,
-            self.predicted_label,
-            self.predicted_label,
-            self.predicted_label,
-            tokens,
-        )
-        html = viz.visualize_text([score_viz])
+        score_viz = [
+            self.attributions[i].visualize_attributions(  # type: ignore
+                self.pred_probs[i],
+                self.labels[i],
+                self.labels[i],
+                self.labels[i],
+                tokens,
+            )
+            for i in range(len(self.attributions))
+        ]
+        html = viz.visualize_text(score_viz)
 
         if html_filepath:
             if not html_filepath.endswith(".html"):
@@ -167,6 +171,33 @@ class ZeroShotClassificationExplainer(
             len(text_ids),
         )
 
+    def _forward(  # type: ignore
+        self,
+        input_ids: torch.Tensor,
+        position_ids: torch.Tensor = None,
+        attention_mask: torch.Tensor = None,
+    ):
+
+        if self.accepts_position_ids:
+            preds = self.model(
+                input_ids,
+                position_ids=position_ids,
+                attention_mask=attention_mask,
+            )
+            preds = preds[0]
+
+        else:
+            preds = self.model(input_ids, attention_mask)[0]
+
+        # if it is a single output node
+        if len(preds[0]) == 1:
+            self._single_node_output = True
+            self.pred_probs = torch.sigmoid(preds)[0][0]
+            return torch.sigmoid(preds)[:, :]
+
+        self.pred_probs.append(torch.softmax(preds, dim=1)[0][self.selected_index])
+        return torch.softmax(preds, dim=1)[:, self.selected_index]
+
     def _calculate_attributions(  # type: ignore
         self, embeddings: Embedding, class_name: str, index: int = None
     ):
@@ -203,7 +234,7 @@ class ZeroShotClassificationExplainer(
             lig.summarize()
         else:
             lig.summarize(self.sep_idx)
-        self.attributions = lig
+        self.attributions.append(lig)
 
     def __call__(
         self,
@@ -251,17 +282,21 @@ class ZeroShotClassificationExplainer(
         Returns:
             list: List of tuples containing words and their associated attribution scores.
         """
+        self.attributions = []
+        self.pred_probs = []
         self.include_hypothesis = include_hypothesis
-        hypothesis_labels = [hypothesis_template.format(label) for label in labels]
+        self.labels = labels
+        self.hypothesis_labels = [hypothesis_template.format(label) for label in labels]
 
-        text_idx = self._get_top_predicted_label_idx(text, hypothesis_labels)
-        self.hypothesis_text = hypothesis_labels[text_idx]
-        self.predicted_label = (
-            labels[text_idx] + " (" + self.entailment_key.lower() + ")"
+        predicted_text_idx = self._get_top_predicted_label_idx(
+            text, self.hypothesis_labels
         )
 
-        return super().__call__(
-            text,
-            class_name=self.entailment_key,
-            embedding_type=embedding_type,
-        )
+        for i, _ in enumerate(labels):
+            self.hypothesis_text = self.hypothesis_labels[i]
+            self.predicted_label = labels[i] + " (" + self.entailment_key.lower() + ")"
+            super().__call__(
+                text,
+                class_name=self.entailment_key,
+                embedding_type=embedding_type,
+            )
