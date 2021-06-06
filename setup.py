@@ -22,7 +22,7 @@ setup(
             "test",
         ]
     ),
-    version="0.4.0",
+    version="0.5.0",
     license="Apache-2.0",
     description="Transformers Interpret is a model explainability tool designed to work exclusively with 🤗 transformers.",
     long_description=long_description,
