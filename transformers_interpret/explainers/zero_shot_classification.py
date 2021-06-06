@@ -30,10 +30,9 @@ class ZeroShotClassificationExplainer(
     `model.config.label2id.keys()` in order for it to work correctly.
 
     This explainer works by forcing the model to explain it's output with respect to
-    the entailment class. For each label passed at inference the explainer forms a hypothesis with each and
-    determines which has the highest predicted probability and then feeds that label as
-    a hypothesis to the model for attribution.
-
+    the entailment class. For each label passed at inference the explainer forms a hypothesis with each
+    and calculates attributions for each hypothesis label. The label with the highest predicted probability
+    can be accessed via the attribute `predicted_label`.
     """
 
     def __init__(
@@ -68,13 +67,21 @@ class ZeroShotClassificationExplainer(
         self.attributions = []
 
     @property
-    def word_attributions(self) -> list:
+    def word_attributions(self) -> dict:
         "Returns the word attributions for model and the text provided. Raises error if attributions not calculated."
-        if self.attributions is not None:
+        if self.attributions != []:
             if self.include_hypothesis:
-                return self.attributions.word_attributions
+                return dict(
+                    zip(
+                        self.labels,
+                        [attr.word_attributions for attr in self.attributions],
+                    )
+                )
             else:
-                return self.attributions[0].word_attributions[: self.sep_idx]
+                spliced_wa = [
+                    attr.word_attributions[: self.sep_idx] for attr in self.attributions
+                ]
+                return dict(zip(self.labels, spliced_wa))
         else:
             raise ValueError(
                 "Attributions have not yet been calculated. Please call the explainer on text first."
@@ -136,8 +143,14 @@ class ZeroShotClassificationExplainer(
                 input_ids, token_type_ids, position_ids, attention_mask
             )
             entailment_outputs.append(
-                float(torch.softmax(preds[0], dim=1)[0][self.entailment_idx])
+                float(torch.sigmoid(preds[0])[0][self.entailment_idx])
             )
+
+        normed_entailment_outputs = [
+            float(i) / sum(entailment_outputs) for i in entailment_outputs
+        ]
+
+        self.pred_probs = normed_entailment_outputs
 
         return entailment_outputs.index(max(entailment_outputs))
 
@@ -174,28 +187,14 @@ class ZeroShotClassificationExplainer(
     def _forward(  # type: ignore
         self,
         input_ids: torch.Tensor,
+        token_type_ids=None,
         position_ids: torch.Tensor = None,
         attention_mask: torch.Tensor = None,
     ):
 
-        if self.accepts_position_ids:
-            preds = self.model(
-                input_ids,
-                position_ids=position_ids,
-                attention_mask=attention_mask,
-            )
-            preds = preds[0]
+        preds = self._get_preds(input_ids, token_type_ids, position_ids, attention_mask)
+        preds = preds[0]
 
-        else:
-            preds = self.model(input_ids, attention_mask)[0]
-
-        # if it is a single output node
-        if len(preds[0]) == 1:
-            self._single_node_output = True
-            self.pred_probs = torch.sigmoid(preds)[0][0]
-            return torch.sigmoid(preds)[:, :]
-
-        self.pred_probs.append(torch.softmax(preds, dim=1)[0][self.selected_index])
         return torch.softmax(preds, dim=1)[:, self.selected_index]
 
     def _calculate_attributions(  # type: ignore
@@ -211,6 +210,11 @@ class ZeroShotClassificationExplainer(
             self.position_ids,
             self.ref_position_ids,
         ) = self._make_input_reference_position_id_pair(self.input_ids)
+
+        (
+            self.token_type_ids,
+            self.ref_token_type_ids,
+        ) = self._make_input_reference_token_type_pair(self.input_ids, self.sep_idx)
 
         self.attention_mask = self._make_attention_mask(self.input_ids)
 
@@ -229,6 +233,8 @@ class ZeroShotClassificationExplainer(
             self.attention_mask,
             position_ids=self.position_ids,
             ref_position_ids=self.ref_position_ids,
+            token_type_ids=self.token_type_ids,
+            ref_token_type_ids=self.ref_token_type_ids,
         )
         if self.include_hypothesis:
             lig.summarize()
@@ -243,15 +249,16 @@ class ZeroShotClassificationExplainer(
         embedding_type: int = 0,
         hypothesis_template="this text is about {} .",
         include_hypothesis: bool = False,
-    ) -> list:
+    ) -> dict:
         """
         Calculates attribution for `text` using the model and
         tokenizer given in the constructor. Since `self.model` is
         a NLI type model each label in `labels` is formatted to the
-        `hypothesis_template`. Whichever label gets the highest prediction
-        score for entailment is selected as the predicted label.
+        `hypothesis_template`. By default attributions are provided for all
+        labels. The top predicted label can be found in the `predicted_label`
+        attribute.
 
-        Attribution is then forced to be on the axis of whatever index
+        Attribution is forced to be on the axis of whatever index
         the entailment class resolves to. e.g. {"entailment": 0, "neutral": 1, "contradiction": 2 }
         in the above case attributions would be for the label at index 0.
 
@@ -292,7 +299,7 @@ class ZeroShotClassificationExplainer(
             text, self.hypothesis_labels
         )
 
-        for i, _ in enumerate(labels):
+        for i, _ in enumerate(self.labels):
             self.hypothesis_text = self.hypothesis_labels[i]
             self.predicted_label = labels[i] + " (" + self.entailment_key.lower() + ")"
             super().__call__(
@@ -300,3 +307,5 @@ class ZeroShotClassificationExplainer(
                 class_name=self.entailment_key,
                 embedding_type=embedding_type,
             )
+        self.predicted_label = self.labels[predicted_text_idx]
+        return self.word_attributions
