@@ -21,7 +21,7 @@ def test_zero_shot_explainer_init_distilbert():
     )
 
     assert zero_shot_explainer.attribution_type == "lig"
-    assert zero_shot_explainer.attributions is None
+    assert zero_shot_explainer.attributions == []
     assert zero_shot_explainer.label_exists is True
     assert zero_shot_explainer.entailment_key == "ENTAILMENT"
 
@@ -53,12 +53,14 @@ def test_zero_shot_explainer_word_attributions():
         DISTILBERT_MNLI_MODEL,
         DISTILBERT_MNLI_TOKENIZER,
     )
-
+    labels = ["urgent", "phone", "tablet", "computer"]
     word_attributions = zero_shot_explainer(
         "I have a problem with my iphone that needs to be resolved asap!!",
-        labels=["urgent", " not", "urgent", "phone", "tablet", "computer"],
+        labels=labels,
     )
-    assert isinstance(word_attributions, list)
+    assert isinstance(word_attributions, dict)
+    for label in labels:
+        assert label in word_attributions.keys()
 
 
 def test_zero_shot_explainer_call_word_attributions_early_raises_error():
@@ -76,18 +78,22 @@ def test_zero_shot_explainer_word_attributions_include_hypothesis():
         DISTILBERT_MNLI_MODEL,
         DISTILBERT_MNLI_TOKENIZER,
     )
-
+    labels = ["urgent", "phone", "tablet", "computer"]
     word_attributions_with_hyp = zero_shot_explainer(
         "I have a problem with my iphone that needs to be resolved asap!!",
-        labels=["urgent", " not", "urgent", "phone", "tablet", "computer"],
+        labels=labels,
         include_hypothesis=True,
     )
     word_attributions_without_hyp = zero_shot_explainer(
         "I have a problem with my iphone that needs to be resolved asap!!",
-        labels=["urgent", " not", "urgent", "phone", "tablet", "computer"],
+        labels=labels,
         include_hypothesis=False,
     )
-    assert len(word_attributions_with_hyp) > len(word_attributions_without_hyp)
+
+    for label in labels:
+        assert len(word_attributions_with_hyp[label]) > len(
+            word_attributions_without_hyp[label]
+        )
 
 
 def test_zero_shot_explainer_visualize():

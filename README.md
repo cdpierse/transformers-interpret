@@ -180,7 +180,7 @@ Let's start by initializing a transformers' sequence classification model and to
 For this example we are using `facebook/bart-large-mnli` which is a checkpoint for a bart-large model trained on the
 [MNLI dataset](https://huggingface.co/datasets/multi_nli). This model typically predicts whether a sentence pair are an entailment, neutral, or a contradiction, however for zero-shot we only look the entailment label.
 
-Notice that we pass our own custom labels `["finance", "technology", "sports"]` to the class instance. Any number of labels can be passed including as little as one. Whichever label scores highest for entailment is the predicted class. If you want to see the attributions for a particular label it is recommended just to pass in that one label and then the attributions will be guaranteed to be calculated w.r.t. that label.
+Notice that we pass our own custom labels `["finance", "technology", "sports"]` to the class instance. Any number of labels can be passed including as little as one. Whichever label scores highest for entailment can be accessed via `predicted_label`, however the attributions themselves are calculated for every label. If you want to see the attributions for a particular label it is recommended just to pass in that one label and then the attributions will be guaranteed to be calculated w.r.t. that label.
 
 ```python
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
@@ -201,44 +201,90 @@ word_attributions = zero_shot_explainer(
 
 ```
 
-Which will return the following list of tuples:
+Which will return the following dict of attribution tuple lists for each label:
 
 ```python
 >>> word_attributions
-[('<s>', 0.0),
- ('Today', 0.0),
- ('apple', 0.22505152647747717),
- ('released', -0.16164146624851905),
- ('the', 0.5026975657258089),
- ('new', 0.052589263167955536),
- ('Mac', 0.2528325960993759),
- ('book', -0.06445090203729663),
- ('showing', -0.21204922293777534),
- ('off', 0.06319714817612732),
- ('a', 0.032048012090796815),
- ('range', 0.08553079346908955),
- ('of', 0.1409201107994034),
- ('new', 0.0515261917112576),
- ('features', -0.09656406466213506),
- ('found', 0.02336613296843605),
- ('in', -0.0011649894272190678),
- ('the', 0.14229640664777807),
- ('proprietary', -0.23169065661847646),
- ('silicon', 0.5963924257008087),
- ('chip', -0.19908474233975806),
- ('computer', 0.030620295844734646),
- ('.', 0.1995076958535378)]
+{'finance': [('<s>', 0.0),
+  ('Today', 0.0),
+  ('apple', -0.016100065046282107),
+  ('released', 0.3348383988281792),
+  ('the', -0.8932952916127369),
+  ('new', 0.14207183688642497),
+  ('Mac', 0.016309545780430777),
+  ('book', -0.06956802041125129),
+  ('showing', -0.12661404114316252),
+  ('off', -0.11470154900720078),
+  ('a', -0.03299250484912159),
+  ('range', -0.002532332125100561),
+  ('of', -0.022451943898971004),
+  ('new', -0.01859870581213379),
+  ('features', -0.020774327263810944),
+  ('found', -0.007734346326330102),
+  ('in', 0.005100588658589585),
+  ('the', 0.04711084622588314),
+  ('proprietary', 0.046352064964644286),
+  ('silicon', -0.0033502000158946127),
+  ('chip', -0.010419324929115785),
+  ('computer', -0.11507972995022273),
+  ('.', 0.12237840300907425)],
+ 'technology': [('<s>', 0.0),
+  ('Today', 0.0),
+  ('apple', 0.22505152647747717),
+  ('released', -0.16164146624851905),
+  ('the', 0.5026975657258089),
+  ('new', 0.052589263167955536),
+  ('Mac', 0.2528325960993759),
+  ('book', -0.06445090203729663),
+  ('showing', -0.21204922293777534),
+  ('off', 0.06319714817612732),
+  ('a', 0.032048012090796815),
+  ('range', 0.08553079346908955),
+  ('of', 0.1409201107994034),
+  ('new', 0.0515261917112576),
+  ('features', -0.09656406466213506),
+  ('found', 0.02336613296843605),
+  ('in', -0.0011649894272190678),
+  ('the', 0.14229640664777807),
+  ('proprietary', -0.23169065661847646),
+  ('silicon', 0.5963924257008087),
+  ('chip', -0.19908474233975806),
+  ('computer', 0.030620295844734646),
+  ('.', 0.1995076958535378)],
+ 'sports': [('<s>', 0.0),
+  ('Today', 0.0),
+  ('apple', 0.1776618164760026),
+  ('released', 0.10067773539491479),
+  ('the', 0.4813466937627506),
+  ('new', -0.018555244191949295),
+  ('Mac', 0.016338241133536224),
+  ('book', 0.39311969562943677),
+  ('showing', 0.03579210145504227),
+  ('off', 0.0016710813632476176),
+  ('a', 0.04367940034297261),
+  ('range', 0.06076859006993011),
+  ('of', 0.11039711284328052),
+  ('new', 0.003932416031994724),
+  ('features', -0.009660883377622588),
+  ('found', -0.06507586539836184),
+  ('in', 0.2957812911667922),
+  ('the', 0.1584106228974514),
+  ('proprietary', 0.0005789280604917397),
+  ('silicon', -0.04693795680472678),
+  ('chip', -0.1699508539245465),
+  ('computer', -0.4290823663975582),
+  ('.', 0.469314992542427)]}
 ```
 
 We can find out which label was predicted with:
 
 ```python
 >>> zero_shot_explainer.predicted_label   
-'technology (entailment)'
+'technology'
 ```
 #### Visualize Zero Shot Classification attributions
 
-For the `ZeroShotClassificationExplainer` the visualize() method returns a table similar to the `SequenceClassificationExplainer`.
+For the `ZeroShotClassificationExplainer` the visualize() method returns a table similar to the `SequenceClassificationExplainer` but with attributions for every label.
 
 ```python
 zero_shot_explainer.visualize("zero_shot.html")
