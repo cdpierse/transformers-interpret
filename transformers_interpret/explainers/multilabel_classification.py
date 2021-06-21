@@ -14,7 +14,7 @@ from transformers_interpret.errors import (
 SUPPORTED_ATTRIBUTION_TYPES = ["lig"]
 
 
-class SequenceClassificationExplainer(BaseExplainer):
+class MultilabelSequenceClassificationExplainer(BaseExplainer):
     """
     Explainer for explaining attributions for models of type
     `{MODEL_NAME}ForSequenceClassification` from the Transformers package.
@@ -41,6 +41,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         tokenizer: PreTrainedTokenizer,
         attribution_type: str = "lig",
         custom_labels: Optional[List[str]] = None,
+        prediction_threshold: Optional[float] = 0.5
     ):
         """
         Args:
@@ -50,6 +51,7 @@ class SequenceClassificationExplainer(BaseExplainer):
             custom_labels (List[str], optional): Applies custom labels to label2id and id2label configs.
                                                  Labels must be same length as the base model configs' labels.
                                                  Labels and ids are applied index-wise. Defaults to None.
+            prediction_threshold (float, optional): What is a threshold for selecting which classes to assign as positive
 
         Raises:
             AttributionTypeNotSupportedError:
@@ -80,6 +82,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         self.input_ids: torch.Tensor = torch.Tensor()
 
         self._single_node_output = False
+        self.prediction_threshold = prediction_threshold
 
     @staticmethod
     def _get_id2label_and_label2id_dict(
@@ -101,23 +104,33 @@ class SequenceClassificationExplainer(BaseExplainer):
         return self.tokenizer.convert_ids_to_tokens(input_ids[0])
 
     @property
-    def predicted_class_index(self) -> int:
-        "Returns predicted class index (int) for model with last calculated `input_ids`"
+    def predicted_class_index(self) -> list(int):
+        "Returns a list of predicted class indices list(int) for model with last calculated `input_ids`"
         if len(self.input_ids) > 0:
             # we call this before _forward() so it has to be calculated twice
             preds = self.model(self.input_ids)[0]
-            self.pred_class = torch.argmax(torch.softmax(preds, dim=0)[0])
-            return torch.argmax(torch.softmax(preds, dim=1)[0]).cpu().detach().numpy()
-
+            if preds.dim() == 2:
+                predictions_list = [preds[i] for i in range(preds.shape[0])]
+            else:
+                predictions_list = [preds]
+            for prediction in predictions_list:
+                label_indices = torch.nonzero(prediction >= self._threshold, as_tuple=True)
+            if label_indices:
+                self.pred_class_index = label_indices[0].tolist()
+                self.pred_class = [self.id2label(int(index)) for index in self.pred_class_index]
+            else:
+                self.pred_class_index = []
+                self.pred_class = []
+            return label_indices
         else:
             raise InputIdsNotCalculatedError("input_ids have not been created yet.`")
 
     @property
     def predicted_class_name(self):
-        "Returns predicted class name (str) for model with last calculated `input_ids`"
+        "Returns predicted class names list(str) for model with last calculated `input_ids`"
         try:
-            index = self.predicted_class_index
-            return self.id2label[int(index)]
+            indices = self.predicted_class_index
+            return [self.id2label[int(index)] for index in indices]
         except Exception:
             return self.predicted_class_index
 
@@ -142,17 +155,11 @@ class SequenceClassificationExplainer(BaseExplainer):
 
         """
         tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
-        attr_class = self.id2label[self.selected_index]
+        attr_class = [self.id2label[selected_index] for selected_index in self.selected_index]
 
-        if self._single_node_output:
-            if true_class is None:
-                true_class = round(float(self.pred_probs))
-            predicted_class = round(float(self.pred_probs))
-            attr_class = round(float(self.pred_probs))
-        else:
-            if true_class is None:
-                true_class = self.selected_index
-            predicted_class = self.predicted_class_name
+        if true_class is None:
+            true_class = self.selected_index
+        predicted_class = self.predicted_class_name
 
         score_viz = self.attributions.visualize_attributions(  # type: ignore
             self.pred_probs,
@@ -188,17 +195,11 @@ class SequenceClassificationExplainer(BaseExplainer):
         else:
             preds = self.model(input_ids, attention_mask)[0]
 
-        # if it is a single output node
-        if len(preds[0]) == 1:
-            self._single_node_output = True
-            self.pred_probs = torch.sigmoid(preds)[0][0]
-            return torch.sigmoid(preds)[:, :]
-
-        self.pred_probs = torch.softmax(preds, dim=1)[0][self.selected_index]
+        self.pred_probs = torch.index_select(torch.sigmoid(preds, dim=1)[0], dim = 1, index = self.selected_index)
         return torch.softmax(preds, dim=1)[:, self.selected_index]
 
     def _calculate_attributions(  # type: ignore
-        self, embeddings: Embedding, index: list(int) = None, class_name: list(str) = None
+        self, embeddings: Embedding, index: int = None, class_name: str = None
     ):
         (
             self.input_ids,
@@ -216,14 +217,15 @@ class SequenceClassificationExplainer(BaseExplainer):
         if index is not None:
             self.selected_index = index
         elif class_name is not None:
-            self.selected_index = []
-            for cls_name in class_name:
-                if cls_name in self.label2id.keys():
-                    self.selected_index.append(int(self.label2id[cls_name]))
-                else:
-                    raise ValueError(f"one of the class names given {cls_name} is not in the list of valid class names: {self.label2id.keys()}")
+            if class_name in self.label2id.keys():
+                self.selected_index = int(self.label2id[class_name])
+            else:
+                s = f"'{class_name}' is not found in self.label2id keys."
+                s += "Defaulting to predicted index instead."
+                warnings.warn(s)
+                self.selected_index = int(self.predicted_class_index)
         else:
-            self.selected_index = [int(predicted_class_index) for predicted_class_index in self.predicted_class_index]
+            self.selected_index = int(self.predicted_class_index)
 
         reference_tokens = [
             token.replace("Ġ", "") for token in self.decode(self.input_ids)
@@ -275,8 +277,8 @@ class SequenceClassificationExplainer(BaseExplainer):
     def __call__(
         self,
         text: str,
-        index: list(int) = None,
-        class_name: list(str) = None,
+        index: int = None,
+        class_name: str = None,
         embedding_type: int = 0,
     ) -> list:
         """
