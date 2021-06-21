@@ -199,7 +199,7 @@ class MultilabelSequenceClassificationExplainer(BaseExplainer):
         return torch.softmax(preds, dim=1)[:, self.selected_index]
 
     def _calculate_attributions(  # type: ignore
-        self, embeddings: Embedding, index: int = None, class_name: str = None
+        self, embeddings: Embedding, index: list(int) = None, class_name: list(str) = None
     ):
         (
             self.input_ids,
@@ -217,15 +217,14 @@ class MultilabelSequenceClassificationExplainer(BaseExplainer):
         if index is not None:
             self.selected_index = index
         elif class_name is not None:
-            if class_name in self.label2id.keys():
-                self.selected_index = int(self.label2id[class_name])
-            else:
-                s = f"'{class_name}' is not found in self.label2id keys."
-                s += "Defaulting to predicted index instead."
-                warnings.warn(s)
-                self.selected_index = int(self.predicted_class_index)
+            self.selected_index = []
+            for cls_name in class_name:
+                if cls_name in self.label2id.keys():
+                    self.selected_index.append(int(self.label2id[cls_name]))
+                else:
+                    raise ValueError(f"one of the class names given {cls_name} is not in the list of valid class names: {self.label2id.keys()}")
         else:
-            self.selected_index = int(self.predicted_class_index)
+            self.selected_index = [int(predicted_class_index) for predicted_class_index in self.predicted_class_index]
 
         reference_tokens = [
             token.replace("Ġ", "") for token in self.decode(self.input_ids)
@@ -277,8 +276,8 @@ class MultilabelSequenceClassificationExplainer(BaseExplainer):
     def __call__(
         self,
         text: str,
-        index: int = None,
-        class_name: str = None,
+        index: list(int) = None,
+        class_name: list(str) = None,
         embedding_type: int = 0,
     ) -> list:
         """
