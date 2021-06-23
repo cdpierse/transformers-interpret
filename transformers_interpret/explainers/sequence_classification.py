@@ -81,6 +81,9 @@ class SequenceClassificationExplainer(BaseExplainer):
 
         self._single_node_output = False
 
+        self.internal_batch_size = None
+        self.n_steps = 50
+
     @staticmethod
     def _get_id2label_and_label2id_dict(
         labels: List[str],
@@ -239,6 +242,8 @@ class SequenceClassificationExplainer(BaseExplainer):
             self.attention_mask,
             position_ids=self.position_ids,
             ref_position_ids=self.ref_position_ids,
+            internal_batch_size=self.internal_batch_size,
+            n_steps=self.n_steps,
         )
         lig.summarize()
         self.attributions = lig
@@ -279,6 +284,8 @@ class SequenceClassificationExplainer(BaseExplainer):
         index: int = None,
         class_name: str = None,
         embedding_type: int = 0,
+        internal_batch_size: int = None,
+        n_steps: int = None,
     ) -> list:
         """
         Calculates attribution for `text` using the model
@@ -303,6 +310,11 @@ class SequenceClassificationExplainer(BaseExplainer):
         Returns:
             list: List of tuples containing words and their associated attribution scores.
         """
+
+        if n_steps:
+            self.n_steps = n_steps
+        if internal_batch_size:
+            self.internal_batch_size = internal_batch_size
         return self._run(text, index, class_name, embedding_type=embedding_type)
 
     def __str__(self):
