@@ -371,7 +371,14 @@ class QuestionAnsweringExplainer(BaseExplainer):
             question (str): The question text
             text (str): The text or context from which the model finds an answers
             embedding_type (int, optional): The embedding type word(0), position(1), all(2) to calculate attributions for.
-            Defaults to 2.
+                Defaults to 2.
+            internal_batch_size (int, optional): Divides total #steps * #examples
+                data points into chunks of size at most internal_batch_size,
+                which are computed (forward / backward passes)
+                sequentially. If internal_batch_size is None, then all evaluations are
+                processed in one batch.
+            n_steps (int, optional): The number of steps used by the approximation
+                method. Default: 50.
 
         Returns:
             dict: Dict for start and end position word attributions.

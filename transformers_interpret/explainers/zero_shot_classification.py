@@ -292,7 +292,13 @@ class ZeroShotClassificationExplainer(
                 Defaults to "this text is about {} .".
             include_hypothesis (bool, optional): Alternative option to include hypothesis text in attributions
                 and visualization. Defaults to False.
-
+            internal_batch_size (int, optional): Divides total #steps * #examples
+                data points into chunks of size at most internal_batch_size,
+                which are computed (forward / backward passes)
+                sequentially. If internal_batch_size is None, then all evaluations are
+                processed in one batch.
+            n_steps (int, optional): The number of steps used by the approximation
+                method. Default: 50.
         Returns:
             list: List of tuples containing words and their associated attribution scores.
         """
