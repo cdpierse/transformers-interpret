@@ -185,3 +185,29 @@ def test_zero_shot_model_lowercase_entailment():
             DISTILBERT_MNLI_MODEL,
             DISTILBERT_MNLI_TOKENIZER,
         )
+
+
+def test_zero_shot_custom_steps():
+    zero_shot_explainer = ZeroShotClassificationExplainer(
+        DISTILBERT_MNLI_MODEL,
+        DISTILBERT_MNLI_TOKENIZER,
+    )
+
+    zero_shot_explainer(
+        "I have a problem with my iphone that needs to be resolved asap!!",
+        labels=["urgent", " not", "urgent", "phone", "tablet", "computer"],
+        n_steps=1,
+    )
+
+
+def test_zero_shot_internal_batch_size():
+    zero_shot_explainer = ZeroShotClassificationExplainer(
+        DISTILBERT_MNLI_MODEL,
+        DISTILBERT_MNLI_TOKENIZER,
+    )
+
+    zero_shot_explainer(
+        "I have a problem with my iphone that needs to be resolved asap!!",
+        labels=["urgent", " not", "urgent", "phone", "tablet", "computer"],
+        internal_batch_size=1,
+    )

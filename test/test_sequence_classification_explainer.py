@@ -68,7 +68,6 @@ def test_sequence_classification_explainer_init_custom_labels_size_error():
         )
 
 
-
 def test_sequence_classification_encode():
     seq_explainer = SequenceClassificationExplainer(
         DISTILBERT_MODEL, DISTILBERT_TOKENIZER
@@ -263,3 +262,19 @@ def test_sequence_classification_viz():
     )
     seq_explainer(explainer_string)
     seq_explainer.visualize()
+
+
+def sequence_classification_custom_steps():
+    explainer_string = "I love you , I like you"
+    seq_explainer = SequenceClassificationExplainer(
+        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
+    )
+    seq_explainer(explainer_string, n_steps=1)
+
+
+def sequence_classification_internal_batch_size():
+    explainer_string = "I love you , I like you"
+    seq_explainer = SequenceClassificationExplainer(
+        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
+    )
+    seq_explainer(explainer_string, internal_batch_size=1)
