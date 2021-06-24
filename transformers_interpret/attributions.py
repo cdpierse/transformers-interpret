@@ -29,6 +29,8 @@ class LIGAttributions(Attributions):
         position_ids: torch.Tensor = None,
         ref_token_type_ids: torch.Tensor = None,
         ref_position_ids: torch.Tensor = None,
+        internal_batch_size: int = None,
+        n_steps: int = 50,
     ):
         super().__init__(custom_forward, embeddings, tokens)
         self.input_ids = input_ids
@@ -38,6 +40,8 @@ class LIGAttributions(Attributions):
         self.position_ids = position_ids
         self.ref_token_type_ids = ref_token_type_ids
         self.ref_position_ids = ref_position_ids
+        self.internal_batch_size = internal_batch_size
+        self.n_steps = n_steps
 
         self.lig = LayerIntegratedGradients(self.custom_forward, self.embeddings)
 
@@ -51,6 +55,8 @@ class LIGAttributions(Attributions):
                 ),
                 return_convergence_delta=True,
                 additional_forward_args=(self.attention_mask),
+                internal_batch_size=self.internal_batch_size,
+                n_steps=self.n_steps,
             )
         elif self.position_ids is not None:
             self._attributions, self.delta = self.lig.attribute(
@@ -61,6 +67,8 @@ class LIGAttributions(Attributions):
                 ),
                 return_convergence_delta=True,
                 additional_forward_args=(self.attention_mask),
+                internal_batch_size=self.internal_batch_size,
+                n_steps=self.n_steps,
             )
         elif self.token_type_ids is not None:
             self._attributions, self.delta = self.lig.attribute(
@@ -71,6 +79,8 @@ class LIGAttributions(Attributions):
                 ),
                 return_convergence_delta=True,
                 additional_forward_args=(self.attention_mask),
+                internal_batch_size=self.internal_batch_size,
+                n_steps=self.n_steps,
             )
 
         else:
@@ -78,6 +88,8 @@ class LIGAttributions(Attributions):
                 inputs=self.input_ids,
                 baselines=self.ref_input_ids,
                 return_convergence_delta=True,
+                internal_batch_size=self.internal_batch_size,
+                n_steps=self.n_steps,
             )
 
     @property

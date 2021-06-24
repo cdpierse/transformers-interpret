@@ -50,6 +50,9 @@ class QuestionAnsweringExplainer(BaseExplainer):
 
         self.position = 0
 
+        self.internal_batch_size = None
+        self.n_steps = 50
+
     def encode(self, text: str) -> list:  # type: ignore
         "Encode 'text' using tokenizer, special tokens are not added"
         return self.tokenizer.encode(text, add_special_tokens=False)
@@ -320,6 +323,8 @@ class QuestionAnsweringExplainer(BaseExplainer):
             ref_position_ids=self.ref_position_ids,
             token_type_ids=self.token_type_ids,
             ref_token_type_ids=self.ref_token_type_ids,
+            internal_batch_size=self.internal_batch_size,
+            n_steps=self.n_steps,
         )
         start_lig.summarize()
         self.start_attributions = start_lig
@@ -337,12 +342,21 @@ class QuestionAnsweringExplainer(BaseExplainer):
             ref_position_ids=self.ref_position_ids,
             token_type_ids=self.token_type_ids,
             ref_token_type_ids=self.ref_token_type_ids,
+            internal_batch_size=self.internal_batch_size,
+            n_steps=self.n_steps,
         )
         end_lig.summarize()
         self.end_attributions = end_lig
         self.attributions = [self.start_attributions, self.end_attributions]
 
-    def __call__(self, question: str, text: str, embedding_type: int = 2) -> dict:
+    def __call__(
+        self,
+        question: str,
+        text: str,
+        embedding_type: int = 2,
+        internal_batch_size: int = None,
+        n_steps: int = None,
+    ) -> dict:
         """
         Calculates start and end position word attributions for `question` and `text` using the model
         and tokenizer given in the constructor.
@@ -357,9 +371,21 @@ class QuestionAnsweringExplainer(BaseExplainer):
             question (str): The question text
             text (str): The text or context from which the model finds an answers
             embedding_type (int, optional): The embedding type word(0), position(1), all(2) to calculate attributions for.
-            Defaults to 2.
+                Defaults to 2.
+            internal_batch_size (int, optional): Divides total #steps * #examples
+                data points into chunks of size at most internal_batch_size,
+                which are computed (forward / backward passes)
+                sequentially. If internal_batch_size is None, then all evaluations are
+                processed in one batch.
+            n_steps (int, optional): The number of steps used by the approximation
+                method. Default: 50.
 
         Returns:
             dict: Dict for start and end position word attributions.
         """
+
+        if n_steps:
+            self.n_steps = n_steps
+        if internal_batch_size:
+            self.internal_batch_size = internal_batch_size
         return self._run(question, text, embedding_type)

@@ -180,3 +180,21 @@ def test_question_answering_visualize_save_append_html_file_ending():
     qa_explainer.visualize(html_filename)
     assert os.path.exists(html_filename + ".html")
     os.remove(html_filename + ".html")
+
+
+def test_question_answering_custom_steps():
+    qa_explainer = QuestionAnsweringExplainer(
+        DISTILBERT_QA_MODEL, DISTILBERT_QA_TOKENIZER
+    )
+    explainer_question = "what is his name ?"
+    explainer_text = "his name is Bob"
+    qa_explainer(explainer_question, explainer_text, n_steps=1)
+
+
+def test_question_answering_custom_internal_batch_size():
+    qa_explainer = QuestionAnsweringExplainer(
+        DISTILBERT_QA_MODEL, DISTILBERT_QA_TOKENIZER
+    )
+    explainer_question = "what is his name ?"
+    explainer_text = "his name is Bob"
+    qa_explainer(explainer_question, explainer_text, internal_batch_size=1)
