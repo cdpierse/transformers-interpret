@@ -44,8 +44,7 @@ class BaseExplainer(ABC):
         else:
             self.accepts_token_type_ids = False
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model.to(self.device)
+        self.device = self.model.device
 
         self.word_embeddings = self.model.get_input_embeddings()
         self.position_embeddings = None
