@@ -98,6 +98,16 @@ def test_explainer_init_gpt2():
     assert explainer.word_embeddings is not None
 
 
+def test_explainer_init_cpu():
+    old_device = DISTILBERT_MODEL.device
+    try:
+        DISTILBERT_MODEL.to("cpu")
+        explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
+        assert explainer.device.type == "cpu"
+    finally:
+        DISTILBERT_MODEL.to(old_device)
+
+
 def test_explainer_make_input_reference_pair():
     explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair(
