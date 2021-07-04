@@ -52,10 +52,7 @@ def test_explainer_init_distilbert():
         explainer.tokenizer, PreTrainedTokenizer
     )
     assert explainer.model_prefix == DISTILBERT_MODEL.base_model_prefix
-    if torch.cuda.is_available():
-        assert explainer.device.type == "cuda:0"
-    else:
-        assert explainer.device.type == "cpu"
+    assert explainer.device == DISTILBERT_MODEL.device
 
     assert explainer.accepts_position_ids is False
     assert explainer.accepts_token_type_ids is False
@@ -73,10 +70,7 @@ def test_explainer_init_bert():
         explainer.tokenizer, PreTrainedTokenizer
     )
     assert explainer.model_prefix == BERT_MODEL.base_model_prefix
-    if torch.cuda.is_available():
-        assert explainer.device.type == "cuda:0"
-    else:
-        assert explainer.device.type == "cpu"
+    assert explainer.device == BERT_MODEL.device
 
     assert explainer.accepts_position_ids is True
     assert explainer.accepts_token_type_ids is True
@@ -94,10 +88,7 @@ def test_explainer_init_gpt2():
         explainer.tokenizer, PreTrainedTokenizer
     )
     assert explainer.model_prefix == GPT2_MODEL.base_model_prefix
-    if torch.cuda.is_available():
-        assert explainer.device.type == "cuda:0"
-    else:
-        assert explainer.device.type == "cpu"
+    assert explainer.device == GPT2_MODEL.device
 
     assert explainer.accepts_position_ids is True
     assert explainer.accepts_token_type_ids is True
