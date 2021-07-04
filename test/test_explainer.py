@@ -108,6 +108,19 @@ def test_explainer_init_cpu():
         DISTILBERT_MODEL.to(old_device)
 
 
+def test_explainer_init_cuda():
+    if not torch.cuda.is_available():
+        print("Cuda device not available to test. Skipping.")
+    else:
+        old_device = DISTILBERT_MODEL.device
+        try:
+            DISTILBERT_MODEL.to("cuda")
+            explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
+            assert explainer.device.type == "cuda"
+        finally:
+            DISTILBERT_MODEL.to(old_device)
+
+
 def test_explainer_make_input_reference_pair():
     explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair(
