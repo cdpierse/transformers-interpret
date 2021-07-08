@@ -52,10 +52,7 @@ def test_explainer_init_distilbert():
         explainer.tokenizer, PreTrainedTokenizer
     )
     assert explainer.model_prefix == DISTILBERT_MODEL.base_model_prefix
-    if torch.cuda.is_available():
-        assert explainer.device.type == "cuda:0"
-    else:
-        assert explainer.device.type == "cpu"
+    assert explainer.device == DISTILBERT_MODEL.device
 
     assert explainer.accepts_position_ids is False
     assert explainer.accepts_token_type_ids is False
@@ -73,10 +70,7 @@ def test_explainer_init_bert():
         explainer.tokenizer, PreTrainedTokenizer
     )
     assert explainer.model_prefix == BERT_MODEL.base_model_prefix
-    if torch.cuda.is_available():
-        assert explainer.device.type == "cuda:0"
-    else:
-        assert explainer.device.type == "cpu"
+    assert explainer.device == BERT_MODEL.device
 
     assert explainer.accepts_position_ids is True
     assert explainer.accepts_token_type_ids is True
@@ -94,10 +88,7 @@ def test_explainer_init_gpt2():
         explainer.tokenizer, PreTrainedTokenizer
     )
     assert explainer.model_prefix == GPT2_MODEL.base_model_prefix
-    if torch.cuda.is_available():
-        assert explainer.device.type == "cuda:0"
-    else:
-        assert explainer.device.type == "cpu"
+    assert explainer.device == GPT2_MODEL.device
 
     assert explainer.accepts_position_ids is True
     assert explainer.accepts_token_type_ids is True
@@ -105,6 +96,29 @@ def test_explainer_init_gpt2():
     assert explainer.model.config.model_type == "gpt2"
     assert explainer.position_embeddings is not None
     assert explainer.word_embeddings is not None
+
+
+def test_explainer_init_cpu():
+    old_device = DISTILBERT_MODEL.device
+    try:
+        DISTILBERT_MODEL.to("cpu")
+        explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
+        assert explainer.device.type == "cpu"
+    finally:
+        DISTILBERT_MODEL.to(old_device)
+
+
+def test_explainer_init_cuda():
+    if not torch.cuda.is_available():
+        print("Cuda device not available to test. Skipping.")
+    else:
+        old_device = DISTILBERT_MODEL.device
+        try:
+            DISTILBERT_MODEL.to("cuda")
+            explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
+            assert explainer.device.type == "cuda"
+        finally:
+            DISTILBERT_MODEL.to(old_device)
 
 
 def test_explainer_make_input_reference_pair():
