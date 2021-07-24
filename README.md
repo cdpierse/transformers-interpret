@@ -43,6 +43,7 @@ Check out the streamlit [demo app here](https://share.streamlit.io/cdpierse/tran
   - [Future Development](#future-development)
   - [Contributing](#contributing)
   - [Questions / Get In Touch](#questions--get-in-touch)
+  - [Reading and Resources](#reading-resources)
   - [Miscellaneous](#miscellaneous)
 
 <a name="install"/>
@@ -462,6 +463,28 @@ The main contributor to this repository is [@cdpierse](https://github.com/cdpier
 If you have any questions, suggestions, or would like to make a contribution (please do 😁), feel free to get in touch at charlespierse@gmail.com
 
 I'd also highly suggest checking out [Captum](https://captum.ai/) if you find model explainability and interpretability interesting. They are doing amazing and important work. In fact, this package stands on the shoulders of the the incredible work being done by the teams at [Pytorch Captum](https://captum.ai/) and [Hugging Face](https://huggingface.co/) and would not exist if not for the amazing job they are both doing in the fields of NLP and model interpretability respectively.
+## Reading and Resources
+<a name="reading-resources"/>
+
+**Captum**
+
+All of the attributions within this package are calculated using PyTorch's explainability package [Captum](https://captum.ai/). See below for some useful links related to Captum. 
+
+- [Captum Algorithm Overview](https://captum.ai/docs/algorithms)
+- [Bert QA Example](https://captum.ai/tutorials/Bert_SQUAD_Interpret) this an implementation acheived purely using Captum. 
+- [API Reference](https://captum.ai/api/)
+- [Model Interpretability with Captum - Narine Kokhilkyan (Video)](https://www.youtube.com/watch?v=iVSIFm0UN9I)
+
+**Attributions**
+
+Integrated Gradients (IG) and a variation of it Layer Integrated Gradients (LIG) are the core attribution methods on which Transformers Interpret is currently built. Below are some useful resources including the original paper and some video links explaining the inner mechanics. If you are curious about what is going on inside of Transformers Interpret I highly recommend checking out at least one of these resources. 
+
+- [Axiomatic Attributions for Deep Networks](https://arxiv.org/abs/1703.01365) the original paper [2017] where Integrated Gradients was specified. 
+- [Fiddler AI YouTube video on IG](https://www.youtube.com/watch?v=9AaDc35JYiI)
+- [Henry AI Labs YouTube Primer on IG](https://www.youtube.com/watch?v=MB8KYX5UzKw)
+- [Explaining Explanations: Axiomatic Feature Interactions for Deep Networks](http://export.arxiv.org/abs/2002.04138) more recent paper [2020] extending the work of the original paper. 
+
+
 
 ## Miscellaneous
 
@@ -473,3 +496,5 @@ Below are some links I used to help me get this package together using Captum. T
 - [Link to runnable colab of captum with BERT](https://colab.research.google.com/drive/1snFbxdVDtL3JEFW7GNfRs1PZKgNHfoNz)
 
 [transformers]: https://huggingface.co/transformers/
+
+
