@@ -194,7 +194,10 @@ class BaseExplainer(ABC):
         return parameter in parameters
 
     def _set_available_embedding_types(self):
-        model_base = getattr(self.model, self.model_prefix)
+        try:
+            model_base = getattr(self.model,  self.model_prefix)
+        except AttributeError:
+            model_base = self.model
         if self.model.config.model_type == "gpt2" and hasattr(model_base, "wpe"):
             self.position_embeddings = model_base.wpe.weight
         else:
