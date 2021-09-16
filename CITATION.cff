@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Pierse"
+  given-names: "Charles"
+title: "Transformers Interpret"
+version: 0.5.2
+date-released: 2021-02-14
+url: "https://github.com/cdpierse/transformers-interpret"
