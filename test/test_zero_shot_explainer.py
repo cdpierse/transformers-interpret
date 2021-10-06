@@ -187,7 +187,7 @@ def test_zero_shot_model_lowercase_entailment():
         )
 
 
-def test_zero_shot_custom_steps():
+def xtest_zero_shot_custom_steps():
     zero_shot_explainer = ZeroShotClassificationExplainer(
         DISTILBERT_MNLI_MODEL,
         DISTILBERT_MNLI_TOKENIZER,
@@ -200,7 +200,7 @@ def test_zero_shot_custom_steps():
     )
 
 
-def test_zero_shot_internal_batch_size():
+def xtest_zero_shot_internal_batch_size():
     zero_shot_explainer = ZeroShotClassificationExplainer(
         DISTILBERT_MNLI_MODEL,
         DISTILBERT_MNLI_TOKENIZER,
