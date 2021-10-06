@@ -16,6 +16,7 @@ jobs:
       - python/save-cache
       - run:
           name: Run Tests
+          no_output_timeout: 30m
           command: |
             python -m pytest
 
