@@ -182,7 +182,7 @@ def test_question_answering_visualize_save_append_html_file_ending():
     os.remove(html_filename + ".html")
 
 
-def test_question_answering_custom_steps():
+def xtest_question_answering_custom_steps():
     qa_explainer = QuestionAnsweringExplainer(
         DISTILBERT_QA_MODEL, DISTILBERT_QA_TOKENIZER
     )
@@ -191,7 +191,7 @@ def test_question_answering_custom_steps():
     qa_explainer(explainer_question, explainer_text, n_steps=1)
 
 
-def test_question_answering_custom_internal_batch_size():
+def xtest_question_answering_custom_internal_batch_size():
     qa_explainer = QuestionAnsweringExplainer(
         DISTILBERT_QA_MODEL, DISTILBERT_QA_TOKENIZER
     )
