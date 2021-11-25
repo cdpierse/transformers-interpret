@@ -43,7 +43,7 @@ Check out the streamlit [demo app here](https://share.streamlit.io/cdpierse/tran
   - [Future Development](#future-development)
   - [Contributing](#contributing)
   - [Questions / Get In Touch](#questions--get-in-touch)
-  - [Reading and Resources](#reading-resources)
+  - [Reading and Resources](#reading-and-resources)
   - [Miscellaneous](#miscellaneous)
 
 <a name="install"/>
@@ -70,6 +70,9 @@ The package does not work with Python 2.7 or below.
 <a name="classification"/>
 
 ### Sequence Classification Explainer
+
+<details>
+<summary>Click to open example</summary>
 
 Let's start by initializing a transformers' model and tokenizer, and running it through the `SequenceClassificationExplainer`.
 
@@ -170,7 +173,13 @@ For a detailed explanation of this example please checkout this [multiclass clas
 
 <a name="qa"/>
 
+</details>
+
 ### Zero Shot Classification Explainer
+
+<details>
+<summary>Click to open example</summary>
+
 
 _Models using this explainer must be previously trained on NLI classification downstream tasks and have a label in the model's config called either "entailment" or "ENTAILMENT"._
 
@@ -280,9 +289,10 @@ Which will return the following dict of attribution tuple lists for each label:
 We can find out which label was predicted with:
 
 ```python
->>> zero_shot_explainer.predicted_label   
+>>> zero_shot_explainer.predicted_label
 'technology'
 ```
+
 #### Visualize Zero Shot Classification attributions
 
 For the `ZeroShotClassificationExplainer` the visualize() method returns a table similar to the `SequenceClassificationExplainer` but with attributions for every label.
@@ -295,7 +305,12 @@ zero_shot_explainer.visualize("zero_shot.html")
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/zero_shot_example.png" width="100%" height="100%" align="center" />
 </a>
 
+</details>
+
 ### Question Answering Explainer (Experimental)
+
+<details>
+<!-- <summary>Click to open example</summary> -->
 
 _This is currently an experimental explainer under active development and is not yet fully tested. The explainers' API is subject to change as are the attribution methods, if you find any bugs please let me know._
 
@@ -431,13 +446,15 @@ qa_explainer.visualize("bert_qa_viz.html")
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_qa_explainer.png" width="120%" height="120%" align="center" />
 </a>
 
+</details>
+
 <a name="future"/>
 
 ## Future Development
 
 This package is still in its early days and there is much more planned. For a 1.0.0 release we're aiming to have:
 
-- Clean and thorough documentation website (__In Progress__)
+- Clean and thorough documentation website (**In Progress**)
 - ~~Support for Question Answering models~~
 - Support for NER models
 - Support for Multiple Choice models
@@ -463,28 +480,28 @@ The main contributor to this repository is [@cdpierse](https://github.com/cdpier
 If you have any questions, suggestions, or would like to make a contribution (please do 😁), feel free to get in touch at charlespierse@gmail.com
 
 I'd also highly suggest checking out [Captum](https://captum.ai/) if you find model explainability and interpretability interesting. They are doing amazing and important work. In fact, this package stands on the shoulders of the the incredible work being done by the teams at [Pytorch Captum](https://captum.ai/) and [Hugging Face](https://huggingface.co/) and would not exist if not for the amazing job they are both doing in the fields of NLP and model interpretability respectively.
+
 ## Reading and Resources
+
 <a name="reading-resources"/>
 
 **Captum**
 
-All of the attributions within this package are calculated using PyTorch's explainability package [Captum](https://captum.ai/). See below for some useful links related to Captum. 
+All of the attributions within this package are calculated using PyTorch's explainability package [Captum](https://captum.ai/). See below for some useful links related to Captum.
 
 - [Captum Algorithm Overview](https://captum.ai/docs/algorithms)
-- [Bert QA Example](https://captum.ai/tutorials/Bert_SQUAD_Interpret) this an implementation acheived purely using Captum. 
+- [Bert QA Example](https://captum.ai/tutorials/Bert_SQUAD_Interpret) this an implementation acheived purely using Captum.
 - [API Reference](https://captum.ai/api/)
 - [Model Interpretability with Captum - Narine Kokhilkyan (Video)](https://www.youtube.com/watch?v=iVSIFm0UN9I)
 
 **Attributions**
 
-Integrated Gradients (IG) and a variation of it Layer Integrated Gradients (LIG) are the core attribution methods on which Transformers Interpret is currently built. Below are some useful resources including the original paper and some video links explaining the inner mechanics. If you are curious about what is going on inside of Transformers Interpret I highly recommend checking out at least one of these resources. 
+Integrated Gradients (IG) and a variation of it Layer Integrated Gradients (LIG) are the core attribution methods on which Transformers Interpret is currently built. Below are some useful resources including the original paper and some video links explaining the inner mechanics. If you are curious about what is going on inside of Transformers Interpret I highly recommend checking out at least one of these resources.
 
-- [Axiomatic Attributions for Deep Networks](https://arxiv.org/abs/1703.01365) the original paper [2017] where Integrated Gradients was specified. 
+- [Axiomatic Attributions for Deep Networks](https://arxiv.org/abs/1703.01365) the original paper [2017] where Integrated Gradients was specified.
 - [Fiddler AI YouTube video on IG](https://www.youtube.com/watch?v=9AaDc35JYiI)
 - [Henry AI Labs YouTube Primer on IG](https://www.youtube.com/watch?v=MB8KYX5UzKw)
-- [Explaining Explanations: Axiomatic Feature Interactions for Deep Networks](http://export.arxiv.org/abs/2002.04138) more recent paper [2020] extending the work of the original paper. 
-
-
+- [Explaining Explanations: Axiomatic Feature Interactions for Deep Networks](http://export.arxiv.org/abs/2002.04138) more recent paper [2020] extending the work of the original paper.
 
 ## Miscellaneous
 
@@ -496,5 +513,3 @@ Below are some links I used to help me get this package together using Captum. T
 - [Link to runnable colab of captum with BERT](https://colab.research.google.com/drive/1snFbxdVDtL3JEFW7GNfRs1PZKgNHfoNz)
 
 [transformers]: https://huggingface.co/transformers/
-
-
