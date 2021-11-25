@@ -67,12 +67,10 @@ The package does not work with Python 2.7 or below.
 
 ## Quick Start
 
-<a name="classification"/>
 
 ### Sequence Classification Explainer
 
-<details>
-<summary>Click to open example</summary>
+<details><summary>Click to expand</summary>
 
 Let's start by initializing a transformers' model and tokenizer, and running it through the `SequenceClassificationExplainer`.
 
@@ -171,14 +169,13 @@ Getting attributions for different classes is particularly insightful for multic
 
 For a detailed explanation of this example please checkout this [multiclass classification notebook.](notebooks/multiclass_classification_example.ipynb)
 
-<a name="qa"/>
 
 </details>
 
 ### Zero Shot Classification Explainer
 
-<details>
-<summary>Click to open example</summary>
+<details><summary>Click to expand</summary>
+
 
 
 _Models using this explainer must be previously trained on NLI classification downstream tasks and have a label in the model's config called either "entailment" or "ENTAILMENT"._
@@ -308,9 +305,8 @@ zero_shot_explainer.visualize("zero_shot.html")
 </details>
 
 ### Question Answering Explainer (Experimental)
-
-<details>
-<!-- <summary>Click to open example</summary> -->
+    
+<details><summary>Click to expand</summary>
 
 _This is currently an experimental explainer under active development and is not yet fully tested. The explainers' API is subject to change as are the attribution methods, if you find any bugs please let me know._
 
