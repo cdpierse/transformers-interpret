@@ -69,9 +69,7 @@ class SequenceClassificationExplainer(BaseExplainer):
                     '{len(model.config.label2id)}'"""
                 )
 
-            self.id2label, self.label2id = self._get_id2label_and_label2id_dict(
-                custom_labels
-            )
+            self.id2label, self.label2id = self._get_id2label_and_label2id_dict(custom_labels)
         else:
             self.label2id = model.config.label2id
             self.id2label = model.config.id2label
@@ -130,9 +128,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         if self.attributions is not None:
             return self.attributions.word_attributions
         else:
-            raise ValueError(
-                "Attributions have not yet been calculated. Please call the explainer on text first."
-            )
+            raise ValueError("Attributions have not yet been calculated. Please call the explainer on text first.")
 
     def visualize(self, html_filepath: str = None, true_class: str = None):
         """
@@ -200,9 +196,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         self.pred_probs = torch.softmax(preds, dim=1)[0][self.selected_index]
         return torch.softmax(preds, dim=1)[:, self.selected_index]
 
-    def _calculate_attributions(  # type: ignore
-        self, embeddings: Embedding, index: int = None, class_name: str = None
-    ):
+    def _calculate_attributions(self, embeddings: Embedding, index: int = None, class_name: str = None):  # type: ignore
         (
             self.input_ids,
             self.ref_input_ids,
@@ -229,9 +223,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         else:
             self.selected_index = int(self.predicted_class_index)
 
-        reference_tokens = [
-            token.replace("Ġ", "") for token in self.decode(self.input_ids)
-        ]
+        reference_tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
         lig = LIGAttributions(
             self._forward,
             embeddings,
@@ -273,9 +265,7 @@ class SequenceClassificationExplainer(BaseExplainer):
 
         self.text = self._clean_text(text)
 
-        self._calculate_attributions(
-            embeddings=embeddings, index=index, class_name=class_name
-        )
+        self._calculate_attributions(embeddings=embeddings, index=index, class_name=class_name)
         return self.word_attributions  # type: ignore
 
     def __call__(

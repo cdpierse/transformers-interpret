@@ -6,12 +6,8 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from transformers_interpret import ZeroShotClassificationExplainer
 from transformers_interpret.errors import AttributionTypeNotSupportedError
 
-DISTILBERT_MNLI_MODEL = AutoModelForSequenceClassification.from_pretrained(
-    "typeform/distilbert-base-uncased-mnli"
-)
-DISTILBERT_MNLI_TOKENIZER = AutoTokenizer.from_pretrained(
-    "typeform/distilbert-base-uncased-mnli"
-)
+DISTILBERT_MNLI_MODEL = AutoModelForSequenceClassification.from_pretrained("typeform/distilbert-base-uncased-mnli")
+DISTILBERT_MNLI_TOKENIZER = AutoTokenizer.from_pretrained("typeform/distilbert-base-uncased-mnli")
 
 
 def test_zero_shot_explainer_init_distilbert():
@@ -91,9 +87,7 @@ def test_zero_shot_explainer_word_attributions_include_hypothesis():
     )
 
     for label in labels:
-        assert len(word_attributions_with_hyp[label]) > len(
-            word_attributions_without_hyp[label]
-        )
+        assert len(word_attributions_with_hyp[label]) > len(word_attributions_without_hyp[label])
 
 
 def test_zero_shot_explainer_visualize():
@@ -157,9 +151,7 @@ def test_zero_explainer_visualize_save_append_html_file_ending():
 
 
 def test_zero_shot_model_does_not_have_entailment_label():
-    with patch.object(
-        DISTILBERT_MNLI_MODEL.config, "label2id", {"l1": 0, "l2": 1, "l3": 2}
-    ):
+    with patch.object(DISTILBERT_MNLI_MODEL.config, "label2id", {"l1": 0, "l2": 1, "l3": 2}):
         with pytest.raises(ValueError):
             ZeroShotClassificationExplainer(
                 DISTILBERT_MNLI_MODEL,
@@ -168,9 +160,7 @@ def test_zero_shot_model_does_not_have_entailment_label():
 
 
 def test_zero_shot_model_uppercase_entailment():
-    with patch.object(
-        DISTILBERT_MNLI_MODEL.config, "label2id", {"ENTAILMENT": 0, "l2": 1, "l3": 2}
-    ):
+    with patch.object(DISTILBERT_MNLI_MODEL.config, "label2id", {"ENTAILMENT": 0, "l2": 1, "l3": 2}):
         ZeroShotClassificationExplainer(
             DISTILBERT_MNLI_MODEL,
             DISTILBERT_MNLI_TOKENIZER,
@@ -178,9 +168,7 @@ def test_zero_shot_model_uppercase_entailment():
 
 
 def test_zero_shot_model_lowercase_entailment():
-    with patch.object(
-        DISTILBERT_MNLI_MODEL.config, "label2id", {"entailment": 0, "l2": 1, "l3": 2}
-    ):
+    with patch.object(DISTILBERT_MNLI_MODEL.config, "label2id", {"entailment": 0, "l2": 1, "l3": 2}):
         ZeroShotClassificationExplainer(
             DISTILBERT_MNLI_MODEL,
             DISTILBERT_MNLI_TOKENIZER,

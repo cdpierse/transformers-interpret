@@ -6,25 +6,15 @@ from transformers_interpret.errors import (
     InputIdsNotCalculatedError,
 )
 
-DISTILBERT_MODEL = AutoModelForSequenceClassification.from_pretrained(
-    "distilbert-base-uncased-finetuned-sst-2-english"
-)
-DISTILBERT_TOKENIZER = AutoTokenizer.from_pretrained(
-    "distilbert-base-uncased-finetuned-sst-2-english"
-)
+DISTILBERT_MODEL = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased-finetuned-sst-2-english")
+DISTILBERT_TOKENIZER = AutoTokenizer.from_pretrained("distilbert-base-uncased-finetuned-sst-2-english")
 
-BERT_MODEL = AutoModelForSequenceClassification.from_pretrained(
-    "mrm8488/bert-mini-finetuned-age_news-classification"
-)
-BERT_TOKENIZER = AutoTokenizer.from_pretrained(
-    "mrm8488/bert-mini-finetuned-age_news-classification"
-)
+BERT_MODEL = AutoModelForSequenceClassification.from_pretrained("mrm8488/bert-mini-finetuned-age_news-classification")
+BERT_TOKENIZER = AutoTokenizer.from_pretrained("mrm8488/bert-mini-finetuned-age_news-classification")
 
 
 def test_sequence_classification_explainer_init_distilbert():
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     assert seq_explainer.attribution_type == "lig"
     assert seq_explainer.label2id == DISTILBERT_MODEL.config.label2id
     assert seq_explainer.id2label == DISTILBERT_MODEL.config.id2label
@@ -50,28 +40,20 @@ def test_sequence_classification_explainer_init_attribution_type_error():
 
 def test_sequence_classification_explainer_init_with_custom_labels():
     labels = ["label_1", "label_2"]
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER, custom_labels=labels
-    )
+    seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER, custom_labels=labels)
     assert len(labels) == len(seq_explainer.id2label)
     assert len(labels) == len(seq_explainer.label2id)
-    for (k1, v1), (k2, v2) in zip(
-        seq_explainer.id2label.items(), seq_explainer.label2id.items()
-    ):
+    for (k1, v1), (k2, v2) in zip(seq_explainer.id2label.items(), seq_explainer.label2id.items()):
         assert v1 in labels and k2 in labels
 
 
 def test_sequence_classification_explainer_init_custom_labels_size_error():
     with pytest.raises(ValueError):
-        SequenceClassificationExplainer(
-            DISTILBERT_MODEL, DISTILBERT_TOKENIZER, custom_labels=["few_labels"]
-        )
+        SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER, custom_labels=["few_labels"])
 
 
 def test_sequence_classification_encode():
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
 
     _input = "this is a sample of text to be encoded"
     tokens = seq_explainer.encode(_input)
@@ -83,9 +65,7 @@ def test_sequence_classification_encode():
 
 def test_sequence_classification_decode():
     explainer_string = "I love you , I hate you"
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     input_ids, _, _ = seq_explainer._make_input_reference_pair(explainer_string)
     decoded = seq_explainer.decode(input_ids)
     assert decoded[0] == seq_explainer.tokenizer.cls_token
@@ -94,9 +74,7 @@ def test_sequence_classification_decode():
 
 
 def test_sequence_classification_run_text_given():
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     word_attributions = seq_explainer._run("I love you, I just love you")
     assert isinstance(word_attributions, list)
 
@@ -118,16 +96,11 @@ def test_sequence_classification_run_text_given():
 
 def test_sequence_classification_explain_on_cls_index():
     explainer_string = "I love you , I like you"
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     seq_explainer._run(explainer_string, index=0)
     assert seq_explainer.predicted_class_index == 1
     assert seq_explainer.predicted_class_index != seq_explainer.selected_index
-    assert (
-        seq_explainer.predicted_class_name
-        != seq_explainer.id2label[seq_explainer.selected_index]
-    )
+    assert seq_explainer.predicted_class_name != seq_explainer.id2label[seq_explainer.selected_index]
     assert seq_explainer.predicted_class_name != "NEGATIVE"
     assert seq_explainer.predicted_class_name == "POSITIVE"
 
@@ -143,9 +116,7 @@ def test_sequence_classification_explain_position_embeddings():
 
 def test_sequence_classification_explain_position_embeddings_not_available():
     explainer_string = "I love you , I like you"
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     pos_attributions = seq_explainer(explainer_string, embedding_type=1)
     word_attributions = seq_explainer(explainer_string, embedding_type=0)
 
@@ -154,9 +125,7 @@ def test_sequence_classification_explain_position_embeddings_not_available():
 
 def test_sequence_classification_explain_embedding_incorrect_value():
     explainer_string = "I love you , I like you"
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
 
     word_attributions = seq_explainer(explainer_string, embedding_type=0)
     incorrect_word_attributions = seq_explainer(explainer_string, embedding_type=-42)
@@ -166,9 +135,7 @@ def test_sequence_classification_explain_embedding_incorrect_value():
 
 def test_sequence_classification_predicted_class_name_no_id2label_defaults_idx():
     explainer_string = "I love you , I like you"
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     seq_explainer.id2label = {"test": "value"}
     seq_explainer._run(explainer_string)
     assert seq_explainer.predicted_class_name == 1
@@ -176,16 +143,11 @@ def test_sequence_classification_predicted_class_name_no_id2label_defaults_idx()
 
 def test_sequence_classification_explain_on_cls_name():
     explainer_string = "I love you , I like you"
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     seq_explainer._run(explainer_string, class_name="NEGATIVE")
     assert seq_explainer.predicted_class_index == 1
     assert seq_explainer.predicted_class_index != seq_explainer.selected_index
-    assert (
-        seq_explainer.predicted_class_name
-        != seq_explainer.id2label[seq_explainer.selected_index]
-    )
+    assert seq_explainer.predicted_class_name != seq_explainer.id2label[seq_explainer.selected_index]
     assert seq_explainer.predicted_class_name != "NEGATIVE"
     assert seq_explainer.predicted_class_name == "POSITIVE"
 
@@ -198,19 +160,14 @@ def test_sequence_classification_explain_on_cls_name_with_custom_labels():
     seq_explainer._run(explainer_string, class_name="sad")
     assert seq_explainer.predicted_class_index == 1
     assert seq_explainer.predicted_class_index != seq_explainer.selected_index
-    assert (
-        seq_explainer.predicted_class_name
-        != seq_explainer.id2label[seq_explainer.selected_index]
-    )
+    assert seq_explainer.predicted_class_name != seq_explainer.id2label[seq_explainer.selected_index]
     assert seq_explainer.predicted_class_name != "sad"
     assert seq_explainer.predicted_class_name == "happy"
 
 
 def test_sequence_classification_explain_on_cls_name_not_in_dict():
     explainer_string = "I love you , I like you"
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     seq_explainer._run(explainer_string, class_name="UNKNOWN")
     assert seq_explainer.selected_index == 1
     assert seq_explainer.predicted_class_index == 1
@@ -218,17 +175,13 @@ def test_sequence_classification_explain_on_cls_name_not_in_dict():
 
 def test_sequence_classification_explain_raises_on_input_ids_not_calculated():
     with pytest.raises(InputIdsNotCalculatedError):
-        seq_explainer = SequenceClassificationExplainer(
-            DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-        )
+        seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
         seq_explainer.predicted_class_index
 
 
 def test_sequence_classification_word_attributions():
     explainer_string = "I love you , I like you"
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     seq_explainer(explainer_string)
     assert isinstance(seq_explainer.word_attributions, list)
     for element in seq_explainer.word_attributions:
@@ -236,17 +189,13 @@ def test_sequence_classification_word_attributions():
 
 
 def test_sequence_classification_word_attributions_not_calculated_raises():
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     with pytest.raises(ValueError):
         seq_explainer.word_attributions
 
 
 def test_sequence_classification_explainer_str():
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     s = "SequenceClassificationExplainer("
     s += f"\n\tmodel={DISTILBERT_MODEL.__class__.__name__},"
     s += f"\n\ttokenizer={DISTILBERT_TOKENIZER.__class__.__name__},"
@@ -257,24 +206,18 @@ def test_sequence_classification_explainer_str():
 
 def test_sequence_classification_viz():
     explainer_string = "I love you , I like you"
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     seq_explainer(explainer_string)
     seq_explainer.visualize()
 
 
 def sequence_classification_custom_steps():
     explainer_string = "I love you , I like you"
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     seq_explainer(explainer_string, n_steps=1)
 
 
 def sequence_classification_internal_batch_size():
     explainer_string = "I love you , I like you"
-    seq_explainer = SequenceClassificationExplainer(
-        DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-    )
+    seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     seq_explainer(explainer_string, internal_batch_size=1)
