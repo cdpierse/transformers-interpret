@@ -142,5 +142,14 @@ class MultiLabelClassificationExplainer(BaseExplainer):
         internal_batch_size: int = None,
         n_steps: int = None,
     ) -> list:
-        # TODO: definitely needs a custom implementation.
-        pass
+        if n_steps:
+            self.n_steps = n_steps
+        if internal_batch_size:
+            self.internal_batch_size = internal_batch_size
+
+        self.attributions = []
+        self.pred_probs = []
+        id2label, label2id = self._get_id2label_and_label2id_dict()
+
+        for i in range(id2label):
+            self._run(text=text, class_name=id2label[i], embedding_type=embedding_type)
