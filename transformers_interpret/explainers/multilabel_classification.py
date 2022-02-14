@@ -5,8 +5,10 @@ import torch
 from captum.attr import visualization as viz
 from torch.nn.modules.sparse import Embedding
 from transformers import PreTrainedModel, PreTrainedTokenizer
-from transformers_interpret import BaseExplainer, LIGAttributions, SequenceClassificationExplainer
+from transformers_interpret import BaseExplainer, LIGAttributions
 from transformers_interpret.errors import AttributionTypeNotSupportedError, InputIdsNotCalculatedError
+
+from .sequence_classification import SequenceClassificationExplainer
 
 SUPPORTED_ATTRIBUTION_TYPES = ["lig"]
 
@@ -52,25 +54,6 @@ class MultiLabelClassificationExplainer(BaseExplainer):
         self.internal_batch_size = None
         self.n_steps = 50
 
-    @staticmethod
-    def _get_id2label_and_label2id_dict(
-        labels: List[str],
-    ) -> Tuple[Dict[int, str], Dict[str, int]]:
-        id2label: Dict[int, str] = dict()
-        label2id: Dict[str, int] = dict()
-        for idx, label in enumerate(labels):
-            id2label[idx] = label
-            label2id[label] = idx
-
-        return id2label, label2id
-
-    def encode(self, text: str = None) -> list:
-        return self.tokenizer.encode(text, add_special_tokens=False)
-
-    def decode(self, input_ids: torch.Tensor) -> list:
-        "Decode 'input_ids' to string using tokenizer"
-        return self.tokenizer.convert_ids_to_tokens(input_ids[0])
-
     @property
     def predicted_class_index(self) -> int:
         "Returns predicted class index (int) for model with last calculated `input_ids`"
@@ -111,19 +94,6 @@ class MultiLabelClassificationExplainer(BaseExplainer):
         # TODO: Custom implementation for this explainer see ZeroShot
         pass
 
-    def _forward(
-        self,
-        input_ids: torch.Tensor,
-        position_ids: torch.Tensor = None,
-        attention_mask: torch.Tensor = None,
-    ):
-        # TODO: possibly needs a custom implementation.
-        pass
-
-    def _calculate_attributions(self, embeddings: Embedding, index: int = None, class_name: str = None):  # type: ignore
-        # TODO: possibly needs a custom implementation.
-        pass
-
     def _run(
         self,
         text: str,
@@ -132,8 +102,26 @@ class MultiLabelClassificationExplainer(BaseExplainer):
         embedding_type: int = None,
     ) -> list:  # type: ignore
 
-        # TODO: possibly needs a custom implementation.
-        pass
+        if embedding_type is None:
+            embeddings = self.word_embeddings
+        else:
+            if embedding_type == 0:
+                embeddings = self.word_embeddings
+            elif embedding_type == 1:
+                if self.accepts_position_ids and self.position_embeddings is not None:
+                    embeddings = self.position_embeddings
+                else:
+                    warnings.warn(
+                        "This model doesn't support position embeddings for attributions. Defaulting to word embeddings"
+                    )
+                    embeddings = self.word_embeddings
+            else:
+                embeddings = self.word_embeddings
+
+        self.text = self._clean_text(text)
+
+        self._calculate_attributions(embeddings=embeddings, index=index, class_name=class_name)
+        return self.word_attributions  # type: ignore
 
     def __call__(
         self,
@@ -149,7 +137,22 @@ class MultiLabelClassificationExplainer(BaseExplainer):
 
         self.attributions = []
         self.pred_probs = []
-        id2label, label2id = self._get_id2label_and_label2id_dict()
+        # id2label, label2id = self._get_id2label_and_label2id_dict()
 
-        for i in range(id2label):
-            self._run(text=text, class_name=id2label[i], embedding_type=embedding_type)
+        for i in range(self.model.config.num_labels):
+            explainer = SequenceClassificationExplainer(
+                self.model,
+                self.tokenizer,
+            )
+            explainer(text, i, embedding_type)
+            self.attributions.append(explainer.attributions)
+
+    def __str__(self):
+        s = f"{self.__class__.__name__}("
+        s += f"\n\tmodel={self.model.__class__.__name__},"
+        s += f"\n\ttokenizer={self.tokenizer.__class__.__name__},"
+        s += f"\n\tattribution_type='{self.attribution_type}',"
+        s += f"\n\tcustom_labels={self.custom_labels},"
+        s += ")"
+
+        return s
