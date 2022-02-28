@@ -1,19 +1,14 @@
-import warnings
 from typing import Dict, List, Optional, Tuple, Union
 
-import torch
 from captum.attr import visualization as viz
-from torch.nn.modules.sparse import Embedding
 from transformers import PreTrainedModel, PreTrainedTokenizer
-from transformers_interpret import BaseExplainer, LIGAttributions
-from transformers_interpret.errors import AttributionTypeNotSupportedError, InputIdsNotCalculatedError
 
 from .sequence_classification import SequenceClassificationExplainer
 
 SUPPORTED_ATTRIBUTION_TYPES = ["lig"]
 
 
-class MultiLabelClassificationExplainer(BaseExplainer):
+class MultiLabelClassificationExplainer(SequenceClassificationExplainer):
     """
     Explainer for Multi-Label Classification models.
     """
@@ -25,61 +20,22 @@ class MultiLabelClassificationExplainer(BaseExplainer):
         attribution_type="lig",
         custom_labels: Optional[List[str]] = None,
     ):
-        super().__init__(model, tokenizer)
-        if attribution_type not in SUPPORTED_ATTRIBUTION_TYPES:
-            raise AttributionTypeNotSupportedError(
-                f"""Attribution type '{attribution_type}' is not supported.
-                Supported types are {SUPPORTED_ATTRIBUTION_TYPES}"""
+        super().__init__(model, tokenizer, attribution_type, custom_labels)
+
+    @property
+    def word_attributions(self) -> dict:
+        "Returns the word attributions for model and the text provided. Raises error if attributions not calculated."
+        if self.attributions != []:
+
+            return dict(
+                zip(
+                    self.labels,
+                    [attr.word_attributions for attr in self.attributions],
+                )
             )
 
-        self.attribution_type = attribution_type
-
-        if custom_labels is not None:
-            if len(custom_labels) != len(model.config.label2id):
-                raise ValueError(
-                    f"""`custom_labels` size '{len(custom_labels)}' should match pretrained model's label2id size
-                        '{len(model.config.label2id)}'"""
-                )
-
-            self.id2label, self.label2id = self._get_id2label_and_label2id_dict(custom_labels)
         else:
-            self.label2id = model.config.label2id
-            self.id2label = model.config.id2label
-
-        self.attributions: Union[None, LIGAttributions] = None
-        self.input_ids: torch.Tensor = torch.Tensor()
-
-        self._single_node_output = False
-
-        self.internal_batch_size = None
-        self.n_steps = 50
-
-    @property
-    def predicted_class_index(self) -> int:
-        "Returns predicted class index (int) for model with last calculated `input_ids`"
-        if len(self.input_ids) > 0:
-            # we call this before _forward() so it has to be calculated twice
-            preds = self.model(self.input_ids)[0]
-            self.pred_class = torch.argmax(torch.softmax(preds, dim=0)[0])
-            return torch.argmax(torch.softmax(preds, dim=1)[0]).cpu().detach().numpy()
-
-        else:
-            raise InputIdsNotCalculatedError("input_ids have not been created yet.`")
-
-    @property
-    def predicted_class_name(self):
-        "Returns predicted class name (str) for model with last calculated `input_ids`"
-        try:
-            index = self.predicted_class_index
-            return self.id2label[int(index)]
-        except Exception:
-            return self.predicted_class_index
-
-    @property
-    def word_attributions(self) -> list:
-        "Returns the word attributions for model and the text provided. Raises error if attributions not calculated."
-        # TODO: Custom implementation for this explainer see ZeroShot
-        pass
+            raise ValueError("Attributions have not yet been calculated. Please call the explainer on text first.")
 
     def visualize(self, html_filepath: str = None, true_class: str = None):
         """
@@ -91,37 +47,31 @@ class MultiLabelClassificationExplainer(BaseExplainer):
         If the true class is known for the text that can be passed to `true_class`
 
         """
-        # TODO: Custom implementation for this explainer see ZeroShot
-        pass
+        tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
 
-    def _run(
-        self,
-        text: str,
-        index: int = None,
-        class_name: str = None,
-        embedding_type: int = None,
-    ) -> list:  # type: ignore
+        score_viz = [
+            self.attributions[i].visualize_attributions(  # type: ignore
+                self.pred_probs[i],
+                "",  # including a predicted class name does not make sense for this explainer
+                "n/a" if not true_class else true_class,  # no true class name for this explainer by default
+                self.labels[i],
+                tokens,
+            )
+            for i in range(len(self.attributions))
+        ]
 
-        if embedding_type is None:
-            embeddings = self.word_embeddings
-        else:
-            if embedding_type == 0:
-                embeddings = self.word_embeddings
-            elif embedding_type == 1:
-                if self.accepts_position_ids and self.position_embeddings is not None:
-                    embeddings = self.position_embeddings
-                else:
-                    warnings.warn(
-                        "This model doesn't support position embeddings for attributions. Defaulting to word embeddings"
-                    )
-                    embeddings = self.word_embeddings
-            else:
-                embeddings = self.word_embeddings
+        html = viz.visualize_text(score_viz)
 
-        self.text = self._clean_text(text)
+        new_html_data = html._repr_html_().replace("Predicted Label", "Prediction Score")
+        new_html_data = new_html_data.replace("True Label", "n/a")
+        html.data = new_html_data
 
-        self._calculate_attributions(embeddings=embeddings, index=index, class_name=class_name)
-        return self.word_attributions  # type: ignore
+        if html_filepath:
+            if not html_filepath.endswith(".html"):
+                html_filepath = html_filepath + ".html"
+            with open(html_filepath, "w") as html_file:
+                html_file.write(html.data)
+        return html
 
     def __call__(
         self,
@@ -137,15 +87,21 @@ class MultiLabelClassificationExplainer(BaseExplainer):
 
         self.attributions = []
         self.pred_probs = []
-        # id2label, label2id = self._get_id2label_and_label2id_dict()
-
+        self.labels = list(self.label2id.keys())
+        self.label_probs_dict = {}
         for i in range(self.model.config.num_labels):
             explainer = SequenceClassificationExplainer(
                 self.model,
                 self.tokenizer,
             )
             explainer(text, i, embedding_type)
+
             self.attributions.append(explainer.attributions)
+            self.input_ids = explainer.input_ids
+            self.pred_probs.append(explainer.pred_probs)
+            self.label_probs_dict[self.id2label[i]] = explainer.pred_probs
+
+        return self.word_attributions
 
     def __str__(self):
         s = f"{self.__class__.__name__}("
