@@ -10,7 +10,21 @@ SUPPORTED_ATTRIBUTION_TYPES = ["lig"]
 
 class MultiLabelClassificationExplainer(SequenceClassificationExplainer):
     """
-    Explainer for Multi-Label Classification models.
+    Explainer for independently explaining label attributions in a multi-label fashion
+    for models of type `{MODEL_NAME}ForSequenceClassification` from the Transformers package.
+    Every label is explained independently and the word attributions are a dictionary of labels
+    mapping to the word attributions for that label. Even if the model itself is not multi-label
+    by the resulting word attributions treat the labels as independent.
+
+    Calculates attribution for `text` using the given model
+    and tokenizer. Since this is a multi-label explainer, the attribution calculation time scales
+    linearly with the number of labels.
+
+    This explainer also allows for attributions with respect to a particlar embedding type.
+    This can be selected by passing a `embedding_type`. The default value is `0` which
+    is for word_embeddings, if `1` is passed then attributions are w.r.t to position_embeddings.
+    If a model does not take position ids in its forward method (distilbert) a warning will
+    occur and the default word_embeddings will be chosen instead.
     """
 
     def __init__(
@@ -79,7 +93,32 @@ class MultiLabelClassificationExplainer(SequenceClassificationExplainer):
         embedding_type: int = 0,
         internal_batch_size: int = None,
         n_steps: int = None,
-    ) -> list:
+    ) -> dict:
+        """
+        Calculates attributions for `text` using the model
+        and tokenizer given in the constructor. Attributions are calculated for
+        every label output in the model.
+
+        This explainer also allows for attributions with respect to a particlar embedding type.
+        This can be selected by passing a `embedding_type`. The default value is `0` which
+        is for word_embeddings, if `1` is passed then attributions are w.r.t to position_embeddings.
+        If a model does not take position ids in its forward method (distilbert) a warning will
+        occur and the default word_embeddings will be chosen instead.
+
+        Args:
+            text (str): Text to provide attributions for.
+            embedding_type (int, optional): The embedding type word(0) or position(1) to calculate attributions for. Defaults to 0.
+            internal_batch_size (int, optional): Divides total #steps * #examples
+                data points into chunks of size at most internal_batch_size,
+                which are computed (forward / backward passes)
+                sequentially. If internal_batch_size is None, then all evaluations are
+                processed in one batch.
+            n_steps (int, optional): The number of steps used by the approximation
+                method. Default: 50.
+
+        Returns:
+            dict: A dictionary of label to list of attributions.
+        """
         if n_steps:
             self.n_steps = n_steps
         if internal_batch_size:
