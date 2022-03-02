@@ -40,6 +40,7 @@ Check out the streamlit [demo app here](https://share.streamlit.io/cdpierse/tran
       - [Visualize Classification attributions](#visualize-classification-attributions)
       - [Explaining Attributions for Non Predicted Class](#explaining-attributions-for-non-predicted-class)
     - [MultiLabel Classification Explainer](#sequence-classification-explainer)
+      - [Visualize MultiLabel Classification attributions](#visualize-multilabel-attributions)
     - [Zero Shot Classification Explainer](#zero-shot-classification-explainer)
       - [Visualize Zero Shot Classification attributions](#visualize-zero-shot-classification-attributions)
     - [Question Answering Explainer (Experimental)](#question-answering-explainer-experimental)
