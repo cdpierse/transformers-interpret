@@ -35,11 +35,12 @@ class MultiLabelClassificationExplainer(SequenceClassificationExplainer):
         custom_labels: Optional[List[str]] = None,
     ):
         super().__init__(model, tokenizer, attribution_type, custom_labels)
+        self.labels = []
 
     @property
     def word_attributions(self) -> dict:
         "Returns the word attributions for model and the text provided. Raises error if attributions not calculated."
-        if self.attributions != []:
+        if self.attributions != [] and self.labels != []:
 
             return dict(
                 zip(
