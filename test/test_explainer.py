@@ -123,9 +123,7 @@ def test_explainer_init_cuda():
 
 def test_explainer_make_input_reference_pair():
     explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
-    input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair(
-        "this is a test string"
-    )
+    input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair("this is a test string")
     assert isinstance(input_ids, Tensor)
     assert isinstance(ref_input_ids, Tensor)
     assert isinstance(len_inputs, int)
@@ -139,9 +137,7 @@ def test_explainer_make_input_reference_pair():
 
 def test_explainer_make_input_reference_pair_gpt2():
     explainer = DummyExplainer(GPT2_MODEL, GPT2_TOKENIZER)
-    input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair(
-        "this is a test string"
-    )
+    input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair("this is a test string")
     assert isinstance(input_ids, Tensor)
     assert isinstance(ref_input_ids, Tensor)
     assert isinstance(len_inputs, int)
@@ -151,9 +147,7 @@ def test_explainer_make_input_reference_pair_gpt2():
 
 def test_explainer_make_input_token_type_pair_no_sep_idx():
     explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
-    input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair(
-        "this is a test string"
-    )
+    input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair("this is a test string")
     (
         token_type_ids,
         ref_token_type_ids,
@@ -169,9 +163,7 @@ def test_explainer_make_input_token_type_pair_no_sep_idx():
 
 def test_explainer_make_input_token_type_pair_sep_idx():
     explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
-    input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair(
-        "this is a test string"
-    )
+    input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair("this is a test string")
     (
         token_type_ids,
         ref_token_type_ids,
@@ -187,12 +179,8 @@ def test_explainer_make_input_token_type_pair_sep_idx():
 
 def test_explainer_make_input_reference_position_id_pair():
     explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
-    input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair(
-        "this is a test string"
-    )
-    position_ids, ref_position_ids = explainer._make_input_reference_position_id_pair(
-        input_ids
-    )
+    input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair("this is a test string")
+    position_ids, ref_position_ids = explainer._make_input_reference_position_id_pair(input_ids)
 
     assert ref_position_ids[0][0] == torch.zeros(len(input_ids[0]))[0]
     for i, val in enumerate(position_ids[0]):
@@ -201,9 +189,7 @@ def test_explainer_make_input_reference_position_id_pair():
 
 def test_explainer_make_attention_mask():
     explainer = DummyExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
-    input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair(
-        "this is a test string"
-    )
+    input_ids, ref_input_ids, len_inputs = explainer._make_input_reference_pair("this is a test string")
     attention_mask = explainer._make_attention_mask(input_ids)
     assert len(attention_mask[0]) == len(input_ids[0])
     for i, val in enumerate(attention_mask[0]):

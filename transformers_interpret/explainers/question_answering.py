@@ -76,9 +76,7 @@ class QuestionAnsweringExplainer(BaseExplainer):
             }
 
         else:
-            raise ValueError(
-                "Attributions have not yet been calculated. Please call the explainer on text first."
-            )
+            raise ValueError("Attributions have not yet been calculated. Please call the explainer on text first.")
 
     @property
     def start_pos(self):
@@ -140,9 +138,7 @@ class QuestionAnsweringExplainer(BaseExplainer):
         predicted_answer = self.predicted_answer
 
         self.position = 0
-        start_pred_probs = self._forward(
-            self.input_ids, self.token_type_ids, self.position_ids
-        )
+        start_pred_probs = self._forward(self.input_ids, self.token_type_ids, self.position_ids)
         start_pos = self.start_pos
         start_pos_str = tokens[start_pos] + " (" + str(start_pos) + ")"
         start_score_viz = self.start_attributions.visualize_attributions(
@@ -155,9 +151,7 @@ class QuestionAnsweringExplainer(BaseExplainer):
 
         self.position = 1
 
-        end_pred_probs = self._forward(
-            self.input_ids, self.token_type_ids, self.position_ids
-        )
+        end_pred_probs = self._forward(self.input_ids, self.token_type_ids, self.position_ids)
         end_pos = self.end_pos
         end_pos_str = tokens[end_pos] + " (" + str(end_pos) + ")"
         end_score_viz = self.end_attributions.visualize_attributions(
@@ -181,13 +175,7 @@ class QuestionAnsweringExplainer(BaseExplainer):
         question_ids = self.encode(question)
         text_ids = self.encode(text)
 
-        input_ids = (
-            [self.cls_token_id]
-            + question_ids
-            + [self.sep_token_id]
-            + text_ids
-            + [self.sep_token_id]
-        )
+        input_ids = [self.cls_token_id] + question_ids + [self.sep_token_id] + text_ids + [self.sep_token_id]
 
         ref_input_ids = (
             [self.cls_token_id]
@@ -307,9 +295,7 @@ class QuestionAnsweringExplainer(BaseExplainer):
 
         self.attention_mask = self._make_attention_mask(self.input_ids)
 
-        reference_tokens = [
-            token.replace("Ġ", "") for token in self.decode(self.input_ids)
-        ]
+        reference_tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
         self.position = 0
         start_lig = LIGAttributions(
             self._forward,

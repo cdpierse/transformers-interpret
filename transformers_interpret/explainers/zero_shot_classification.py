@@ -15,9 +15,7 @@ from .sequence_classification import SequenceClassificationExplainer
 SUPPORTED_ATTRIBUTION_TYPES = ["lig"]
 
 
-class ZeroShotClassificationExplainer(
-    SequenceClassificationExplainer, QuestionAnsweringExplainer
-):
+class ZeroShotClassificationExplainer(SequenceClassificationExplainer, QuestionAnsweringExplainer):
     """
     Explainer for explaining attributions for models that can perform
     zero-shot classification, specifically models trained on nli downstream tasks.
@@ -81,14 +79,10 @@ class ZeroShotClassificationExplainer(
                     )
                 )
             else:
-                spliced_wa = [
-                    attr.word_attributions[: self.sep_idx] for attr in self.attributions
-                ]
+                spliced_wa = [attr.word_attributions[: self.sep_idx] for attr in self.attributions]
                 return dict(zip(self.labels, spliced_wa))
         else:
-            raise ValueError(
-                "Attributions have not yet been calculated. Please call the explainer on text first."
-            )
+            raise ValueError("Attributions have not yet been calculated. Please call the explainer on text first.")
 
     def visualize(self, html_filepath: str = None, true_class: str = None):
         """
@@ -138,20 +132,12 @@ class ZeroShotClassificationExplainer(
         for label in hypothesis_labels:
             input_ids, _, sep_idx = self._make_input_reference_pair(text, label)
             position_ids, _ = self._make_input_reference_position_id_pair(input_ids)
-            token_type_ids, _ = self._make_input_reference_token_type_pair(
-                input_ids, sep_idx
-            )
+            token_type_ids, _ = self._make_input_reference_token_type_pair(input_ids, sep_idx)
             attention_mask = self._make_attention_mask(input_ids)
-            preds = self._get_preds(
-                input_ids, token_type_ids, position_ids, attention_mask
-            )
-            entailment_outputs.append(
-                float(torch.sigmoid(preds[0])[0][self.entailment_idx])
-            )
+            preds = self._get_preds(input_ids, token_type_ids, position_ids, attention_mask)
+            entailment_outputs.append(float(torch.sigmoid(preds[0])[0][self.entailment_idx]))
 
-        normed_entailment_outputs = [
-            float(i) / sum(entailment_outputs) for i in entailment_outputs
-        ]
+        normed_entailment_outputs = [float(i) / sum(entailment_outputs) for i in entailment_outputs]
 
         self.pred_probs = normed_entailment_outputs
 
@@ -165,13 +151,7 @@ class ZeroShotClassificationExplainer(
         hyp_ids = self.encode(hypothesis_text)
         text_ids = self.encode(text)
 
-        input_ids = (
-            [self.cls_token_id]
-            + text_ids
-            + [self.sep_token_id]
-            + hyp_ids
-            + [self.sep_token_id]
-        )
+        input_ids = [self.cls_token_id] + text_ids + [self.sep_token_id] + hyp_ids + [self.sep_token_id]
 
         ref_input_ids = (
             [self.cls_token_id]
@@ -200,9 +180,7 @@ class ZeroShotClassificationExplainer(
 
         return torch.softmax(preds, dim=1)[:, self.selected_index]
 
-    def _calculate_attributions(  # type: ignore
-        self, embeddings: Embedding, class_name: str, index: int = None
-    ):
+    def _calculate_attributions(self, embeddings: Embedding, class_name: str, index: int = None):  # type: ignore
         (
             self.input_ids,
             self.ref_input_ids,
@@ -223,9 +201,7 @@ class ZeroShotClassificationExplainer(
 
         self.selected_index = int(self.label2id[class_name])
 
-        reference_tokens = [
-            token.replace("Ġ", "") for token in self.decode(self.input_ids)
-        ]
+        reference_tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
         lig = LIGAttributions(
             self._forward,
             embeddings,
@@ -313,9 +289,7 @@ class ZeroShotClassificationExplainer(
         self.labels = labels
         self.hypothesis_labels = [hypothesis_template.format(label) for label in labels]
 
-        predicted_text_idx = self._get_top_predicted_label_idx(
-            text, self.hypothesis_labels
-        )
+        predicted_text_idx = self._get_top_predicted_label_idx(text, self.hypothesis_labels)
 
         for i, _ in enumerate(self.labels):
             self.hypothesis_text = self.hypothesis_labels[i]

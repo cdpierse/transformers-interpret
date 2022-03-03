@@ -22,14 +22,10 @@ class BaseExplainer(ABC):
             self.ref_token_id = self.tokenizer.pad_token_id
 
         self.sep_token_id = (
-            self.tokenizer.sep_token_id
-            if self.tokenizer.sep_token_id is not None
-            else self.tokenizer.eos_token_id
+            self.tokenizer.sep_token_id if self.tokenizer.sep_token_id is not None else self.tokenizer.eos_token_id
         )
         self.cls_token_id = (
-            self.tokenizer.cls_token_id
-            if self.tokenizer.cls_token_id is not None
-            else self.tokenizer.bos_token_id
+            self.tokenizer.cls_token_id if self.tokenizer.cls_token_id is not None else self.tokenizer.bos_token_id
         )
 
         self.model_prefix = model.base_model_prefix
@@ -98,9 +94,7 @@ class BaseExplainer(ABC):
         """
         raise NotImplementedError
 
-    def _make_input_reference_pair(
-        self, text: Union[List, str]
-    ) -> Tuple[torch.Tensor, torch.Tensor, int]:
+    def _make_input_reference_pair(self, text: Union[List, str]) -> Tuple[torch.Tensor, torch.Tensor, int]:
         """
         Tokenizes `text` to numerical token id  representation `input_ids`,
         as well as creating another reference tensor `ref_input_ids` of the same length
@@ -126,11 +120,7 @@ class BaseExplainer(ABC):
         if len(text_ids) == len(input_ids):
             ref_input_ids = [self.ref_token_id] * len(text_ids)
         else:
-            ref_input_ids = (
-                [self.cls_token_id]
-                + [self.ref_token_id] * len(text_ids)
-                + [self.sep_token_id]
-            )
+            ref_input_ids = [self.cls_token_id] + [self.ref_token_id] * len(text_ids) + [self.sep_token_id]
 
         return (
             torch.tensor([input_ids], device=self.device),
@@ -152,18 +142,14 @@ class BaseExplainer(ABC):
             Tuple[torch.Tensor, torch.Tensor]
         """
         seq_len = input_ids.size(1)
-        token_type_ids = torch.tensor(
-            [0 if i <= sep_idx else 1 for i in range(seq_len)], device=self.device
-        ).expand_as(input_ids)
-        ref_token_type_ids = torch.zeros_like(
-            token_type_ids, device=self.device
-        ).expand_as(input_ids)
+        token_type_ids = torch.tensor([0 if i <= sep_idx else 1 for i in range(seq_len)], device=self.device).expand_as(
+            input_ids
+        )
+        ref_token_type_ids = torch.zeros_like(token_type_ids, device=self.device).expand_as(input_ids)
 
         return (token_type_ids, ref_token_type_ids)
 
-    def _make_input_reference_position_id_pair(
-        self, input_ids: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _make_input_reference_position_id_pair(self, input_ids: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Returns tensors for positional encoding of tokens for input_ids and zeroed tensor for reference ids.
 
@@ -203,9 +189,7 @@ class BaseExplainer(ABC):
                 if hasattr(self.model_embeddings, "position_embeddings"):
                     self.position_embeddings = self.model_embeddings.position_embeddings
                 if hasattr(self.model_embeddings, "token_type_embeddings"):
-                    self.token_type_embeddings = (
-                        self.model_embeddings.token_type_embeddings
-                    )
+                    self.token_type_embeddings = self.model_embeddings.token_type_embeddings
 
     def __str__(self):
         s = f"{self.__class__.__name__}("
