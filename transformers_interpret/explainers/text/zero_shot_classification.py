@@ -6,10 +6,8 @@ from torch.nn.modules.sparse import Embedding
 from transformers import PreTrainedModel, PreTrainedTokenizer
 from transformers_interpret import LIGAttributions
 from transformers_interpret.errors import AttributionTypeNotSupportedError
-from transformers_interpret.explainers.question_answering import (
-    QuestionAnsweringExplainer,
-)
 
+from .question_answering import QuestionAnsweringExplainer
 from .sequence_classification import SequenceClassificationExplainer
 
 SUPPORTED_ATTRIBUTION_TYPES = ["lig"]

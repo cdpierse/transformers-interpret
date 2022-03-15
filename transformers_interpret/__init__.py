@@ -1,7 +1,7 @@
 from .attributions import Attributions, LIGAttributions
 from .explainer import BaseExplainer
-from .explainers.question_answering import QuestionAnsweringExplainer
-from .explainers.sequence_classification import SequenceClassificationExplainer, PairwiseSequenceClassificationExplainer
-from .explainers.zero_shot_classification import ZeroShotClassificationExplainer
-from .explainers.multilabel_classification import MultiLabelClassificationExplainer
-from .explainers.token_classification import TokenClassificationExplainer
+from .explainers.text.question_answering import QuestionAnsweringExplainer
+from .explainers.text.sequence_classification import SequenceClassificationExplainer, PairwiseSequenceClassificationExplainer
+from .explainers.text.zero_shot_classification import ZeroShotClassificationExplainer
+from .explainers.text.multilabel_classification import MultiLabelClassificationExplainer
+from .explainers.text.token_classification import TokenClassificationExplainer
