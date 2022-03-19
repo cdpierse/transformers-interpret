@@ -690,13 +690,13 @@ qa_explainer.visualize("bert_qa_viz.html")
 
 This package is still in its early days and there is much more planned. For a 1.0.0 release we're aiming to have:
 
-- Clean and thorough documentation website (**In Progress**)
+- Clean and thorough documentation website
 - ~~Support for Question Answering models~~
 - Support for NER models
-- Support for Multiple Choice models
 - ~~Support for Zero Shot Classification models.~~
 - ~~Ability to show attributions for multiple embedding type, rather than just the word embeddings.~~
 - Additional attribution methods
+- Support for vision transformer models
 - In depth examples
 - ~~A nice logo~~ (thanks @Voyz)
 - and more... feel free to submit your suggestions!
