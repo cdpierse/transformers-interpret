@@ -1,12 +1,11 @@
 import warnings
-from typing import List, Tuple, Dict, Optional, Union
+from typing import List, Dict, Optional, Union
 
 import torch
 from captum.attr import visualization as viz
 from torch.nn.modules.sparse import Embedding
 from transformers import PreTrainedModel, PreTrainedTokenizer
 from transformers_interpret import BaseExplainer
-from transformers_interpret import attributions
 from transformers_interpret.attributions import LIGAttributions
 from transformers_interpret.errors import (
     AttributionTypeNotSupportedError,
@@ -23,7 +22,6 @@ class TokenClassificationExplainer(BaseExplainer):
         model: PreTrainedModel,
         tokenizer: PreTrainedTokenizer,
         attribution_type="lig",
-        custom_labels: Optional[List[str]] = None,
         ignored_indexes: Optional[List[int]] = None,
         ignored_labels: Optional[List[str]] = None,
     ):
@@ -33,9 +31,6 @@ class TokenClassificationExplainer(BaseExplainer):
             model (PreTrainedModel): Pretrained huggingface Sequence Classification model.
             tokenizer (PreTrainedTokenizer): Pretrained huggingface tokenizer
             attribution_type (str, optional): The attribution method to calculate on. Defaults to "lig".
-            custom_labels (List[str], optional): Applies custom labels to label2id and id2label configs.
-                                                Labels must be same length as the base model configs' labels.
-                                                Labels and ids are applied index-wise. Defaults to None.
             ignored_indexes (List[int], optional): Indexes that are to be ignored by the explainer.
             ignored_labels (List[str], optional)): NER labels that are to be ignored by the explainer. The
                                                 explainer will ignore those indexes whose predicted label is
@@ -49,52 +44,16 @@ class TokenClassificationExplainer(BaseExplainer):
                 f"""Attribution type '{attribution_type}' is not supported.
                 Supported types are {SUPPORTED_ATTRIBUTION_TYPES}"""
             )
-        self.attribution_type = attribution_type
-
-        if custom_labels is not None:
-            if len(custom_labels) != len(model.config.label2id):
-                raise ValueError(
-                    f"""`custom_labels` size '{len(custom_labels)}' should match pretrained model's label2id size
-                    '{len(model.config.label2id)}'"""
-                )
-
-            self.id2label, self.label2id = self._get_id2label_and_label2id_dict(
-                custom_labels
-            )
-        else:
-            self.label2id = model.config.label2id
-            self.id2label = model.config.id2label
+        self.attribution_type: str = attribution_type
 
         self.ignored_indexes: Optional[List[int]] = ignored_indexes
-
-        if ignored_labels is not None:
-            for ilabel in ignored_labels:
-                if ilabel not in list(self.label2id.keys()):
-                    raise ValueError(f"""`{ilabel}` is not among the model's labels""")
-
-            self.ignored_labels = ignored_labels
-        else:
-            self.ignored_labels = None
+        self.ignored_labels: Optional[List[str]] = ignored_labels
 
         self.attributions: Union[None, Dict[int, LIGAttributions]] = None
         self.input_ids: torch.Tensor = torch.Tensor()
 
-        self._single_node_output = False
-
         self.internal_batch_size = None
         self.n_steps = 50
-
-    @staticmethod
-    def _get_id2label_and_label2id_dict(
-        labels: List[str],
-    ) -> Tuple[Dict[int, str], Dict[str, int]]:
-        id2label: Dict[int, str] = dict()
-        label2id: Dict[str, int] = dict()
-        for idx, label in enumerate(labels):
-            id2label[idx] = label
-            label2id[label] = idx
-
-        return id2label, label2id
 
     def encode(self, text: str = None) -> list:
         "Encode the text using tokenizer"
@@ -117,7 +76,7 @@ class TokenClassificationExplainer(BaseExplainer):
             return sorted(list(selected_indexes))
 
         else:
-            raise InputIdsNotCalculatedError("input_ids have not been created yet.`")
+            raise InputIdsNotCalculatedError("input_ids have not been created yet. The possible indexes are yet unknown")
 
     @property
     def selected_labels(self) -> List[str]:
@@ -130,13 +89,14 @@ class TokenClassificationExplainer(BaseExplainer):
         return list(selected_labels)
 
     @property
-    def predicted_class_index(self) -> List[int]:
+    def predicted_class_indexes(self) -> List[int]:
         "Returns the predicted class indexes (int) for model with last calculated `input_ids`"
         if len(self.input_ids) > 0:
-            # we call this before _forward() so it has to be calculated twice
+            
             preds = self.model(self.input_ids)
             preds = preds[0]
             self.pred_class = torch.softmax(preds, dim=2)[0]
+            
             return (
                 torch.argmax(torch.softmax(preds, dim=2), dim=2)[0]
                 .cpu()
@@ -148,21 +108,25 @@ class TokenClassificationExplainer(BaseExplainer):
             raise InputIdsNotCalculatedError("input_ids have not been created yet.`")
 
     @property
-    def predicted_class_name(self):
+    def predicted_class_names(self):
         "Returns predicted class names (str) for model with last calculated `input_ids`"
         try:
-            indexes = self.predicted_class_index
+            indexes = self.predicted_class_indexes
             return [self.id2label[int(index)] for index in indexes]
         except Exception:
-            return self.predicted_class_index
+            return self.predicted_class_indexes
 
     @property
     def word_attributions(self) -> Dict:
         "Returns the word attributions for model and the text provided. Raises error if attributions not calculated."
+        
         if self.attributions is not None:
             attributions_dict = dict()
-            for index, attr in self.attributions:
-                attributions_dict[index] = attr.word_attributions
+            tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
+            
+            for index, attr in self.attributions.items():
+                attributions_dict[tokens[index]] = attr.word_attributions
+
             return attributions_dict
         else:
             raise ValueError(
@@ -173,24 +137,23 @@ class TokenClassificationExplainer(BaseExplainer):
     def _selected_indexes(self) -> List[int]:
         """Returns the indexes for which the attributions must be calculated considering the
         ignored indexes and the ignored labels, in that order of priority"""
-        if len(self.input_ids) > 0:
-            selected_indexes = set(range(self.input_ids.shape[1]))  # all indexes
+        selected_indexes = set(range(self.input_ids.shape[1]))  # all indexes
 
-            if self.ignored_indexes is not None:
-                selected_indexes = selected_indexes.difference(
-                    set(self.ignored_indexes)
-                )
+        if self.ignored_indexes is not None:
+            selected_indexes = selected_indexes.difference(
+                set(self.ignored_indexes)
+            )
 
-            if self.ignored_labels is not None:
-                ignored_indexes = []
-                pred_labels = [self.id2label[id] for id in self.predicted_class_index]
+        if self.ignored_labels is not None:
+            ignored_indexes_extra = []
+            pred_labels = [self.id2label[id] for id in self.predicted_class_indexes]
 
-                for index, label in enumerate(pred_labels):
-                    if label in self.ignored_labels:
-                        ignored_indexes.append(index)
-                selected_indexes = selected_indexes.difference(ignored_indexes)
+            for index, label in enumerate(pred_labels):
+                if label in self.ignored_labels:
+                    ignored_indexes_extra.append(index)
+            selected_indexes = selected_indexes.difference(ignored_indexes_extra)
 
-            return sorted(list(selected_indexes))
+        return sorted(list(selected_indexes))
 
     def visualize(self, html_filepath: str = None, true_classes: List[str] = None):
         """
@@ -271,7 +234,7 @@ class TokenClassificationExplainer(BaseExplainer):
 
         self.attention_mask = self._make_attention_mask(self.input_ids)
 
-        pred_classes = self.predicted_class_index
+        pred_classes = self.predicted_class_indexes
         reference_tokens = [
             token.replace("Ġ", "") for token in self.decode(self.input_ids)
         ]
@@ -323,7 +286,7 @@ class TokenClassificationExplainer(BaseExplainer):
         self.text = self._clean_text(text)
 
         self._calculate_attributions(embeddings=embeddings)
-        return self.attributions  # type: ignore
+        return self.word_attributions  # type: ignore
 
     def __call__(
         self,
