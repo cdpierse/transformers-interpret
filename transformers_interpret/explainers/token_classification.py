@@ -171,8 +171,8 @@ class TokenClassificationExplainer(BaseExplainer):
 
         """
         if true_classes is not None and len(true_classes) != self.input_ids.shape[1]:
-            raise ValueError()  # TODO
-
+            raise ValueError(f"""The length of `true_classes` must be equal to the number of tokens""")
+            
         score_vizs = []
         tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
 
