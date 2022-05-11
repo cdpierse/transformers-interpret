@@ -46,6 +46,9 @@ class TokenClassificationExplainer(BaseExplainer):
             )
         self.attribution_type: str = attribution_type
 
+        self.label2id = model.config.label2id
+        self.id2label = model.config.id2label
+
         self.ignored_indexes: Optional[List[int]] = ignored_indexes
         self.ignored_labels: Optional[List[str]] = ignored_labels
 
@@ -117,17 +120,19 @@ class TokenClassificationExplainer(BaseExplainer):
             return self.predicted_class_indexes
 
     @property
-    def word_attributions(self) -> Dict:
+    def word_attributions(self) -> list:
         "Returns the word attributions for model and the text provided. Raises error if attributions not calculated."
         
         if self.attributions is not None:
-            attributions_dict = dict()
+            word_attr = list()
             tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
             
             for index, attr in self.attributions.items():
-                attributions_dict[tokens[index]] = attr.word_attributions
+                word_attr.append(
+                    (tokens[index], attr.word_attributions)
+                ) 
 
-            return attributions_dict
+            return word_attr
         else:
             raise ValueError(
                 "Attributions have not yet been calculated. Please call the explainer on text first."
@@ -266,7 +271,7 @@ class TokenClassificationExplainer(BaseExplainer):
         self,
         text: str,
         embedding_type: int = None,
-    ) -> list:  # type: ignore
+    ) -> list: 
         if embedding_type is None:
             embeddings = self.word_embeddings
         else:
@@ -286,7 +291,7 @@ class TokenClassificationExplainer(BaseExplainer):
         self.text = self._clean_text(text)
 
         self._calculate_attributions(embeddings=embeddings)
-        return self.word_attributions  # type: ignore
+        return self.word_attributions  
 
     def __call__(
         self,
