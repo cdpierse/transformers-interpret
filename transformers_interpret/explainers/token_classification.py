@@ -79,7 +79,9 @@ class TokenClassificationExplainer(BaseExplainer):
             return sorted(list(selected_indexes))
 
         else:
-            raise InputIdsNotCalculatedError("input_ids have not been created yet. The possible indexes are yet unknown")
+            raise InputIdsNotCalculatedError(
+                "input_ids have not been created yet. The possible indexes are yet unknown"
+            )
 
     @property
     def selected_labels(self) -> List[str]:
@@ -95,11 +97,11 @@ class TokenClassificationExplainer(BaseExplainer):
     def predicted_class_indexes(self) -> List[int]:
         "Returns the predicted class indexes (int) for model with last calculated `input_ids`"
         if len(self.input_ids) > 0:
-            
+
             preds = self.model(self.input_ids)
             preds = preds[0]
             self.pred_class = torch.softmax(preds, dim=2)[0]
-            
+
             return (
                 torch.argmax(torch.softmax(preds, dim=2), dim=2)[0]
                 .cpu()
@@ -122,15 +124,13 @@ class TokenClassificationExplainer(BaseExplainer):
     @property
     def word_attributions(self) -> list:
         "Returns the word attributions for model and the text provided. Raises error if attributions not calculated."
-        
+
         if self.attributions is not None:
             word_attr = list()
             tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
-            
+
             for index, attr in self.attributions.items():
-                word_attr.append(
-                    (tokens[index], attr.word_attributions)
-                ) 
+                word_attr.append((tokens[index], attr.word_attributions))
 
             return word_attr
         else:
@@ -145,9 +145,7 @@ class TokenClassificationExplainer(BaseExplainer):
         selected_indexes = set(range(self.input_ids.shape[1]))  # all indexes
 
         if self.ignored_indexes is not None:
-            selected_indexes = selected_indexes.difference(
-                set(self.ignored_indexes)
-            )
+            selected_indexes = selected_indexes.difference(set(self.ignored_indexes))
 
         if self.ignored_labels is not None:
             ignored_indexes_extra = []
@@ -171,8 +169,10 @@ class TokenClassificationExplainer(BaseExplainer):
 
         """
         if true_classes is not None and len(true_classes) != self.input_ids.shape[1]:
-            raise ValueError(f"""The length of `true_classes` must be equal to the number of tokens""")
-            
+            raise ValueError(
+                f"""The length of `true_classes` must be equal to the number of tokens"""
+            )
+
         score_vizs = []
         tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
 
@@ -271,7 +271,7 @@ class TokenClassificationExplainer(BaseExplainer):
         self,
         text: str,
         embedding_type: int = None,
-    ) -> list: 
+    ) -> list:
         if embedding_type is None:
             embeddings = self.word_embeddings
         else:
@@ -291,7 +291,7 @@ class TokenClassificationExplainer(BaseExplainer):
         self.text = self._clean_text(text)
 
         self._calculate_attributions(embeddings=embeddings)
-        return self.word_attributions  
+        return self.word_attributions
 
     def __call__(
         self,
