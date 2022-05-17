@@ -90,15 +90,17 @@ class TokenClassificationExplainer(BaseExplainer):
             return self.predicted_class_indexes
 
     @property
-    def word_attributions(self) -> list:
+    def word_attributions(self) -> Dict:
         "Returns the word attributions for model and the text provided. Raises error if attributions not calculated."
 
         if self.attributions is not None:
-            word_attr = list()
-            tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
-
+            word_attr = dict()
+            tokens = [
+                token.replace("Ġ", "") for token in self.decode(self.input_ids)
+            ]
+            
             for index, attr in self.attributions.items():
-                word_attr.append((tokens[index], attr.word_attributions))
+                word_attr[tokens[index]] =  attr.word_attributions
 
             return word_attr
         else:
