@@ -95,12 +95,10 @@ class TokenClassificationExplainer(BaseExplainer):
 
         if self.attributions is not None:
             word_attr = dict()
-            tokens = [
-                token.replace("Ġ", "") for token in self.decode(self.input_ids)
-            ]
-            
+            tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
+
             for index, attr in self.attributions.items():
-                word_attr[tokens[index]] =  attr.word_attributions
+                word_attr[tokens[index]] = attr.word_attributions
 
             return word_attr
         else:
