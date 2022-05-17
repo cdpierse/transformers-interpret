@@ -45,6 +45,8 @@ Check out the streamlit [demo app here](https://share.streamlit.io/cdpierse/tran
       - [Visualize Zero Shot Classification attributions](#visualize-zero-shot-classification-attributions)
     - [Question Answering Explainer (Experimental)](#question-answering-explainer-experimental)
       - [Visualize Question Answering attributions](#visualize-question-answering-attributions)
+    - [Token Classfication (NER) Explainer (Experimental)](#token-classification-ner-explainer)
+      - [Visualize Token Classification (NER) attributions](#visualize-ner-attributions)
   - [Future Development](#future-development)
   - [Contributing](#contributing)
   - [Questions / Get In Touch](#questions--get-in-touch)
@@ -684,6 +686,115 @@ qa_explainer.visualize("bert_qa_viz.html")
 
 </details>
 
+
+
+## Token Classification (NER) explainer 
+<details><summary>Click to expand</summary>
+
+_This is currently an experimental explainer under active development and is not yet fully tested. The explainers' API is subject to change as are the attribution methods, if you find any bugs please let me know._
+
+Let's start by initializing a transformers' Token Classfication model and tokenizer, and running it through the `TokenClassificationExplainer`.
+
+For this example we are using `dslim/bert-base-NER`, a bert model finetuned on the CoNLL-2003 Named Entity Recognition dataset.
+
+
+
+```python
+from transformers import AutoModelForTokenClassification, AutoTokenizer
+from transformers_interpret import TokenClassificationExplainer
+
+model = AutoModelForTokenClassification.from_pretrained('dslim/bert-base-NER')
+tokenizer = AutoTokenizer.from_pretrained('dslim/bert-base-NER')
+
+ner_explainer = TokenClassificationExplainer(
+    model,
+    tokenizer,
+)
+
+sample_text = "We visited Paris last weekend, where Emmanuel Macron lives."
+
+word_attributions = ner_explainer(sample_text, ignored_labels=['O'])
+
+```
+
+In order to reduce the number of attributions that are calculated, we tell the explainer to ignore the tokens that whose predicted label is `'O'`.  We could also tell the explainer to ignore certain indexes providing a list as argument of the parameter `ignored_indexes`.
+
+Which will return the following dict of attribution tuple lists for each token, except those which were predicted as 'O':
+
+```python 
+>>> word_attributions 
+{'Paris': [('[CLS]', 0.0),
+  ('We', -0.026176158026416003),
+  ('visited', 0.1289424214695528),
+  ('Paris', 0.9820248557100411),
+  ('last', -0.13107116600328042),
+  ('weekend', 0.010904143358261256),
+  (',', 0.011178508562829472),
+  ('where', 0.023509729193194558),
+  ('Emmanuel', 0.009830564279598433),
+  ('Mac', 0.00034993661827931806),
+  ('##ron', 0.014679480802688051),
+  ('lives', 0.00523146911109651),
+  ('.', 9.093164937093907e-05),
+  ('[SEP]', 0.0)],
+ 'Emmanuel': [('[CLS]', 0.0),
+  ('We', -0.02795400955500282),
+  ('visited', -0.019536101884928644),
+  ('Paris', 0.016961229547365956),
+  ('last', 0.02993168457599209),
+  ('weekend', -0.0005594575778221615),
+  (',', -0.0028076008557282677),
+  ('where', 0.4016979194311053),
+  ('Emmanuel', 0.9076506398659525),
+  ('Mac', -0.09408993595706144),
+  ('##ron', -0.04634243847125355),
+  ('lives', 0.02766440864687646),
+  ('.', -0.026236800991730185),
+  ('[SEP]', 0.0)],
+ 'Mac': [('[CLS]', 0.0),
+  ('We', -0.023946141938553923),
+  ('visited', -0.02314137524841115),
+  ('Paris', 0.016059605323833003),
+  ('last', 0.0425715380070115),
+  ('weekend', 0.008064733430597637),
+  (',', 0.03339827130222196),
+  ('where', 0.2888303588807151),
+  ('Emmanuel', 0.954108208748422),
+  ('Mac', 0.009529915023771622),
+  ('##ron', 0.0018587632542397066),
+  ('lives', 0.0063623171046915915),
+  ('.', -0.041953834660571884),
+  ('[SEP]', 0.0)],
+ '##ron': [('[CLS]', 0.0),
+  ('We', -0.13524730066867285),
+  ('visited', 0.03632829648791544),
+  ('Paris', 0.16271952183132127),
+  ('last', 0.004163465393724605),
+  ('weekend', -0.014037349925373541),
+  (',', 0.06303365825682841),
+  ('where', 0.4202547928670278),
+  ('Emmanuel', 0.7670349435767041),
+  ('Mac', 0.38679457512942717),
+  ('##ron', -0.039683691940599335),
+  ('lives', 0.08338745816005198),
+  ('.', -0.16318135160442798),
+  ('[SEP]', 0.0)]}
+```
+
+#### Visualize NER attributions
+For the `TokenClassificationExplainer` the visualize() method returns a table with as many rows as tokens. 
+
+```python
+ner_explainer.visualize("bert_ner_viz.html")
+```
+
+<a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_ner_explainer.png">
+<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_ner_explainer.png" width="120%" height="120%" align="center" />
+</a>
+
+
+</details>
+
 <a name="future"/>
 
 ## Future Development
@@ -692,7 +803,7 @@ This package is still in its early days and there is much more planned. For a 1.
 
 - Clean and thorough documentation website
 - ~~Support for Question Answering models~~
-- Support for NER models
+- ~~Support for NER models~~
 - ~~Support for Zero Shot Classification models.~~
 - ~~Ability to show attributions for multiple embedding type, rather than just the word embeddings.~~
 - Additional attribution methods
