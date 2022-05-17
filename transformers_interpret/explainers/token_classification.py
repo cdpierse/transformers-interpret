@@ -22,8 +22,6 @@ class TokenClassificationExplainer(BaseExplainer):
         model: PreTrainedModel,
         tokenizer: PreTrainedTokenizer,
         attribution_type="lig",
-        ignored_indexes: Optional[List[int]] = None,
-        ignored_labels: Optional[List[str]] = None,
     ):
 
         """
@@ -31,10 +29,7 @@ class TokenClassificationExplainer(BaseExplainer):
             model (PreTrainedModel): Pretrained huggingface Sequence Classification model.
             tokenizer (PreTrainedTokenizer): Pretrained huggingface tokenizer
             attribution_type (str, optional): The attribution method to calculate on. Defaults to "lig".
-            ignored_indexes (List[int], optional): Indexes that are to be ignored by the explainer.
-            ignored_labels (List[str], optional)): NER labels that are to be ignored by the explainer. The
-                                                explainer will ignore those indexes whose predicted label is
-                                                in `ignored_labels`.
+
         Raises:
             AttributionTypeNotSupportedError:
         """
@@ -49,8 +44,8 @@ class TokenClassificationExplainer(BaseExplainer):
         self.label2id = model.config.label2id
         self.id2label = model.config.id2label
 
-        self.ignored_indexes: Optional[List[int]] = ignored_indexes
-        self.ignored_labels: Optional[List[str]] = ignored_labels
+        self.ignored_indexes: Optional[List[int]] = None
+        self.ignored_labels: Optional[List[str]] = None
 
         self.attributions: Union[None, Dict[int, LIGAttributions]] = None
         self.input_ids: torch.Tensor = torch.Tensor()
@@ -65,33 +60,6 @@ class TokenClassificationExplainer(BaseExplainer):
     def decode(self, input_ids: torch.Tensor) -> list:
         "Decode 'input_ids' to string using tokenizer"
         return self.tokenizer.convert_ids_to_tokens(input_ids[0])
-
-    @property
-    def selected_indexes(self) -> List[int]:
-        "Returns the complement of the ignored indexes"
-        if len(self.input_ids) > 0:
-            all_indexes = set(range(self.input_ids.shape[1]))
-            if self.ignored_indexes is not None:
-                selected_indexes = all_indexes.difference(set(self.ignored_indexes))
-            else:
-                selected_indexes = all_indexes
-
-            return sorted(list(selected_indexes))
-
-        else:
-            raise InputIdsNotCalculatedError(
-                "input_ids have not been created yet. The possible indexes are yet unknown"
-            )
-
-    @property
-    def selected_labels(self) -> List[str]:
-        "Returns the complement of the ignored labels"
-        all_labels = set(self.label2id.keys())
-        if self.ignored_labels is not None:
-            selected_labels = all_labels.difference(set(self.ignored_labels))
-        else:
-            selected_labels = all_labels
-        return list(selected_labels)
 
     @property
     def predicted_class_indexes(self) -> List[int]:
@@ -142,6 +110,7 @@ class TokenClassificationExplainer(BaseExplainer):
     def _selected_indexes(self) -> List[int]:
         """Returns the indexes for which the attributions must be calculated considering the
         ignored indexes and the ignored labels, in that order of priority"""
+
         selected_indexes = set(range(self.input_ids.shape[1]))  # all indexes
 
         if self.ignored_indexes is not None:
@@ -225,7 +194,10 @@ class TokenClassificationExplainer(BaseExplainer):
         self.pred_probs = torch.softmax(preds, dim=2)[0]
         return torch.softmax(preds, dim=2)[:, self.index, :]
 
-    def _calculate_attributions(self, embeddings: Embedding):
+    def _calculate_attributions(
+        self,
+        embeddings: Embedding,
+    ) -> None:
         (
             self.input_ids,
             self.ref_input_ids,
@@ -297,14 +269,31 @@ class TokenClassificationExplainer(BaseExplainer):
         self,
         text: str,
         embedding_type: int = 0,
-        internal_batch_size: int = None,
-        n_steps: int = None,
+        internal_batch_size: Optional[int] = None,
+        n_steps: Optional[int] = None,
+        ignored_indexes: Optional[List[int]] = None,
+        ignored_labels: Optional[List[str]] = None,
     ) -> list:
+        """
+        Args:
+            text (str): Sentence whose NER predictions are to be explained.
+            embedding_type (int, default = 0): Custom type of embedding.
+            internal_batch_size (int, optional): Custom internal batch size for the attributions calculation.
+            n_steps (int): Custom number of steps in the approximation used in the attributions calculation.
+            ignored_indexes (List[int], optional): Indexes that are to be ignored by the explainer.
+            ignored_labels (List[str], optional)): NER labels that are to be ignored by the explainer. The
+                                                explainer will ignore those indexes whose predicted label is
+                                                in `ignored_labels`.
+        """
 
         if n_steps:
             self.n_steps = n_steps
         if internal_batch_size:
             self.internal_batch_size = internal_batch_size
+
+        self.ignored_indexes = ignored_indexes
+        self.ignored_labels = ignored_labels
+
         return self._run(text, embedding_type=embedding_type)
 
     def __str__(self):

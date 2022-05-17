@@ -9,27 +9,12 @@ from transformers_interpret.errors import (
 BERT_MODEL = AutoModelForTokenClassification.from_pretrained("dslim/bert-base-NER")
 BERT_TOKENIZER = AutoTokenizer.from_pretrained("dslim/bert-base-NER")
 
-ROBERTA_MODEL = AutoModelForTokenClassification.from_pretrained("Jean-Baptiste/roberta-large-ner-english")
-ROBERTA_TOKENIZER = AutoTokenizer.from_pretrained("Jean-Baptiste/roberta-large-ner-english")
-
 
 def test_token_classification_explainer_init_bert():
-    ner_explainer = TokenClassificationExplainer(
-        BERT_MODEL, BERT_TOKENIZER
-    )
+    ner_explainer = TokenClassificationExplainer(BERT_MODEL, BERT_TOKENIZER)
     assert ner_explainer.attribution_type == "lig"
     assert ner_explainer.label2id == BERT_MODEL.config.label2id
     assert ner_explainer.id2label == BERT_MODEL.config.id2label
-    assert ner_explainer.attributions is None
-
-
-def test_token_classification_explainer_init_bert():
-    ner_explainer = TokenClassificationExplainer(
-        ROBERTA_MODEL, ROBERTA_TOKENIZER
-    )
-    assert ner_explainer.attribution_type == "lig"
-    assert ner_explainer.label2id == ROBERTA_MODEL.config.label2id
-    assert ner_explainer.id2label == ROBERTA_MODEL.config.id2label
     assert ner_explainer.attributions is None
 
 
@@ -41,105 +26,68 @@ def test_token_classification_explainer_init_attribution_type_error():
             attribution_type="UNSUPPORTED",
         )
 
-def test_token_classification_explainer_init_ignored_indexes():
-    indexes = [0, 1, 6]
-    ner_explainer = TokenClassificationExplainer(
-        BERT_MODEL, BERT_TOKENIZER, ignored_indexes=indexes
+
+def test_token_classification_selected_indexes_only_ignored_indexes():
+    explainer_string = (
+        "We visited Paris during the weekend, where Emmanuel Macron lives."
     )
-    assert len(indexes) == len(ner_explainer.ignored_indexes)
-    
-    for index in ner_explainer.ignored_indexes:
-        assert index in indexes
-
-
-def test_token_classification_explainer_init_ignored_labels():
-    labels = ['O', 'I-LOC', 'UNKNOWN_LABEL']
-    ner_explainer = TokenClassificationExplainer(
-        BERT_MODEL, BERT_TOKENIZER, ignored_labels=labels
-    )
-    assert len(labels) == len(ner_explainer.ignored_labels)
-    
-    for label in ner_explainer.ignored_labels:
-        assert label in labels
-
-
-def test_token_classification_selected_indexes():
-    explainer_string = "We visited Paris during the weekend, where Emmanuel Macron lives."
     expected_all_indexes = list(range(15))
-    indexes = [0,1,2,3,4,5,6,7,8,9,11,12,13]
-    ner_explainer = TokenClassificationExplainer(
-        BERT_MODEL, BERT_TOKENIZER, ignored_indexes=indexes
+    indexes = [0, 1, 2, 3, 4, 5, 7, 8, 9, 11, 12, 13]
+    ner_explainer = TokenClassificationExplainer(BERT_MODEL, BERT_TOKENIZER)
+
+    word_attributions = ner_explainer(explainer_string, ignored_indexes=indexes)
+
+    assert len(ner_explainer._selected_indexes) == (
+        len(expected_all_indexes) - len(indexes)
     )
 
-    word_attributions = ner_explainer(explainer_string) 
-
-    assert len(ner_explainer.selected_indexes) == (len(expected_all_indexes) - len(indexes))
-
-    for index in ner_explainer.selected_indexes: 
-        assert index in expected_all_indexes 
+    for index in ner_explainer._selected_indexes:
+        assert index in expected_all_indexes
         assert index not in indexes
 
 
+def test_token_classification_selected_indexes_only_ignored_labels():
+    ignored_labels = ["O"]
+    indexes = [3]
+    explainer_string = "We visited Paris during the weekend"
+
+    ner_explainer = TokenClassificationExplainer(BERT_MODEL, BERT_TOKENIZER)
+
+    word_attributions = ner_explainer(explainer_string, ignored_labels=ignored_labels)
+
+    assert len(indexes) == len(ner_explainer._selected_indexes)
+
+    for index in ner_explainer._selected_indexes:
+        assert index in indexes
+
+
 def test_token_classification_selected_indexes_all():
-    explainer_string = "We visited Paris during the weekend, where Emmanuel Macron lives."
-    expected_all_indexes = list(range(15))
-    ner_explainer = TokenClassificationExplainer(
-        BERT_MODEL, BERT_TOKENIZER
+    explainer_string = (
+        "We visited Paris during the weekend, where Emmanuel Macron lives."
     )
+    expected_all_indexes = list(range(15))
+    ner_explainer = TokenClassificationExplainer(BERT_MODEL, BERT_TOKENIZER)
 
     word_attributions = ner_explainer(explainer_string)
 
-    assert len(ner_explainer.selected_indexes) == ner_explainer.input_ids.shape[1]
+    assert len(ner_explainer._selected_indexes) == ner_explainer.input_ids.shape[1]
 
-    for i, index in enumerate(ner_explainer.selected_indexes):
-        assert i == index 
-
-
-def test_token_classification_selected_indexes_raises_on_input_ids_not_calculated():
-    indexes = [0,2,3]
-    with pytest.raises(InputIdsNotCalculatedError):
-        ner_explainer = TokenClassificationExplainer(
-            BERT_MODEL, BERT_TOKENIZER, ignored_indexes=indexes
-         )
-        ner_explainer.selected_indexes
+    for i, index in enumerate(ner_explainer._selected_indexes):
+        assert i == index
 
 
-def test_token_classification_selected_labels():
-    ignored_labels = ['O', 'I-LOC']
-    ner_explainer = TokenClassificationExplainer(
-        BERT_MODEL, BERT_TOKENIZER, ignored_labels=ignored_labels
-    )
-    all_labels = list(BERT_MODEL.config.label2id.keys())
-
-    for label in ner_explainer.selected_labels:
-        assert label in all_labels 
-        assert label not in ignored_labels 
-
-
-def test_token_classification_selected_labels_all():
-    ner_explainer = TokenClassificationExplainer(
-        BERT_MODEL, BERT_TOKENIZER
-    )
-    all_labels = list(BERT_MODEL.config.label2id.keys())
-
-    assert len(ner_explainer.selected_labels) == len(all_labels)
-
-    for label in ner_explainer.selected_labels:
-        assert label in all_labels
-
-
-def test_token_classification_selected_indexes_and_selected_labels():
-    ignored_labels = ['O', 'I-PER', 'B-PER']
-    ignored_indexes = [1,2]
+def test_token_classification_selected_indexes_ignored_indexes_and_labels():
+    ignored_labels = ["O", "I-PER", "B-PER"]
+    ignored_indexes = [1, 2]
     explainer_string = "We visited Paris last weekend"
     selected_indexes = [3]
 
-    ner_explainer = TokenClassificationExplainer(
-        BERT_MODEL, BERT_TOKENIZER, ignored_indexes=ignored_indexes, ignored_labels=ignored_labels
+    ner_explainer = TokenClassificationExplainer(BERT_MODEL, BERT_TOKENIZER)
+    word_attributions = ner_explainer(
+        explainer_string, ignored_indexes=ignored_indexes, ignored_labels=ignored_labels
     )
-    ner_explainer._run(explainer_string)
 
-    assert len(selected_indexes) == len(ner_explainer._selected_indexes) 
+    assert len(selected_indexes) == len(ner_explainer._selected_indexes)
 
     for i, index in enumerate(ner_explainer._selected_indexes):
         assert selected_indexes[i] == index
@@ -197,18 +145,18 @@ def test_token_classification_explain_position_embeddings():
 def test_token_classification_explain_position_embeddings_incorrect_value():
     explainer_string = "We visited Paris during the weekend"
     ner_explainer = TokenClassificationExplainer(BERT_MODEL, BERT_TOKENIZER)
-    
+
     word_attributions = ner_explainer(explainer_string, embedding_type=0)
     incorrect_word_attributions = ner_explainer(explainer_string, embedding_type=-42)
 
-    assert incorrect_word_attributions == word_attributions 
+    assert incorrect_word_attributions == word_attributions
 
 
 def test_token_classification_predicted_class_names():
     explainer_string = "We visited Paris during the weekend"
     ner_explainer = TokenClassificationExplainer(BERT_MODEL, BERT_TOKENIZER)
     ner_explainer._run(explainer_string)
-    ground_truths = ['O', 'O', 'O', 'B-LOC', 'O', 'O', 'O', 'O']
+    ground_truths = ["O", "O", "O", "B-LOC", "O", "O", "O", "O"]
 
     assert len(ground_truths) == len(ner_explainer.predicted_class_names)
 
@@ -273,18 +221,18 @@ def test_token_classification_viz_on_true_classes_value_error():
     explainer_string = "We visited Paris during the weekend"
     ner_explainer = TokenClassificationExplainer(BERT_MODEL, BERT_TOKENIZER)
     ner_explainer(explainer_string)
-    true_classes = ['None', 'Location', 'None']
+    true_classes = ["None", "Location", "None"]
     with pytest.raises(ValueError):
         ner_explainer.visualize(true_classes=true_classes)
 
 
 def token_classification_custom_steps():
-    explainer_string ="We visited Paris during the weekend"
+    explainer_string = "We visited Paris during the weekend"
     ner_explainer = TokenClassificationExplainer(BERT_MODEL, BERT_TOKENIZER)
     ner_explainer(explainer_string, n_steps=1)
 
 
 def token_classification_internal_batch_size():
-    explainer_string ="We visited Paris during the weekend"
+    explainer_string = "We visited Paris during the weekend"
     ner_explainer = TokenClassificationExplainer(BERT_MODEL, BERT_TOKENIZER)
     ner_explainer(explainer_string, internal_batch_size=1)
