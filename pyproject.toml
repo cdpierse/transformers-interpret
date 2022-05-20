@@ -27,10 +27,13 @@ ipython = "^7.31.1"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.19.0"
+<<<<<<< HEAD
 twine = "^4.0.1"
 pytest = "^5.4.2"
 black = {version = "^22.6.0", allow-prereleases = true}
 pytest-cov = "^3.0.0"
+=======
+>>>>>>> 4841f6d (Bump requirements)
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
