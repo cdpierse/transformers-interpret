@@ -96,9 +96,20 @@ class TokenClassificationExplainer(BaseExplainer):
         if self.attributions is not None:
             word_attr = dict()
             tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
+            labels = self.predicted_class_names
 
             for index, attr in self.attributions.items():
-                word_attr[tokens[index]] = attr.word_attributions
+                try:
+                    predicted_class = self.id2label[
+                        torch.argmax(self.pred_probs[index]).item()
+                    ]
+                except KeyError:
+                    predicted_class = torch.argmax(self.pred_probs[index]).item()
+
+                word_attr[tokens[index]] = {
+                    "label": predicted_class,
+                    "attribution_scores": attr.word_attributions,
+                }
 
             return word_attr
         else:
@@ -243,7 +254,7 @@ class TokenClassificationExplainer(BaseExplainer):
         self,
         text: str,
         embedding_type: int = None,
-    ) -> list:
+    ) -> dict:
         if embedding_type is None:
             embeddings = self.word_embeddings
         else:
@@ -273,7 +284,7 @@ class TokenClassificationExplainer(BaseExplainer):
         n_steps: Optional[int] = None,
         ignored_indexes: Optional[List[int]] = None,
         ignored_labels: Optional[List[str]] = None,
-    ) -> list:
+    ) -> dict:
         """
         Args:
             text (str): Sentence whose NER predictions are to be explained.
