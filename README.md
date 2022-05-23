@@ -812,6 +812,8 @@ ner_explainer.visualize("bert_ner_viz.html")
 </a>
 
 
+For more details about how the `TokenClassificationExplainer` works, you can check the notebook [notebooks/ner_example.ipynb](notebooks/ner_example.ipynb).
+
 </details>
 
 <a name="future"/>
