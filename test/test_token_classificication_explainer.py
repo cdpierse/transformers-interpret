@@ -7,10 +7,10 @@ from transformers_interpret.errors import (
 )
 
 DISTILBERT_MODEL = AutoModelForTokenClassification.from_pretrained(
-    "elastic/distilbert-base-uncased-finetuned-conll03-english"
+    "elastic/distilbert-base-cased-finetuned-conll03-english"
 )
 DISTILBERT_TOKENIZER = AutoTokenizer.from_pretrained(
-    "elastic/distilbert-base-uncased-finetuned-conll03-english"
+    "elastic/distilbert-base-cased-finetuned-conll03-english"
 )
 
 
@@ -127,7 +127,7 @@ def test_token_classification_decode():
     decoded = ner_explainer.decode(input_ids)
     assert decoded[0] == ner_explainer.tokenizer.cls_token
     assert decoded[-1] == ner_explainer.tokenizer.sep_token
-    assert " ".join(decoded[1:-1]) == explainer_string.lower()  # uncased model
+    assert " ".join(decoded[1:-1]) == explainer_string
 
 
 def test_token_classification_run_text_given():
@@ -138,9 +138,9 @@ def test_token_classification_run_text_given():
     actual_tokens = list(word_attributions.keys())
     expected_tokens = [
         "[CLS]",
-        "we",
+        "We",
         "visited",
-        "paris",
+        "Paris",
         "during",
         "the",
         "weekend",
@@ -173,8 +173,7 @@ def test_token_classification_predicted_class_names():
     explainer_string = "We visited Paris during the weekend"
     ner_explainer = TokenClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     ner_explainer._run(explainer_string)
-    # the model wrongly classifies the token '[SEP]' as 'B-LOC'
-    ground_truths = ["O", "O", "O", "B-LOC", "O", "O", "O", "B-LOC"]
+    ground_truths = ["O", "O", "O", "B-LOC", "O", "O", "O", "O"]
 
     assert len(ground_truths) == len(ner_explainer.predicted_class_names)
 
