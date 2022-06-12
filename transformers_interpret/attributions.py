@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Tuple, List, Union, Optional
 
 import torch
 import torch.nn as nn
@@ -25,17 +25,19 @@ class LIGAttributions(Attributions):
         ref_input_ids: torch.Tensor,
         sep_id: int,
         attention_mask: torch.Tensor,
-        token_type_ids: torch.Tensor = None,
-        position_ids: torch.Tensor = None,
-        ref_token_type_ids: torch.Tensor = None,
-        ref_position_ids: torch.Tensor = None,
-        internal_batch_size: int = None,
+        target: Optional[Union[int, Tuple, torch.Tensor, List]] = None,
+        token_type_ids: Optional[torch.Tensor] = None,
+        position_ids: Optional[torch.Tensor] = None,
+        ref_token_type_ids: Optional[torch.Tensor] = None,
+        ref_position_ids: Optional[torch.Tensor] = None,
+        internal_batch_size: Optional[int] = None,
         n_steps: int = 50,
     ):
         super().__init__(custom_forward, embeddings, tokens)
         self.input_ids = input_ids
         self.ref_input_ids = ref_input_ids
         self.attention_mask = attention_mask
+        self.target = target
         self.token_type_ids = token_type_ids
         self.position_ids = position_ids
         self.ref_token_type_ids = ref_token_type_ids
@@ -53,6 +55,7 @@ class LIGAttributions(Attributions):
                     self.ref_token_type_ids,
                     self.ref_position_ids,
                 ),
+                target=self.target,
                 return_convergence_delta=True,
                 additional_forward_args=(self.attention_mask),
                 internal_batch_size=self.internal_batch_size,
@@ -65,6 +68,7 @@ class LIGAttributions(Attributions):
                     self.ref_input_ids,
                     self.ref_position_ids,
                 ),
+                target=self.target,
                 return_convergence_delta=True,
                 additional_forward_args=(self.attention_mask),
                 internal_batch_size=self.internal_batch_size,
@@ -77,6 +81,7 @@ class LIGAttributions(Attributions):
                     self.ref_input_ids,
                     self.ref_token_type_ids,
                 ),
+                target=self.target,
                 return_convergence_delta=True,
                 additional_forward_args=(self.attention_mask),
                 internal_batch_size=self.internal_batch_size,
@@ -87,6 +92,7 @@ class LIGAttributions(Attributions):
             self._attributions, self.delta = self.lig.attribute(
                 inputs=self.input_ids,
                 baselines=self.ref_input_ids,
+                target=self.target,
                 return_convergence_delta=True,
                 internal_batch_size=self.internal_batch_size,
                 n_steps=self.n_steps,
@@ -96,7 +102,9 @@ class LIGAttributions(Attributions):
     def word_attributions(self) -> list:
         wa = []
         if len(self.attributions_sum) >= 1:
-            for i, (word, attribution) in enumerate(zip(self.tokens, self.attributions_sum)):
+            for i, (word, attribution) in enumerate(
+                zip(self.tokens, self.attributions_sum)
+            ):
                 wa.append((word, float(attribution.cpu().data.numpy())))
             return wa
 
@@ -105,9 +113,13 @@ class LIGAttributions(Attributions):
 
     def summarize(self, end_idx=None):
         self.attributions_sum = self._attributions.sum(dim=-1).squeeze(0)
-        self.attributions_sum = self.attributions_sum[:end_idx] / torch.norm(self.attributions_sum[:end_idx])
+        self.attributions_sum = self.attributions_sum[:end_idx] / torch.norm(
+            self.attributions_sum[:end_idx]
+        )
 
-    def visualize_attributions(self, pred_prob, pred_class, true_class, attr_class, all_tokens):
+    def visualize_attributions(
+        self, pred_prob, pred_class, true_class, attr_class, all_tokens
+    ):
 
         return viz.VisualizationDataRecord(
             self.attributions_sum,
