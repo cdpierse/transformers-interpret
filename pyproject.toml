@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "transformers-interpret"
-version = "0.1.0"
+version = "0.7.2"
 description = ""
 authors = ["Charles Pierse <charlespierse@gmail.com>"]
 
