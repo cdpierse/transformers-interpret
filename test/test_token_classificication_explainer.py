@@ -9,9 +9,7 @@ from transformers_interpret.errors import (
 DISTILBERT_MODEL = AutoModelForTokenClassification.from_pretrained(
     "elastic/distilbert-base-cased-finetuned-conll03-english"
 )
-DISTILBERT_TOKENIZER = AutoTokenizer.from_pretrained(
-    "elastic/distilbert-base-cased-finetuned-conll03-english"
-)
+DISTILBERT_TOKENIZER = AutoTokenizer.from_pretrained("elastic/distilbert-base-cased-finetuned-conll03-english")
 
 
 BERT_MODEL = AutoModelForTokenClassification.from_pretrained("dslim/bert-base-NER")
@@ -44,18 +42,14 @@ def test_token_classification_explainer_init_attribution_type_error():
 
 
 def test_token_classification_selected_indexes_only_ignored_indexes():
-    explainer_string = (
-        "We visited Paris during the weekend, where Emmanuel Macron lives."
-    )
+    explainer_string = "We visited Paris during the weekend, where Emmanuel Macron lives."
     expected_all_indexes = list(range(15))
     indexes = [0, 1, 2, 3, 4, 5, 7, 8, 9, 11, 12, 13]
     ner_explainer = TokenClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
 
     word_attributions = ner_explainer(explainer_string, ignored_indexes=indexes)
 
-    assert len(ner_explainer._selected_indexes) == (
-        len(expected_all_indexes) - len(indexes)
-    )
+    assert len(ner_explainer._selected_indexes) == (len(expected_all_indexes) - len(indexes))
 
     for index in ner_explainer._selected_indexes:
         assert index in expected_all_indexes
@@ -78,9 +72,7 @@ def test_token_classification_selected_indexes_only_ignored_labels():
 
 
 def test_token_classification_selected_indexes_all():
-    explainer_string = (
-        "We visited Paris during the weekend, where Emmanuel Macron lives."
-    )
+    explainer_string = "We visited Paris during the weekend, where Emmanuel Macron lives."
     expected_all_indexes = list(range(15))
     ner_explainer = TokenClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
 
@@ -99,9 +91,7 @@ def test_token_classification_selected_indexes_ignored_indexes_and_labels():
     selected_indexes = [3]  # this models classifies erroniously '[SEP]' as a location
 
     ner_explainer = TokenClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
-    word_attributions = ner_explainer(
-        explainer_string, ignored_indexes=ignored_indexes, ignored_labels=ignored_labels
-    )
+    word_attributions = ner_explainer(explainer_string, ignored_indexes=ignored_indexes, ignored_labels=ignored_labels)
 
     assert len(selected_indexes) == len(ner_explainer._selected_indexes)
 
@@ -196,9 +186,7 @@ def test_token_classification_predicted_class_names_no_id2label_defaults_idx():
 
 def test_token_classification_explain_raises_on_input_ids_not_calculated():
     with pytest.raises(InputIdsNotCalculatedError):
-        ner_explainer = TokenClassificationExplainer(
-            DISTILBERT_MODEL, DISTILBERT_TOKENIZER
-        )
+        ner_explainer = TokenClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
         ner_explainer.predicted_class_indexes
 
 

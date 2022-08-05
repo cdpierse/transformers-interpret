@@ -87,7 +87,7 @@ Before you submit your pull request consider the following guidelines:
   coverage run -m pytest -s -v && coverage report -m
   ```
 - Format your code appropriately:
-  * This package uses [black](https://black.readthedocs.io/en/stable/) as its formatter. In order to format your code with black run ```black . ``` from the root of the package.  
+  * This package uses [black](https://black.readthedocs.io/en/stable/) as its formatter. In order to format your code with black run ```black . ``` from the root of the package.
 
 - Commit your changes using a descriptive commit message.
 

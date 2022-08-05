@@ -1,15 +1,30 @@
 [tool.poetry]
 name = "transformers-interpret"
-version = "0.7.2"
-description = ""
+version = "0.7.5"
+description = "Model explainability that works seamlessly with 🤗 transformers. Explain your transformers model in just 2 lines of code."
+readme = "README.md"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Text Processing :: Linguistic",
+]
 authors = ["Charles Pierse <charlespierse@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
-pytest = "5.4.2"
+python = "^3.6"
+pytest = "^5.4.2"
 captum = ">=0.3.1"
 transformers = ">=3.0.0"
-ipython = "7.31.1"
+ipython = "^7.31.1"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.19.0"

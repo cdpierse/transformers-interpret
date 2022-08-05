@@ -70,12 +70,7 @@ class TokenClassificationExplainer(BaseExplainer):
             preds = preds[0]
             self.pred_class = torch.softmax(preds, dim=2)[0]
 
-            return (
-                torch.argmax(torch.softmax(preds, dim=2), dim=2)[0]
-                .cpu()
-                .detach()
-                .numpy()
-            )
+            return torch.argmax(torch.softmax(preds, dim=2), dim=2)[0].cpu().detach().numpy()
 
         else:
             raise InputIdsNotCalculatedError("input_ids have not been created yet.`")
@@ -100,9 +95,7 @@ class TokenClassificationExplainer(BaseExplainer):
 
             for index, attr in self.attributions.items():
                 try:
-                    predicted_class = self.id2label[
-                        torch.argmax(self.pred_probs[index]).item()
-                    ]
+                    predicted_class = self.id2label[torch.argmax(self.pred_probs[index]).item()]
                 except KeyError:
                     predicted_class = torch.argmax(self.pred_probs[index]).item()
 
@@ -113,9 +106,7 @@ class TokenClassificationExplainer(BaseExplainer):
 
             return word_attr
         else:
-            raise ValueError(
-                "Attributions have not yet been calculated. Please call the explainer on text first."
-            )
+            raise ValueError("Attributions have not yet been calculated. Please call the explainer on text first.")
 
     @property
     def _selected_indexes(self) -> List[int]:
@@ -149,9 +140,7 @@ class TokenClassificationExplainer(BaseExplainer):
 
         """
         if true_classes is not None and len(true_classes) != self.input_ids.shape[1]:
-            raise ValueError(
-                f"""The length of `true_classes` must be equal to the number of tokens"""
-            )
+            raise ValueError(f"""The length of `true_classes` must be equal to the number of tokens""")
 
         score_vizs = []
         tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
@@ -223,9 +212,7 @@ class TokenClassificationExplainer(BaseExplainer):
         self.attention_mask = self._make_attention_mask(self.input_ids)
 
         pred_classes = self.predicted_class_indexes
-        reference_tokens = [
-            token.replace("Ġ", "") for token in self.decode(self.input_ids)
-        ]
+        reference_tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
 
         ligs = {}
 
