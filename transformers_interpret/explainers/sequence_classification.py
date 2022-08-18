@@ -172,20 +172,13 @@ class SequenceClassificationExplainer(BaseExplainer):
     def _forward(  # type: ignore
         self,
         input_ids: torch.Tensor,
+        token_type_ids=None,
         position_ids: torch.Tensor = None,
         attention_mask: torch.Tensor = None,
     ):
 
-        if self.accepts_position_ids:
-            preds = self.model(
-                input_ids,
-                position_ids=position_ids,
-                attention_mask=attention_mask,
-            )
-            preds = preds[0]
-
-        else:
-            preds = self.model(input_ids, attention_mask)[0]
+        preds = self._get_preds(input_ids, token_type_ids, position_ids, attention_mask)
+        preds = preds[0]
 
         # if it is a single output node
         if len(preds[0]) == 1:
@@ -207,6 +200,11 @@ class SequenceClassificationExplainer(BaseExplainer):
             self.position_ids,
             self.ref_position_ids,
         ) = self._make_input_reference_position_id_pair(self.input_ids)
+
+        (
+            self.token_type_ids,
+            self.ref_token_type_ids,
+        ) = self._make_input_reference_token_type_pair(self.input_ids, self.sep_idx)
 
         self.attention_mask = self._make_attention_mask(self.input_ids)
 
@@ -234,6 +232,8 @@ class SequenceClassificationExplainer(BaseExplainer):
             self.attention_mask,
             position_ids=self.position_ids,
             ref_position_ids=self.ref_position_ids,
+            token_type_ids=self.token_type_ids,
+            ref_token_type_ids=self.ref_token_type_ids,
             internal_batch_size=self.internal_batch_size,
             n_steps=self.n_steps,
         )
@@ -321,3 +321,131 @@ class SequenceClassificationExplainer(BaseExplainer):
         s += ")"
 
         return s
+
+
+class PairwiseSequenceClassificationExplainer(SequenceClassificationExplainer):
+    def _make_input_reference_pair(
+        self, text1: Union[List, str], text2: Union[List, str]
+    ) -> Tuple[torch.Tensor, torch.Tensor, int]:
+
+        t1_ids = self.tokenizer.encode(text1, add_special_tokens=False)
+        t2_ids = self.tokenizer.encode(text2, add_special_tokens=False)
+        input_ids = self.tokenizer.encode([text1, text2], add_special_tokens=True)
+
+        ref_input_ids = (
+            [self.cls_token_id]
+            + [self.ref_token_id] * len(t1_ids)
+            + [self.sep_token_id]
+            + [self.ref_token_id] * len(t2_ids)
+            + [self.sep_token_id]
+        )
+
+        return (
+            torch.tensor([input_ids], device=self.device),
+            torch.tensor([ref_input_ids], device=self.device),
+            len(t1_ids) + len(t1_ids) + 2,
+        )
+
+    def _calculate_attributions(self, embeddings: Embedding, index: int = None, class_name: str = None):  # type: ignore
+        (
+            self.input_ids,
+            self.ref_input_ids,
+            self.sep_idx,
+        ) = self._make_input_reference_pair(self.text1, self.text2)
+
+        (
+            self.position_ids,
+            self.ref_position_ids,
+        ) = self._make_input_reference_position_id_pair(self.input_ids)
+
+        (
+            self.token_type_ids,
+            self.ref_token_type_ids,
+        ) = self._make_input_reference_token_type_pair(self.input_ids, self.sep_idx)
+
+        self.attention_mask = self._make_attention_mask(self.input_ids)
+
+        if index is not None:
+            self.selected_index = index
+        elif class_name is not None:
+            if class_name in self.label2id.keys():
+                self.selected_index = int(self.label2id[class_name])
+            else:
+                s = f"'{class_name}' is not found in self.label2id keys."
+                s += "Defaulting to predicted index instead."
+                warnings.warn(s)
+                self.selected_index = int(self.predicted_class_index)
+        else:
+            print(self._single_node_output)
+            self.selected_index = int(self.predicted_class_index)
+
+        reference_tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
+        lig = LIGAttributions(
+            self._forward,
+            embeddings,
+            reference_tokens,
+            self.input_ids,
+            self.ref_input_ids,
+            self.sep_idx,
+            self.attention_mask,
+            position_ids=self.position_ids,
+            ref_position_ids=self.ref_position_ids,
+            token_type_ids=self.token_type_ids,
+            ref_token_type_ids=self.ref_token_type_ids,
+            internal_batch_size=self.internal_batch_size,
+            n_steps=self.n_steps,
+        )
+        lig.summarize()
+        self.attributions = lig
+
+    def _run(
+        self,
+        text1: str,
+        text2: str,
+        index: int = None,
+        class_name: str = None,
+        embedding_type: int = None,
+    ) -> list:  # type: ignore
+        if embedding_type is None:
+            embeddings = self.word_embeddings
+        else:
+            if embedding_type == 0:
+                embeddings = self.word_embeddings
+            elif embedding_type == 1:
+                if self.accepts_position_ids and self.position_embeddings is not None:
+                    embeddings = self.position_embeddings
+                else:
+                    warnings.warn(
+                        "This model doesn't support position embeddings for attributions. Defaulting to word embeddings"
+                    )
+                    embeddings = self.word_embeddings
+            else:
+                embeddings = self.word_embeddings
+
+        self.text1 = text1
+        self.text2 = text2
+
+        self._calculate_attributions(embeddings=embeddings, index=index, class_name=class_name)
+        return self.word_attributions  # type: ignore
+
+    def __call__(
+        self,
+        text1: str,
+        text2: str,
+        index: int = None,
+        class_name: str = None,
+        embedding_type: int = 0,
+        internal_batch_size: int = None,
+        n_steps: int = None,
+    ):
+        if n_steps:
+            self.n_steps = n_steps
+        if internal_batch_size:
+            self.internal_batch_size = internal_batch_size
+        return self._run(
+            text1=text1,
+            text2=text2,
+            embedding_type=embedding_type,
+            index=index,
+            class_name=class_name,
+        )
