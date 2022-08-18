@@ -36,17 +36,17 @@ Check out the streamlit [demo app here](https://share.streamlit.io/cdpierse/tran
 
 - [Documentation](#documentation)
   - [Quick Start](#quick-start)
-    - [Sequence Classification Explainer](#sequence-classification-explainer)
+    - [Sequence Classification Explainer and Pairwise Sequence Classification](#sequence-classification-explainer-and-pairwise-sequence-classification)
       - [Visualize Classification attributions](#visualize-classification-attributions)
       - [Explaining Attributions for Non Predicted Class](#explaining-attributions-for-non-predicted-class)
-    - [MultiLabel Classification Explainer](#sequence-classification-explainer)
-      - [Visualize MultiLabel Classification attributions](#visualize-multilabel-attributions)
+    - [MultiLabel Classification Explainer](#multilabel-classification-explainer)
+      - [Visualize MultiLabel Classification attributions](#visualize-multilabel-classification-attributions)
     - [Zero Shot Classification Explainer](#zero-shot-classification-explainer)
       - [Visualize Zero Shot Classification attributions](#visualize-zero-shot-classification-attributions)
-    - [Question Answering Explainer (Experimental)](#question-answering-explainer-experimental)
+    - [Question Answering Explainer](#question-answering-explainer)
       - [Visualize Question Answering attributions](#visualize-question-answering-attributions)
-    - [Token Classfication (NER) Explainer (Experimental)](#token-classification-ner-explainer)
-      - [Visualize Token Classification (NER) attributions](#visualize-ner-attributions)
+    - [Token Classification (NER) explainer](#token-classification-ner-explainer)
+      - [Visualize NER attributions](#visualize-ner-attributions)
   - [Future Development](#future-development)
   - [Contributing](#contributing)
   - [Questions / Get In Touch](#questions--get-in-touch)
@@ -63,7 +63,7 @@ pip install transformers-interpret
 
 Supported:
 
-- Python >= 3.6
+- Python >= 3.7
 - Pytorch >= 1.5.0
 - [transformers][transformers] >= v3.0.0
 - captum >= 0.3.1
@@ -74,8 +74,7 @@ The package does not work with Python 2.7 or below.
 
 ## Quick Start
 
-
-### Sequence Classification Explainer
+### Sequence Classification Explainer and Pairwise Sequence Classification
 
 <details><summary>Click to expand</summary>
 
@@ -176,7 +175,6 @@ Getting attributions for different classes is particularly insightful for multic
 
 For a detailed explanation of this example please checkout this [multiclass classification notebook.](notebooks/multiclass_classification_example.ipynb)
 
-
 </details>
 
 ### MultiLabel Classification Explainer
@@ -199,7 +197,9 @@ cls_explainer = MultiLabelClassificationExplainer(model, tokenizer)
 
 word_attributions = cls_explainer("There were many aspects of the film I liked, but it was frightening and gross in parts. My parents hated it.")
 ```
+
 This produces a dictionary of word attributions mapping labels to a list of tuples for each word and it's attribution score.
+
 <details><summary>Click to see word attribution dictionary</summary>
 
 ```python
@@ -394,8 +394,8 @@ This produces a dictionary of word attributions mapping labels to a list of tupl
               ('', -0.465690452620123),
               ('</s>', 0.0)]}
 ```
-</details>
 
+</details>
 
 #### Visualize MultiLabel Classification attributions
 
@@ -411,14 +411,11 @@ cls_explainer.visualize("multilabel_viz.html")
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/multilabel_example.png" width="80%" height="80%" align="center"/>
 </a>
 
-
 </details>
 
 ### Zero Shot Classification Explainer
 
 <details><summary>Click to expand</summary>
-
-
 
 _Models using this explainer must be previously trained on NLI classification downstream tasks and have a label in the model's config called either "entailment" or "ENTAILMENT"._
 
@@ -546,11 +543,9 @@ zero_shot_explainer.visualize("zero_shot.html")
 
 </details>
 
-### Question Answering Explainer (Experimental)
+### Question Answering Explainer
 
 <details><summary>Click to expand</summary>
-
-_This is currently an experimental explainer under active development and is not yet fully tested. The explainers' API is subject to change as are the attribution methods, if you find any bugs please let me know._
 
 Let's start by initializing a transformers' Question Answering model and tokenizer, and running it through the `QuestionAnsweringExplainer`.
 
@@ -686,9 +681,8 @@ qa_explainer.visualize("bert_qa_viz.html")
 
 </details>
 
-
-
 ### Token Classification (NER) explainer
+
 <details><summary>Click to expand</summary>
 
 _This is currently an experimental explainer under active development and is not yet fully tested. The explainers' API is subject to change as are the attribution methods, if you find any bugs please let me know._
@@ -696,8 +690,6 @@ _This is currently an experimental explainer under active development and is not
 Let's start by initializing a transformers' Token Classfication model and tokenizer, and running it through the `TokenClassificationExplainer`.
 
 For this example we are using `dslim/bert-base-NER`, a bert model finetuned on the CoNLL-2003 Named Entity Recognition dataset.
-
-
 
 ```python
 from transformers import AutoModelForTokenClassification, AutoTokenizer
@@ -717,7 +709,7 @@ word_attributions = ner_explainer(sample_text, ignored_labels=['O'])
 
 ```
 
-In order to reduce the number of attributions that are calculated, we tell the explainer to ignore the tokens that whose predicted label is `'O'`.  We could also tell the explainer to ignore certain indexes providing a list as argument of the parameter `ignored_indexes`.
+In order to reduce the number of attributions that are calculated, we tell the explainer to ignore the tokens that whose predicted label is `'O'`. We could also tell the explainer to ignore certain indexes providing a list as argument of the parameter `ignored_indexes`.
 
 Which will return the following dict of including the predicted label and the attributions for each of token, except those which were predicted as 'O':
 
@@ -801,6 +793,7 @@ Which will return the following dict of including the predicted label and the at
 ```
 
 #### Visualize NER attributions
+
 For the `TokenClassificationExplainer` the visualize() method returns a table with as many rows as tokens.
 
 ```python
@@ -810,7 +803,6 @@ ner_explainer.visualize("bert_ner_viz.html")
 <a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_ner_explainer.png">
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_ner_explainer.png" width="120%" height="120%" align="center" />
 </a>
-
 
 For more details about how the `TokenClassificationExplainer` works, you can check the notebook [notebooks/ner_example.ipynb](notebooks/ner_example.ipynb).
 
