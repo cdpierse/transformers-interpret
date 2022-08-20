@@ -1,6 +1,6 @@
 import pytest
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
-from transformers_interpret import SequenceClassificationExplainer
+from transformers_interpret import SequenceClassificationExplainer, PairwiseSequenceClassificationExplainer
 from transformers_interpret.errors import (
     AttributionTypeNotSupportedError,
     InputIdsNotCalculatedError,
@@ -11,6 +11,9 @@ DISTILBERT_TOKENIZER = AutoTokenizer.from_pretrained("distilbert-base-uncased-fi
 
 BERT_MODEL = AutoModelForSequenceClassification.from_pretrained("mrm8488/bert-mini-finetuned-age_news-classification")
 BERT_TOKENIZER = AutoTokenizer.from_pretrained("mrm8488/bert-mini-finetuned-age_news-classification")
+
+CROSS_ENCODER_MODEL = AutoModelForSequenceClassification.from_pretrained("cross-encoder/ms-marco-TinyBERT-L-2-v2")
+CROSS_ENCODER_TOKENIZER = AutoTokenizer.from_pretrained("cross-encoder/ms-marco-TinyBERT-L-2-v2")
 
 
 def test_sequence_classification_explainer_init_distilbert():
@@ -221,3 +224,15 @@ def sequence_classification_internal_batch_size():
     explainer_string = "I love you , I like you"
     seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     seq_explainer(explainer_string, internal_batch_size=1)
+
+
+def test_pairwise_sequence_classification_two_inputs():
+    string1 = "How many people live in berlin?"
+    string2 = "there are 1000000 people living in berlin"
+    explainer = PairwiseSequenceClassificationExplainer(CROSS_ENCODER_MODEL, CROSS_ENCODER_TOKENIZER)
+
+    assert explainer.text1 == string1
+    assert explainer.text2 == string2
+
+    attr = explainer(string1, string2)
+    assert attr
