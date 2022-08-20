@@ -231,8 +231,7 @@ def test_pairwise_sequence_classification_two_inputs():
     string2 = "there are 1000000 people living in berlin"
     explainer = PairwiseSequenceClassificationExplainer(CROSS_ENCODER_MODEL, CROSS_ENCODER_TOKENIZER)
 
+    attr = explainer(string1, string2)
     assert explainer.text1 == string1
     assert explainer.text2 == string2
-
-    attr = explainer(string1, string2)
     assert attr
