@@ -183,19 +183,19 @@ class BaseExplainer(ABC):
         position_ids: torch.Tensor = None,
         attention_mask: torch.Tensor = None,
     ):
+
         if self.accepts_position_ids and self.accepts_token_type_ids:
             preds = self.model(
-                input_ids,
+                input_ids=input_ids,
                 token_type_ids=token_type_ids,
                 position_ids=position_ids,
                 attention_mask=attention_mask,
             )
-
             return preds
 
         elif self.accepts_position_ids:
             preds = self.model(
-                input_ids,
+                input_ids=input_ids,
                 position_ids=position_ids,
                 attention_mask=attention_mask,
             )
@@ -203,7 +203,7 @@ class BaseExplainer(ABC):
             return preds
         elif self.accepts_token_type_ids:
             preds = self.model(
-                input_ids,
+                input_ids=input_ids,
                 token_type_ids=token_type_ids,
                 attention_mask=attention_mask,
             )
@@ -211,7 +211,7 @@ class BaseExplainer(ABC):
             return preds
         else:
             preds = self.model(
-                input_ids,
+                input_ids=input_ids,
                 attention_mask=attention_mask,
             )
 

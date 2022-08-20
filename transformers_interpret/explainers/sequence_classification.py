@@ -329,7 +329,6 @@ class PairwiseSequenceClassificationExplainer(SequenceClassificationExplainer):
         t1_ids = self.tokenizer.encode(text1, add_special_tokens=False)
         t2_ids = self.tokenizer.encode(text2, add_special_tokens=False)
         input_ids = self.tokenizer.encode([text1, text2], add_special_tokens=True)
-
         if self.model.config.model_type == "roberta":
             ref_input_ids = (
                 [self.cls_token_id]
@@ -353,7 +352,7 @@ class PairwiseSequenceClassificationExplainer(SequenceClassificationExplainer):
         return (
             torch.tensor([input_ids], device=self.device),
             torch.tensor([ref_input_ids], device=self.device),
-            len(t1_ids) + len(t1_ids) + 2,
+            len(t1_ids) + 1,  # +1 for CLS token
         )
 
     def _calculate_attributions(
