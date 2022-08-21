@@ -3,7 +3,7 @@ name: Unit Tests
 on: push
 jobs:
     tests:
-        runs-on: ubuntu-18.04
+        runs-on: ubuntu-20.04
         steps:
             - name: Checkout
               uses: actions/checkout@v1
@@ -41,5 +41,5 @@ jobs:
 
             - uses: actions/upload-artifact@v2
               with:
-                  name: pipeline-unit-coverage
-                  path: unit_htmlcov/
+                  name: ti-unit-coverage
+                  path: ti-unit-htmlcov/
