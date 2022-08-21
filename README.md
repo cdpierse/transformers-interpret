@@ -34,6 +34,8 @@ Check out the streamlit [demo app here](https://share.streamlit.io/cdpierse/tran
     - [Sequence Classification Explainer and Pairwise Sequence Classification](#sequence-classification-explainer-and-pairwise-sequence-classification)
       - [Visualize Classification attributions](#visualize-classification-attributions)
       - [Explaining Attributions for Non Predicted Class](#explaining-attributions-for-non-predicted-class)
+    - [Pairwise Sequence Classification](#pairwise-sequence-classification)
+      - [Visualize Pairwise Classification attributions](#visualize-pairwise-classification-attributions)
     - [MultiLabel Classification Explainer](#multilabel-classification-explainer)
       - [Visualize MultiLabel Classification attributions](#visualize-multilabel-classification-attributions)
     - [Zero Shot Classification Explainer](#zero-shot-classification-explainer)
@@ -169,6 +171,103 @@ cls_explainer.visualize("distilbert_negative_attr.html")
 Getting attributions for different classes is particularly insightful for multiclass problems as it allows you to inspect model predictions for a number of different classes and sanity-check that the model is "looking" at the right things.
 
 For a detailed explanation of this example please checkout this [multiclass classification notebook.](notebooks/multiclass_classification_example.ipynb)
+
+### Pairwise Sequence Classification
+
+The `PairwiseSequenceClassificationExplainer` is a variant of the the `SequenceClassificationExplainer` that is designed to work with classification models that expect the input sequence to be two inputs separated by a models' separator token. Common examples of this are [NLI models](https://arxiv.org/abs/1705.02364) and [Cross-Encoders ](https://www.sbert.net/docs/pretrained_cross-encoders.html) which are commonly used to score two inputs similarity to one another.
+
+This explainer calculates pairwise attributions for two passed inputs `text1` and `text2` using the model
+and tokenizer given in the constructor.
+
+Also, since a common use case for pairwise sequence classification is to compare two inputs similarity -  models of this nature typically only have a single output node rather than multiple for each class. The pairwise sequence classification has some useful utility functions to make interpreting single node outputs clearer.
+
+By default for models that output a single node the attributions are with respect to the inputs pushing the scores closer to 1.0, however if you want to see the
+attributions with respect to scores closer to 0.0 you can pass `flip_sign=True`. For similarity
+based models this is useful, as the model might predict a score closer to 0.0 for the two inputs
+and in that case we would flip the attributions sign to explain why the two inputs are dissimilar.
+
+Let's start by initializing a cross-encoder model and tokenizer from the suite of [pre-trained cross-encoders ](https://www.sbert.net/docs/pretrained_cross-encoders.html)provided by [sentence-transformers](https://github.com/UKPLab/sentence-transformers).
+
+For this example we are using `"cross-encoder/ms-marco-MiniLM-L-6-v2"`, a high quality cross-encoder trained on the [MSMarco dataset](https://github.com/microsoft/MSMARCO-Passage-Ranking) a passage ranking dataset for question answering and machine reading comprehension.
+
+```python
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+from transformers_interpret.explainers.sequence_classification import PairwiseSequenceClassificationExplainer
+
+model = AutoModelForSequenceClassification.from_pretrained("cross-encoder/ms-marco-MiniLM-L-6-v2")
+tokenizer = AutoTokenizer.from_pretrained("cross-encoder/ms-marco-MiniLM-L-6-v2")
+
+pairwise_explainer = PairwiseSequenceClassificationExplainer(model, tokenizer)
+
+# the pairwise explainer requires two string inputs to be passed, in this case given the nature of the model
+# we pass a query string and a context string. The question we are asking of our model is "does this context contain a valid answer to our question"
+# the higher the score the better the fit.
+
+query = "How many people live in Berlin?"
+context = "Berlin has a population of 3,520,031 registered inhabitants in an area of 891.82 square kilometers."
+pairwise_attr = explainer(query, context)
+```
+
+Which returns the following attributions:
+
+```python
+>>> pairwise_attr
+[('[CLS]', 0.0),
+ ('how', -0.037558652124213034),
+ ('many', -0.40348581975409786),
+ ('people', -0.29756140282349425),
+ ('live', -0.48979015417391764),
+ ('in', -0.17844527885888117),
+ ('berlin', 0.3737346097442739),
+ ('?', -0.2281428913480142),
+ ('[SEP]', 0.0),
+ ('berlin', 0.18282430604641564),
+ ('has', 0.039114659489254834),
+ ('a', 0.0820056652212297),
+ ('population', 0.35712150914643026),
+ ('of', 0.09680870840224687),
+ ('3', 0.04791760029513795),
+ (',', 0.040330986539774266),
+ ('520', 0.16307677913176166),
+ (',', -0.005919693904602767),
+ ('03', 0.019431649515841844),
+ ('##1', -0.0243808667024702),
+ ('registered', 0.07748341753369632),
+ ('inhabitants', 0.23904087299731255),
+ ('in', 0.07553221327346359),
+ ('an', 0.033112821611999875),
+ ('area', -0.025378852244447532),
+ ('of', 0.026526373859562906),
+ ('89', 0.0030700151809002147),
+ ('##1', -0.000410387092186983),
+ ('.', -0.0193147139126114),
+ ('82', 0.0073800833347678774),
+ ('square', 0.028988305990861576),
+ ('kilometers', 0.02071182933829008),
+ ('.', -0.025901070914318036),
+ ('[SEP]', 0.0)]
+```
+
+#### Visualize Pairwise Classification attributions
+
+Visualizing the pairwise attributions is no different to the sequence classification explaine. We can see that in both the `query` and `context` there is a lot of positive attribution for the word `berlin` as well the words `population` and `inhabitants` in the `context`, good signs that our model understands the textual context of the question asked.
+
+```python
+pairwise_explainer.visualize("cross_encoder_attr.html")
+```
+
+<a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/pairwise_cross_encoder_example.png">
+<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/pairwise_cross_encoder_example.png" width="80%" height="80%" align="center" />
+</a>
+
+If we were more interested in highlighting the input attributions that pushed the model away from the positive class of this single node output we could pass:
+
+```python
+pairwise_attr = explainer(query, context, flip_sign=True)
+```
+
+This simply inverts the sign of the attributions ensuring that they are with respect to the model outputting 0 rather than 1.
 
 </details>
 
