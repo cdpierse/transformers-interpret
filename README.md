@@ -11,13 +11,11 @@
 <p align="center">
     <a href="https://opensource.org/licenses/Apache-2.0">
         <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"/>
+    <a href="https://github.com/cdpierse/transformers-interpret/actions/workflows/unit_tests.yml">
+        <img src="https://github.com/cdpierse/transformers-interpret/actions/workflows/unit_tests.yml/badge.svg">
     </a>
-    <img src="./images/coverage.svg">
-    <a href="https://github.com/cdpierse/transformers-interpret/releases">
+            <a href="https://github.com/cdpierse/transformers-interpret/releases">
         <img src="https://img.shields.io/pypi/v/transformers_interpret?label=version"/>
-    </a>
-    <a href="https://app.circleci.com/pipelines/github/cdpierse/transformers-interpret">
-        <img src="https://circleci.com/gh/cdpierse/transformers-interpret.svg?style=shield&circle-token=de18bfcb7476a5a47b8ad39b8cb1d61f5ae9ed52">
     </a>
         <a href="https://pepy.tech/project/transformers-interpret">
         <img src="https://static.pepy.tech/personalized-badge/transformers-interpret?period=total&units=abbreviation&left_color=black&right_color=brightgreen&left_text=Downloads">
@@ -36,17 +34,19 @@ Check out the streamlit [demo app here](https://share.streamlit.io/cdpierse/tran
 
 - [Documentation](#documentation)
   - [Quick Start](#quick-start)
-    - [Sequence Classification Explainer](#sequence-classification-explainer)
+    - [Sequence Classification Explainer and Pairwise Sequence Classification](#sequence-classification-explainer-and-pairwise-sequence-classification)
       - [Visualize Classification attributions](#visualize-classification-attributions)
       - [Explaining Attributions for Non Predicted Class](#explaining-attributions-for-non-predicted-class)
-    - [MultiLabel Classification Explainer](#sequence-classification-explainer)
-      - [Visualize MultiLabel Classification attributions](#visualize-multilabel-attributions)
+    - [Pairwise Sequence Classification](#pairwise-sequence-classification)
+      - [Visualize Pairwise Classification attributions](#visualize-pairwise-classification-attributions)
+    - [MultiLabel Classification Explainer](#multilabel-classification-explainer)
+      - [Visualize MultiLabel Classification attributions](#visualize-multilabel-classification-attributions)
     - [Zero Shot Classification Explainer](#zero-shot-classification-explainer)
       - [Visualize Zero Shot Classification attributions](#visualize-zero-shot-classification-attributions)
-    - [Question Answering Explainer (Experimental)](#question-answering-explainer-experimental)
+    - [Question Answering Explainer](#question-answering-explainer)
       - [Visualize Question Answering attributions](#visualize-question-answering-attributions)
-    - [Token Classfication (NER) Explainer (Experimental)](#token-classification-ner-explainer)
-      - [Visualize Token Classification (NER) attributions](#visualize-ner-attributions)
+    - [Token Classification (NER) explainer](#token-classification-ner-explainer)
+      - [Visualize NER attributions](#visualize-ner-attributions)
   - [Future Development](#future-development)
   - [Contributing](#contributing)
   - [Questions / Get In Touch](#questions--get-in-touch)
@@ -63,7 +63,7 @@ pip install transformers-interpret
 
 Supported:
 
-- Python >= 3.6
+- Python >= 3.7
 - Pytorch >= 1.5.0
 - [transformers][transformers] >= v3.0.0
 - captum >= 0.3.1
@@ -74,8 +74,7 @@ The package does not work with Python 2.7 or below.
 
 ## Quick Start
 
-
-### Sequence Classification Explainer
+### Sequence Classification Explainer and Pairwise Sequence Classification
 
 <details><summary>Click to expand</summary>
 
@@ -176,6 +175,102 @@ Getting attributions for different classes is particularly insightful for multic
 
 For a detailed explanation of this example please checkout this [multiclass classification notebook.](notebooks/multiclass_classification_example.ipynb)
 
+### Pairwise Sequence Classification
+
+The `PairwiseSequenceClassificationExplainer` is a variant of the the `SequenceClassificationExplainer` that is designed to work with classification models that expect the input sequence to be two inputs separated by a models' separator token. Common examples of this are [NLI models](https://arxiv.org/abs/1705.02364) and [Cross-Encoders ](https://www.sbert.net/docs/pretrained_cross-encoders.html) which are commonly used to score two inputs similarity to one another.
+
+This explainer calculates pairwise attributions for two passed inputs `text1` and `text2` using the model
+and tokenizer given in the constructor.
+
+Also, since a common use case for pairwise sequence classification is to compare two inputs similarity -  models of this nature typically only have a single output node rather than multiple for each class. The pairwise sequence classification has some useful utility functions to make interpreting single node outputs clearer.
+
+By default for models that output a single node the attributions are with respect to the inputs pushing the scores closer to 1.0, however if you want to see the
+attributions with respect to scores closer to 0.0 you can pass `flip_sign=True`. For similarity
+based models this is useful, as the model might predict a score closer to 0.0 for the two inputs
+and in that case we would flip the attributions sign to explain why the two inputs are dissimilar.
+
+Let's start by initializing a cross-encoder model and tokenizer from the suite of [pre-trained cross-encoders ](https://www.sbert.net/docs/pretrained_cross-encoders.html)provided by [sentence-transformers](https://github.com/UKPLab/sentence-transformers).
+
+For this example we are using `"cross-encoder/ms-marco-MiniLM-L-6-v2"`, a high quality cross-encoder trained on the [MSMarco dataset](https://github.com/microsoft/MSMARCO-Passage-Ranking) a passage ranking dataset for question answering and machine reading comprehension.
+
+```python
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+from transformers_interpret.explainers.sequence_classification import PairwiseSequenceClassificationExplainer
+
+model = AutoModelForSequenceClassification.from_pretrained("cross-encoder/ms-marco-MiniLM-L-6-v2")
+tokenizer = AutoTokenizer.from_pretrained("cross-encoder/ms-marco-MiniLM-L-6-v2")
+
+pairwise_explainer = PairwiseSequenceClassificationExplainer(model, tokenizer)
+
+# the pairwise explainer requires two string inputs to be passed, in this case given the nature of the model
+# we pass a query string and a context string. The question we are asking of our model is "does this context contain a valid answer to our question"
+# the higher the score the better the fit.
+
+query = "How many people live in Berlin?"
+context = "Berlin has a population of 3,520,031 registered inhabitants in an area of 891.82 square kilometers."
+pairwise_attr = explainer(query, context)
+```
+
+Which returns the following attributions:
+
+```python
+>>> pairwise_attr
+[('[CLS]', 0.0),
+ ('how', -0.037558652124213034),
+ ('many', -0.40348581975409786),
+ ('people', -0.29756140282349425),
+ ('live', -0.48979015417391764),
+ ('in', -0.17844527885888117),
+ ('berlin', 0.3737346097442739),
+ ('?', -0.2281428913480142),
+ ('[SEP]', 0.0),
+ ('berlin', 0.18282430604641564),
+ ('has', 0.039114659489254834),
+ ('a', 0.0820056652212297),
+ ('population', 0.35712150914643026),
+ ('of', 0.09680870840224687),
+ ('3', 0.04791760029513795),
+ (',', 0.040330986539774266),
+ ('520', 0.16307677913176166),
+ (',', -0.005919693904602767),
+ ('03', 0.019431649515841844),
+ ('##1', -0.0243808667024702),
+ ('registered', 0.07748341753369632),
+ ('inhabitants', 0.23904087299731255),
+ ('in', 0.07553221327346359),
+ ('an', 0.033112821611999875),
+ ('area', -0.025378852244447532),
+ ('of', 0.026526373859562906),
+ ('89', 0.0030700151809002147),
+ ('##1', -0.000410387092186983),
+ ('.', -0.0193147139126114),
+ ('82', 0.0073800833347678774),
+ ('square', 0.028988305990861576),
+ ('kilometers', 0.02071182933829008),
+ ('.', -0.025901070914318036),
+ ('[SEP]', 0.0)]
+```
+
+#### Visualize Pairwise Classification attributions
+
+Visualizing the pairwise attributions is no different to the sequence classification explaine. We can see that in both the `query` and `context` there is a lot of positive attribution for the word `berlin` as well the words `population` and `inhabitants` in the `context`, good signs that our model understands the textual context of the question asked.
+
+```python
+pairwise_explainer.visualize("cross_encoder_attr.html")
+```
+
+<a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/pairwise_cross_encoder_example.png">
+<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/pairwise_cross_encoder_example.png" width="80%" height="80%" align="center" />
+</a>
+
+If we were more interested in highlighting the input attributions that pushed the model away from the positive class of this single node output we could pass:
+
+```python
+pairwise_attr = explainer(query, context, flip_sign=True)
+```
+
+This simply inverts the sign of the attributions ensuring that they are with respect to the model outputting 0 rather than 1.
 
 </details>
 
@@ -199,7 +294,9 @@ cls_explainer = MultiLabelClassificationExplainer(model, tokenizer)
 
 word_attributions = cls_explainer("There were many aspects of the film I liked, but it was frightening and gross in parts. My parents hated it.")
 ```
+
 This produces a dictionary of word attributions mapping labels to a list of tuples for each word and it's attribution score.
+
 <details><summary>Click to see word attribution dictionary</summary>
 
 ```python
@@ -394,8 +491,8 @@ This produces a dictionary of word attributions mapping labels to a list of tupl
               ('', -0.465690452620123),
               ('</s>', 0.0)]}
 ```
-</details>
 
+</details>
 
 #### Visualize MultiLabel Classification attributions
 
@@ -411,14 +508,11 @@ cls_explainer.visualize("multilabel_viz.html")
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/multilabel_example.png" width="80%" height="80%" align="center"/>
 </a>
 
-
 </details>
 
 ### Zero Shot Classification Explainer
 
 <details><summary>Click to expand</summary>
-
-
 
 _Models using this explainer must be previously trained on NLI classification downstream tasks and have a label in the model's config called either "entailment" or "ENTAILMENT"._
 
@@ -546,11 +640,9 @@ zero_shot_explainer.visualize("zero_shot.html")
 
 </details>
 
-### Question Answering Explainer (Experimental)
+### Question Answering Explainer
 
 <details><summary>Click to expand</summary>
-
-_This is currently an experimental explainer under active development and is not yet fully tested. The explainers' API is subject to change as are the attribution methods, if you find any bugs please let me know._
 
 Let's start by initializing a transformers' Question Answering model and tokenizer, and running it through the `QuestionAnsweringExplainer`.
 
@@ -686,9 +778,8 @@ qa_explainer.visualize("bert_qa_viz.html")
 
 </details>
 
-
-
 ### Token Classification (NER) explainer
+
 <details><summary>Click to expand</summary>
 
 _This is currently an experimental explainer under active development and is not yet fully tested. The explainers' API is subject to change as are the attribution methods, if you find any bugs please let me know._
@@ -696,8 +787,6 @@ _This is currently an experimental explainer under active development and is not
 Let's start by initializing a transformers' Token Classfication model and tokenizer, and running it through the `TokenClassificationExplainer`.
 
 For this example we are using `dslim/bert-base-NER`, a bert model finetuned on the CoNLL-2003 Named Entity Recognition dataset.
-
-
 
 ```python
 from transformers import AutoModelForTokenClassification, AutoTokenizer
@@ -717,7 +806,7 @@ word_attributions = ner_explainer(sample_text, ignored_labels=['O'])
 
 ```
 
-In order to reduce the number of attributions that are calculated, we tell the explainer to ignore the tokens that whose predicted label is `'O'`.  We could also tell the explainer to ignore certain indexes providing a list as argument of the parameter `ignored_indexes`.
+In order to reduce the number of attributions that are calculated, we tell the explainer to ignore the tokens that whose predicted label is `'O'`. We could also tell the explainer to ignore certain indexes providing a list as argument of the parameter `ignored_indexes`.
 
 Which will return the following dict of including the predicted label and the attributions for each of token, except those which were predicted as 'O':
 
@@ -801,6 +890,7 @@ Which will return the following dict of including the predicted label and the at
 ```
 
 #### Visualize NER attributions
+
 For the `TokenClassificationExplainer` the visualize() method returns a table with as many rows as tokens.
 
 ```python
@@ -810,7 +900,6 @@ ner_explainer.visualize("bert_ner_viz.html")
 <a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_ner_explainer.png">
 <img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/bert_ner_explainer.png" width="120%" height="120%" align="center" />
 </a>
-
 
 For more details about how the `TokenClassificationExplainer` works, you can check the notebook [notebooks/ner_example.ipynb](notebooks/ner_example.ipynb).
 

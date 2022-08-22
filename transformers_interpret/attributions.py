@@ -1,4 +1,4 @@
-from typing import Callable, Tuple, List, Union, Optional
+from typing import Callable, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -109,8 +109,12 @@ class LIGAttributions(Attributions):
         else:
             raise AttributionsNotCalculatedError("Attributions are not yet calculated")
 
-    def summarize(self, end_idx=None):
-        self.attributions_sum = self._attributions.sum(dim=-1).squeeze(0)
+    def summarize(self, end_idx=None, flip_sign: bool = False):
+        if flip_sign:
+            multiplier = -1
+        else:
+            multiplier = 1
+        self.attributions_sum = self._attributions.sum(dim=-1).squeeze(0) * multiplier
         self.attributions_sum = self.attributions_sum[:end_idx] / torch.norm(self.attributions_sum[:end_idx])
 
     def visualize_attributions(self, pred_prob, pred_class, true_class, attr_class, all_tokens):
