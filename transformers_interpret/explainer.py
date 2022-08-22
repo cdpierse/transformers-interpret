@@ -30,12 +30,19 @@ class BaseExplainer(ABC):
 
         self.model_prefix = model.base_model_prefix
 
-        if self._model_forward_signature_accepts_parameter("position_ids"):
+        nonstandard_model_types = ["roberta"]
+        if (
+            self._model_forward_signature_accepts_parameter("position_ids")
+            and self.model.config.model_type not in nonstandard_model_types
+        ):
             self.accepts_position_ids = True
         else:
             self.accepts_position_ids = False
 
-        if self._model_forward_signature_accepts_parameter("token_type_ids"):
+        if (
+            self._model_forward_signature_accepts_parameter("token_type_ids")
+            and self.model.config.model_type not in nonstandard_model_types
+        ):
             self.accepts_token_type_ids = True
         else:
             self.accepts_token_type_ids = False
@@ -168,6 +175,47 @@ class BaseExplainer(ABC):
 
     def _make_attention_mask(self, input_ids: torch.Tensor) -> torch.Tensor:
         return torch.ones_like(input_ids)
+
+    def _get_preds(
+        self,
+        input_ids: torch.Tensor,
+        token_type_ids=None,
+        position_ids: torch.Tensor = None,
+        attention_mask: torch.Tensor = None,
+    ):
+
+        if self.accepts_position_ids and self.accepts_token_type_ids:
+            preds = self.model(
+                input_ids=input_ids,
+                token_type_ids=token_type_ids,
+                position_ids=position_ids,
+                attention_mask=attention_mask,
+            )
+            return preds
+
+        elif self.accepts_position_ids:
+            preds = self.model(
+                input_ids=input_ids,
+                position_ids=position_ids,
+                attention_mask=attention_mask,
+            )
+
+            return preds
+        elif self.accepts_token_type_ids:
+            preds = self.model(
+                input_ids=input_ids,
+                token_type_ids=token_type_ids,
+                attention_mask=attention_mask,
+            )
+
+            return preds
+        else:
+            preds = self.model(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+            )
+
+            return preds
 
     def _clean_text(self, text: str) -> str:
         text = re.sub("([.,!?()])", r" \1 ", text)

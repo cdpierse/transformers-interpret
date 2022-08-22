@@ -1,6 +1,6 @@
 import pytest
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
-from transformers_interpret import SequenceClassificationExplainer
+from transformers_interpret import SequenceClassificationExplainer, PairwiseSequenceClassificationExplainer
 from transformers_interpret.errors import (
     AttributionTypeNotSupportedError,
     InputIdsNotCalculatedError,
@@ -11,6 +11,9 @@ DISTILBERT_TOKENIZER = AutoTokenizer.from_pretrained("distilbert-base-uncased-fi
 
 BERT_MODEL = AutoModelForSequenceClassification.from_pretrained("mrm8488/bert-mini-finetuned-age_news-classification")
 BERT_TOKENIZER = AutoTokenizer.from_pretrained("mrm8488/bert-mini-finetuned-age_news-classification")
+
+CROSS_ENCODER_MODEL = AutoModelForSequenceClassification.from_pretrained("cross-encoder/ms-marco-TinyBERT-L-2-v2")
+CROSS_ENCODER_TOKENIZER = AutoTokenizer.from_pretrained("cross-encoder/ms-marco-TinyBERT-L-2-v2")
 
 
 def test_sequence_classification_explainer_init_distilbert():
@@ -221,3 +224,68 @@ def sequence_classification_internal_batch_size():
     explainer_string = "I love you , I like you"
     seq_explainer = SequenceClassificationExplainer(DISTILBERT_MODEL, DISTILBERT_TOKENIZER)
     seq_explainer(explainer_string, internal_batch_size=1)
+
+
+def test_pairwise_sequence_classification():
+    string1 = "How many people live in berlin?"
+    string2 = "there are 1000000 people living in berlin"
+    explainer = PairwiseSequenceClassificationExplainer(CROSS_ENCODER_MODEL, CROSS_ENCODER_TOKENIZER)
+
+    attr = explainer(string1, string2)
+    assert explainer.text1 == string1
+    assert explainer.text2 == string2
+    assert attr
+
+
+def test_pairwise_sequence_classification_flip_attribute_sign():
+    string1 = "How many people live in berlin?"
+    string2 = "this string is not related to the question."
+    explainer = PairwiseSequenceClassificationExplainer(CROSS_ENCODER_MODEL, CROSS_ENCODER_TOKENIZER)
+
+    original_sign_attr = explainer(string1, string2)
+    flipped_sign_attr = explainer(string1, string2, flip_sign=True)
+
+    for flipped_wa, original_wa in zip(flipped_sign_attr, original_sign_attr):
+        assert flipped_wa[1] == -original_wa[1]
+
+
+def test_pairwise_sequence_classification_viz():
+    string1 = "How many people live in berlin?"
+    string2 = "there are 1000000 people living in berlin"
+    explainer = PairwiseSequenceClassificationExplainer(CROSS_ENCODER_MODEL, CROSS_ENCODER_TOKENIZER)
+
+    explainer(string1, string2)
+    explainer.visualize()
+
+
+def test_pairwise_sequence_classification_custom_steps():
+    string1 = "How many people live in berlin?"
+    string2 = "there are 1000000 people living in berlin"
+    explainer = PairwiseSequenceClassificationExplainer(CROSS_ENCODER_MODEL, CROSS_ENCODER_TOKENIZER)
+
+    explainer(string1, string2, n_steps=1)
+
+
+def test_pairwise_sequence_classification_internal_batch_size():
+    string1 = "How many people live in berlin?"
+    string2 = "there are 1000000 people living in berlin"
+    explainer = PairwiseSequenceClassificationExplainer(CROSS_ENCODER_MODEL, CROSS_ENCODER_TOKENIZER)
+
+    explainer(string1, string2, internal_batch_size=1)
+
+
+def test_pairwise_sequence_classification_position_embeddings():
+    string1 = "How many people live in berlin?"
+    string2 = "there are 1000000 people living in berlin"
+    explainer = PairwiseSequenceClassificationExplainer(CROSS_ENCODER_MODEL, CROSS_ENCODER_TOKENIZER)
+
+    explainer(string1, string2, embedding_type=1)
+
+
+def test_pairwise_sequence_classification_position_embeddings_not_accepted():
+    string1 = "How many people live in berlin?"
+    string2 = "there are 1000000 people living in berlin"
+    explainer = PairwiseSequenceClassificationExplainer(CROSS_ENCODER_MODEL, CROSS_ENCODER_TOKENIZER)
+    explainer.accepts_position_ids = False
+
+    explainer(string1, string2, embedding_type=1)

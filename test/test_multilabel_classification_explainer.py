@@ -1,7 +1,10 @@
 import pytest
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from transformers_interpret import MultiLabelClassificationExplainer
-from transformers_interpret.errors import AttributionTypeNotSupportedError, InputIdsNotCalculatedError
+from transformers_interpret.errors import (
+    AttributionTypeNotSupportedError,
+    InputIdsNotCalculatedError,
+)
 
 DISTILBERT_MODEL = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased-finetuned-sst-2-english")
 DISTILBERT_TOKENIZER = AutoTokenizer.from_pretrained("distilbert-base-uncased-finetuned-sst-2-english")

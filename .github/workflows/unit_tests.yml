@@ -1,0 +1,45 @@
+---
+name: Unit Tests
+on: push
+jobs:
+    tests:
+        runs-on: ubuntu-20.04
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v1
+
+            - name: Set up Python 3.7.13
+              uses: actions/setup-python@v2
+              with:
+                  python-version: 3.7.13
+
+            - name: Install poetry
+              run: |
+                  which python
+                  which pip
+                  pip install poetry
+
+            - name: Install Python dependencies
+              if: steps.cache-poetry.outputs.cache-hit != 'true'
+              run: |
+                  poetry install
+
+            - name: Run Unit tests
+
+              run: |
+                  export PATH="$HOME/.pyenv/bin:$PATH"
+                  export PYTHONPATH="."
+
+                  poetry run pytest -s --cov=transformers_interpret/ --cov-report term-missing \
+                    test
+
+            - name: Report coverage
+              run: |
+                  export PATH="$HOME/.pyenv/bin:$PATH"
+                  poetry run coverage report --fail-under=50
+                  poetry run coverage html -d unit_htmlcov
+
+            - uses: actions/upload-artifact@v2
+              with:
+                  name: ti-unit-coverage
+                  path: ti-unit-htmlcov/
