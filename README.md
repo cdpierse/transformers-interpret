@@ -14,6 +14,9 @@
     <a href="https://github.com/cdpierse/transformers-interpret/actions/workflows/unit_tests.yml">
         <img src="https://github.com/cdpierse/transformers-interpret/actions/workflows/unit_tests.yml/badge.svg">
     </a>
+            <a href="https://github.com/cdpierse/transformers-interpret/releases">
+        <img src="https://img.shields.io/pypi/v/transformers_interpret?label=version"/>
+    </a>
         <a href="https://pepy.tech/project/transformers-interpret">
         <img src="https://static.pepy.tech/personalized-badge/transformers-interpret?period=total&units=abbreviation&left_color=black&right_color=brightgreen&left_text=Downloads">
     </a>
