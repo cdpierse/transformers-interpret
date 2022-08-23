@@ -209,7 +209,7 @@ pairwise_explainer = PairwiseSequenceClassificationExplainer(model, tokenizer)
 
 query = "How many people live in Berlin?"
 context = "Berlin has a population of 3,520,031 registered inhabitants in an area of 891.82 square kilometers."
-pairwise_attr = explainer(query, context)
+pairwise_attr = pairwise_explainer(query, context)
 ```
 
 Which returns the following attributions:
@@ -261,7 +261,7 @@ pairwise_explainer.visualize("cross_encoder_attr.html")
 ```
 
 <a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/pairwise_cross_encoder_example.png">
-<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/pairwise_cross_encoder_example.png" width="80%" height="80%" align="center" />
+<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/pairwise_cross_encoder_example.png" width="100%" height="100%" align="center" />
 </a>
 
 If we were more interested in highlighting the input attributions that pushed the model away from the positive class of this single node output we could pass:
