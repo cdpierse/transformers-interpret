@@ -132,3 +132,4 @@ notebooks/explore_captum.ipynb
 
 # Pycharm
 .idea/
+release_script.py
