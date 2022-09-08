@@ -1,5 +1,5 @@
 from enum import Enum, unique
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -134,13 +134,15 @@ class ImageClassificationExplainer:
 class VisualizationMethods(Enum):
     HEATMAP = "heatmap"
     OVERLAY = "overlay"
+    ALPHA_SCALING = "alpha_scaling"
+    MASKED_IMAGE = "masked_image"
 
 
 class SignType(Enum):
     ALL = "all"
     POSITIVE = "positive"
     NEGATIVE = "negative"
-    ABSOULTE = "absolute"
+    ABSOLUTE = "absolute"
 
 
 # TODO: create a class specific for image classification that can visualize the attributions
@@ -157,34 +159,71 @@ class ImageAttributionVisualizer:
         self.pixel_values = pixel_values
         self.outlier_threshold = outlier_threshold
         self.pred_class = pred_class
+        self.render_pyplot = self._in_ipython()
 
     def overlay(self):
-        _ = viz.visualize_image_attr(
+        return viz.visualize_image_attr(
             attr=self.attributions,
             sign="all",
             method="blended_heat_map",
             show_colorbar=True,
             outlier_perc=self.outlier_threshold,
             title=f"Heatmap Overlay IG. Prediction - {self.pred_class}",
+            use_pyplot=self.render_pyplot,
         )
 
     def heatmap(self):
-        _ = viz.visualize_image_attr(
+        return viz.visualize_image_attr(
             attr=self.attributions,
             sign="all",
             method="heat_map",
             show_colorbar=True,
             outlier_perc=self.outlier_threshold,
             title=f"Heatmap IG. Prediction - {self.pred_class}",
+            use_pyplot=self.render_pyplot,
         )
 
     def side_by_side(self):
         pass
 
+    def alpha_scaling(self):
+        return viz.visualize_image_attr(
+            attr=self.attributions,
+            sign="positive",
+            method="alpha_scaling",
+            show_colorbar=True,
+            outlier_perc=self.outlier_threshold,
+            title=f"Alpha Scaling IG. Prediction - {self.pred_class}",
+            use_pyplot=self.render_pyplot,
+        )
+
+    def masked_image(self):
+        return viz.visualize_image_attr(
+            attr=self.attributions,
+            sign="positive",
+            method="masked_image",
+            show_colorbar=True,
+            outlier_perc=self.outlier_threshold,
+            title=f"Masked Image IG. Prediction - {self.pred_class}",
+            use_pyplot=self.render_pyplot,
+        )
+
     def original_image(self):
-        img = viz.visualize_image_attr(
-            None, self.pixel_values, method="original_image", title=f"Original Image. Prediction - {self.pred_class}"
+        return viz.visualize_image_attr(
+            None,
+            self.pixel_values,
+            method="original_image",
+            title=f"Original Image. Prediction - {self.pred_class}",
+            use_pyplot=self.render_pyplot,
         )
 
     def save(self):
         pass
+
+    def _in_ipython(self) -> bool:
+        try:
+            eval("__IPYTHON__")
+        except NameError:
+            return False
+        else:  # pragma: no cover
+            return True
