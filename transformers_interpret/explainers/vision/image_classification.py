@@ -1,3 +1,4 @@
+import warnings
 from enum import Enum, unique
 from typing import Any, List, Optional, Tuple, Union
 
@@ -7,8 +8,8 @@ from captum.attr import IntegratedGradients, NoiseTunnel
 from captum.attr import visualization as viz
 from PIL import Image
 from transformers import AutoFeatureExtractor, AutoModelForImageClassification
-from transformers.image_utils import ImageFeatureExtractionMixin
 from transformers.modeling_utils import PreTrainedModel
+from transformers.models.vit.feature_extraction_vit import ViTFeatureExtractor
 
 from .attribution_types import AttributionType, NoiseTunnelType
 
@@ -21,7 +22,7 @@ class ImageClassificationExplainer:
     def __init__(
         self,
         model: PreTrainedModel,
-        feature_extractor: ImageFeatureExtractionMixin,
+        feature_extractor: ViTFeatureExtractor,
         attribution_type: str = AttributionType.INTEGRATED_GRADIENTS_NOISE_TUNNEL,
         custom_labels: Optional[List[str]] = None,
     ):
@@ -60,16 +61,30 @@ class ImageClassificationExplainer:
         method: str = "overlay",
         sign: str = "all",
         outlier_threshold: float = 0.1,
+        use_original_image_pixels: bool = True,
     ):
         outlier_threshold = min(outlier_threshold * 100, 100)
         np_attributions = np.transpose(self.attributions.squeeze().cpu().detach().numpy(), (1, 2, 0))
-        np_image = np.transpose(self.inputs["pixel_values"].squeeze().cpu().detach().numpy(), (1, 2, 0))
+        if use_original_image_pixels:
+            np_image = np.asarray(self.feature_extractor.resize(self._image, size=self.feature_extractor.size))
+        else:
+            # uses the normalized image pixels which is what the model sees, but can be hard to interpret visually
+            np_image = np.transpose(self.inputs["pixel_values"].squeeze().cpu().detach().numpy(), (1, 2, 0))
+        if sign == "all" and method in ["alpha_scaling", "masked_image"]:
+            warnings.warn(
+                "sign='all' is not supported for method='alpha_scaling' or method='masked_image'. "
+                "Please use sign='positive', sign='negative', or sign='absolute'. "
+                "Changing sign to default 'positive'."
+            )
+            sign = "positive"
+
         visualizer = ImageAttributionVisualizer(
             attributions=np_attributions,
             pixel_values=np_image,
             outlier_threshold=outlier_threshold,
             pred_class=self.id2label[self.predicted_index],
             visualization_method=method,
+            sign=sign,
         )
         return visualizer()
 
@@ -120,8 +135,8 @@ class ImageClassificationExplainer:
         n_steps_noise_tunnel: Union[int, None] = None,
         noise_tunnel_n_samples: Union[int, None] = None,
         noise_tunnel_type: NoiseTunnelType = NoiseTunnelType.SMOOTHGRAD,
-        outlier_threshold: Union[float, None] = 0.1,
     ):
+        self._image = image
         self.noise_tunnel_type = noise_tunnel_type.value
         self.inputs = self.feature_extractor(image, return_tensors="pt")
         self.predicted_index = self.model(self.inputs["pixel_values"]).logits.argmax().item()
@@ -161,6 +176,7 @@ class ImageAttributionVisualizer:
         pixel_values: np.ndarray,
         outlier_threshold: float,
         pred_class: str,
+        sign: str,
         visualization_method: str,
     ):
         self.attributions = attributions
@@ -174,6 +190,11 @@ class ImageAttributionVisualizer:
             raise ValueError(
                 f"""`visualization_method` must be one of the following: {list(VisualizationMethods.__members__.keys())}"""
             )
+
+        try:
+            self.sign = SignType(sign)
+        except ValueError:
+            raise ValueError(f"""`sign` must be one of the following: {list(SignType.__members__.keys())}""")
         if self.visualization_method == VisualizationMethods.HEATMAP:
             self.plot_function = self.heatmap
         elif self.visualization_method == VisualizationMethods.OVERLAY:
@@ -187,7 +208,7 @@ class ImageAttributionVisualizer:
         return viz.visualize_image_attr(
             original_image=self.pixel_values,
             attr=self.attributions,
-            sign="all",
+            sign="absolute_value" if self.sign.value == "absolute" else self.sign.value,
             method="blended_heat_map",
             show_colorbar=True,
             outlier_perc=self.outlier_threshold,
@@ -199,7 +220,7 @@ class ImageAttributionVisualizer:
         return viz.visualize_image_attr(
             original_image=self.pixel_values,
             attr=self.attributions,
-            sign="all",
+            sign="absolute_value" if self.sign.value == "absolute" else self.sign.value,
             method="heat_map",
             show_colorbar=True,
             outlier_perc=self.outlier_threshold,
@@ -214,7 +235,7 @@ class ImageAttributionVisualizer:
         return viz.visualize_image_attr(
             original_image=self.pixel_values,
             attr=self.attributions,
-            sign="positive",
+            sign="absolute_value" if self.sign.value == "absolute" else self.sign.value,
             method="alpha_scaling",
             show_colorbar=True,
             outlier_perc=self.outlier_threshold,
@@ -226,7 +247,7 @@ class ImageAttributionVisualizer:
         return viz.visualize_image_attr(
             original_image=self.pixel_values,
             attr=self.attributions,
-            sign="positive",
+            sign="absolute_value" if self.sign.value == "absolute" else self.sign.value,
             method="masked_image",
             show_colorbar=True,
             outlier_perc=self.outlier_threshold,
