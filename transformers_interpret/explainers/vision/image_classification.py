@@ -9,7 +9,8 @@ from captum.attr import visualization as viz
 from PIL import Image
 from transformers import AutoFeatureExtractor, AutoModelForImageClassification
 from transformers.modeling_utils import PreTrainedModel
-from transformers.models.vit.feature_extraction_vit import ViTFeatureExtractor
+
+from transformers.image_utils import ImageFeatureExtractionMixin
 
 from .attribution_types import AttributionType, NoiseTunnelType
 
@@ -22,7 +23,7 @@ class ImageClassificationExplainer:
     def __init__(
         self,
         model: PreTrainedModel,
-        feature_extractor: ViTFeatureExtractor,
+        feature_extractor: ImageFeatureExtractionMixin,
         attribution_type: str = AttributionType.INTEGRATED_GRADIENTS_NOISE_TUNNEL,
         custom_labels: Optional[List[str]] = None,
     ):
