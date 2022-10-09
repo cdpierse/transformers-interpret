@@ -1,6 +1,6 @@
 import warnings
 from enum import Enum, unique
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union, Dict
 
 import numpy as np
 import torch
@@ -58,7 +58,7 @@ class ImageClassificationExplainer:
 
     def visualize(
         self,
-        save_path: str = None,
+        save_path: Union[str, None] = None,
         method: str = "overlay",
         sign: str = "all",
         outlier_threshold: float = 0.1,
@@ -87,7 +87,12 @@ class ImageClassificationExplainer:
             visualization_method=method,
             sign=sign,
         )
-        return visualizer()
+
+        viz_result = visualizer()
+        if save_path:
+            viz_result[0].savefig(save_path)
+
+        return viz_result
 
     def image(self):
         return self.visualize(method="original_image")
@@ -126,6 +131,18 @@ class ImageClassificationExplainer:
                 n_steps=self.n_steps_noise_tunnel,
             )
 
+    @staticmethod
+    def _get_id2label_and_label2id_dict(
+        labels: List[str],
+    ) -> Tuple[Dict[int, str], Dict[str, int]]:
+        id2label: Dict[int, str] = dict()
+        label2id: Dict[str, int] = dict()
+        for idx, label in enumerate(labels):
+            id2label[idx] = label
+            label2id[label] = idx
+
+        return id2label, label2id
+
     def __call__(
         self,
         image: Image,
@@ -135,10 +152,14 @@ class ImageClassificationExplainer:
         n_steps: Union[int, None] = None,
         n_steps_noise_tunnel: Union[int, None] = None,
         noise_tunnel_n_samples: Union[int, None] = None,
-        noise_tunnel_type: NoiseTunnelType = NoiseTunnelType.SMOOTHGRAD,
+        noise_tunnel_type: NoiseTunnelType = NoiseTunnelType.SMOOTHGRAD.value,
     ):
         self._image = image
-        self.noise_tunnel_type = noise_tunnel_type.value
+        try:
+            self.noise_tunnel_type = NoiseTunnelType(noise_tunnel_type).value
+        except ValueError:
+            raise ValueError(f"noise_tunnel_type must be one of {NoiseTunnelType.__members__}")
+
         self.inputs = self.feature_extractor(image, return_tensors="pt")
         self.predicted_index = self.model(self.inputs["pixel_values"]).logits.argmax().item()
 
@@ -168,8 +189,6 @@ class SignType(Enum):
     ABSOLUTE = "absolute"
 
 
-# TODO: create a class specific for image classification that can visualize the attributions
-# in a variety of ways e.g. overlay, heatmap, side-by-side, etc.
 class ImageAttributionVisualizer:
     def __init__(
         self,
