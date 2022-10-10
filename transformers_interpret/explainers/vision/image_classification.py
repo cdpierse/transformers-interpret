@@ -24,13 +24,13 @@ class ImageClassificationExplainer:
         self,
         model: PreTrainedModel,
         feature_extractor: ImageFeatureExtractionMixin,
-        attribution_type: str = AttributionType.INTEGRATED_GRADIENTS_NOISE_TUNNEL,
+        attribution_type: str = AttributionType.INTEGRATED_GRADIENTS_NOISE_TUNNEL.value,
         custom_labels: Optional[List[str]] = None,
     ):
         self.model = model
         self.feature_extractor = feature_extractor
-        if not isinstance(attribution_type, AttributionType):
-            raise TypeError("attribution_type must be an instance of AttributionType Enum")
+        if attribution_type not in [attribution.value for attribution in AttributionType]:
+            raise ValueError(f"Attribution type {attribution_type} not supported.")
 
         self.attribution_type = attribution_type
 
@@ -63,14 +63,18 @@ class ImageClassificationExplainer:
         sign: str = "all",
         outlier_threshold: float = 0.1,
         use_original_image_pixels: bool = True,
+        side_by_side: bool = False,
     ):
         outlier_threshold = min(outlier_threshold * 100, 100)
         np_attributions = np.transpose(self.attributions.squeeze().cpu().detach().numpy(), (1, 2, 0))
         if use_original_image_pixels:
-            np_image = np.asarray(self.feature_extractor.resize(self._image, size=self.feature_extractor.size))
+            np_image = np.asarray(
+                self.feature_extractor.resize(self._image, size=(np_attributions.shape[0], np_attributions.shape[1]))
+            )
         else:
             # uses the normalized image pixels which is what the model sees, but can be hard to interpret visually
             np_image = np.transpose(self.inputs["pixel_values"].squeeze().cpu().detach().numpy(), (1, 2, 0))
+
         if sign == "all" and method in ["alpha_scaling", "masked_image"]:
             warnings.warn(
                 "sign='all' is not supported for method='alpha_scaling' or method='masked_image'. "
@@ -86,6 +90,7 @@ class ImageClassificationExplainer:
             pred_class=self.id2label[self.predicted_index],
             visualization_method=method,
             sign=sign,
+            side_by_side=side_by_side,
         )
 
         viz_result = visualizer()
@@ -93,9 +98,6 @@ class ImageClassificationExplainer:
             viz_result[0].savefig(save_path)
 
         return viz_result
-
-    def image(self):
-        return self.visualize(method="original_image")
 
     def _forward_func(self, inputs):
         outputs = self.model(inputs)
@@ -111,7 +113,7 @@ class ImageClassificationExplainer:
         else:
             self.selected_index = self.predicted_index
 
-        if self.attribution_type == AttributionType.INTEGRATED_GRADIENTS:
+        if self.attribution_type == AttributionType.INTEGRATED_GRADIENTS.value:
             ig = IntegratedGradients(self._forward_func)
             self.attributions, self.delta = ig.attribute(
                 inputs["pixel_values"],
@@ -120,7 +122,7 @@ class ImageClassificationExplainer:
                 n_steps=self.n_steps,
                 return_convergence_delta=True,
             )
-        if self.attribution_type == AttributionType.INTEGRATED_GRADIENTS_NOISE_TUNNEL:
+        if self.attribution_type == AttributionType.INTEGRATED_GRADIENTS_NOISE_TUNNEL.value:
             ig_nt = IntegratedGradients(self._forward_func)
             nt = NoiseTunnel(ig_nt)
             self.attributions = nt.attribute(
@@ -154,7 +156,7 @@ class ImageClassificationExplainer:
         noise_tunnel_n_samples: Union[int, None] = None,
         noise_tunnel_type: NoiseTunnelType = NoiseTunnelType.SMOOTHGRAD.value,
     ):
-        self._image = image
+        self._image: Image = image
         try:
             self.noise_tunnel_type = NoiseTunnelType(noise_tunnel_type).value
         except ValueError:
@@ -198,12 +200,14 @@ class ImageAttributionVisualizer:
         pred_class: str,
         sign: str,
         visualization_method: str,
+        side_by_side: bool = False,
     ):
         self.attributions = attributions
         self.pixel_values = pixel_values
         self.outlier_threshold = outlier_threshold
         self.pred_class = pred_class
         self.render_pyplot = self._using_ipython()
+        self.side_by_side = side_by_side
         try:
             self.visualization_method = VisualizationMethods(visualization_method)
         except ValueError:
@@ -225,6 +229,17 @@ class ImageAttributionVisualizer:
             self.plot_function = self.masked_image
 
     def overlay(self):
+        if self.side_by_side:
+            return viz.visualize_image_attr_multiple(
+                attr=self.attributions,
+                original_image=self.pixel_values,
+                methods=["original_image", "blended_heat_map"],
+                signs=["all", "absolute_value" if self.sign.value == "absolute" else self.sign.value],
+                show_colorbar=True,
+                use_pyplot=self.render_pyplot,
+                outlier_perc=self.outlier_threshold,
+                titles=["Original Image", f"Heatmap overlay IG. Prediction: {self.pred_class}"],
+            )
         return viz.visualize_image_attr(
             original_image=self.pixel_values,
             attr=self.attributions,
@@ -237,6 +252,18 @@ class ImageAttributionVisualizer:
         )
 
     def heatmap(self):
+        if self.side_by_side:
+            return viz.visualize_image_attr_multiple(
+                attr=self.attributions,
+                original_image=self.pixel_values,
+                methods=["original_image", "heat_map"],
+                signs=["all", "absolute_value" if self.sign.value == "absolute" else self.sign.value],
+                show_colorbar=True,
+                use_pyplot=self.render_pyplot,
+                outlier_perc=self.outlier_threshold,
+                titles=["Original Image", f"Heatmap IG. Prediction: {self.pred_class}"],
+            )
+
         return viz.visualize_image_attr(
             original_image=self.pixel_values,
             attr=self.attributions,
@@ -248,10 +275,19 @@ class ImageAttributionVisualizer:
             use_pyplot=self.render_pyplot,
         )
 
-    def side_by_side(self):
-        pass
-
     def alpha_scaling(self):
+        if self.side_by_side:
+            return viz.visualize_image_attr_multiple(
+                attr=self.attributions,
+                original_image=self.pixel_values,
+                methods=["original_image", "alpha_scaling"],
+                signs=["all", "absolute_value" if self.sign.value == "absolute" else self.sign.value],
+                show_colorbar=True,
+                use_pyplot=self.render_pyplot,
+                outlier_perc=self.outlier_threshold,
+                titles=["Original Image", f"Alpha Scaled IG. Prediction: {self.pred_class}"],
+            )
+
         return viz.visualize_image_attr(
             original_image=self.pixel_values,
             attr=self.attributions,
@@ -264,6 +300,17 @@ class ImageAttributionVisualizer:
         )
 
     def masked_image(self):
+        if self.side_by_side:
+            return viz.visualize_image_attr_multiple(
+                attr=self.attributions,
+                original_image=self.pixel_values,
+                methods=["original_image", "masked_image"],
+                signs=["all", "absolute_value" if self.sign.value == "absolute" else self.sign.value],
+                show_colorbar=True,
+                use_pyplot=self.render_pyplot,
+                outlier_perc=self.outlier_threshold,
+                titles=["Original Image", f"Masked Image IG. Prediction: {self.pred_class}"],
+            )
         return viz.visualize_image_attr(
             original_image=self.pixel_values,
             attr=self.attributions,
@@ -274,18 +321,6 @@ class ImageAttributionVisualizer:
             title=f"Masked Image IG. Prediction - {self.pred_class}",
             use_pyplot=self.render_pyplot,
         )
-
-    def original_image(self):
-        return viz.visualize_image_attr(
-            None,
-            self.pixel_values,
-            method="original_image",
-            title=f"Original Image. Prediction - {self.pred_class}",
-            use_pyplot=self.render_pyplot,
-        )
-
-    def save(self):
-        pass
 
     def _using_ipython(self) -> bool:
         try:
