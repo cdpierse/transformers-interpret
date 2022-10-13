@@ -24,36 +24,9 @@
 
 Transformers Interpret is a model explainability tool designed to work exclusively with the 🤗 [transformers][transformers] package.
 
-In line with the philosophy of the transformers package Tranformers Interpret allows any transformers model to be explained in just two lines. It even supports visualizations in both notebooks and as savable html files.
+In line with the philosophy of the Transformers package Transformers Interpret allows any transformers model to be explained in just two lines. Explainers are available for both text and computer vision models. Visualizations are also available in notebooks and as savable png and html files.
 
 Check out the streamlit [demo app here](https://share.streamlit.io/cdpierse/transformers-interpret-streamlit/main/app.py)
-
-#### Table of Contents
-
-- [Install](#install)
-
-- [Documentation](#documentation)
-  - [Quick Start](#quick-start)
-    - [Sequence Classification Explainer and Pairwise Sequence Classification](#sequence-classification-explainer-and-pairwise-sequence-classification)
-      - [Visualize Classification attributions](#visualize-classification-attributions)
-      - [Explaining Attributions for Non Predicted Class](#explaining-attributions-for-non-predicted-class)
-    - [Pairwise Sequence Classification](#pairwise-sequence-classification)
-      - [Visualize Pairwise Classification attributions](#visualize-pairwise-classification-attributions)
-    - [MultiLabel Classification Explainer](#multilabel-classification-explainer)
-      - [Visualize MultiLabel Classification attributions](#visualize-multilabel-classification-attributions)
-    - [Zero Shot Classification Explainer](#zero-shot-classification-explainer)
-      - [Visualize Zero Shot Classification attributions](#visualize-zero-shot-classification-attributions)
-    - [Question Answering Explainer](#question-answering-explainer)
-      - [Visualize Question Answering attributions](#visualize-question-answering-attributions)
-    - [Token Classification (NER) explainer](#token-classification-ner-explainer)
-      - [Visualize NER attributions](#visualize-ner-attributions)
-  - [Future Development](#future-development)
-  - [Contributing](#contributing)
-  - [Questions / Get In Touch](#questions--get-in-touch)
-  - [Reading and Resources](#reading-and-resources)
-  - [Miscellaneous](#miscellaneous)
-
-<a name="install"/>
 
 ## Install
 
@@ -61,23 +34,13 @@ Check out the streamlit [demo app here](https://share.streamlit.io/cdpierse/tran
 pip install transformers-interpret
 ```
 
-Supported:
-
-- Python >= 3.7
-- Pytorch >= 1.5.0
-- [transformers][transformers] >= v3.0.0
-- captum >= 0.3.1
-
-The package does not work with Python 2.7 or below.
-
-# Documentation
-
 ## Quick Start
 
-### Sequence Classification Explainer and Pairwise Sequence Classification
+### Text Explainers
 
-<details><summary>Click to expand</summary>
+<details><summary> Sequence Classification Explainer and Pairwise Sequence Classification</summary>
 
+<p>
 Let's start by initializing a transformers' model and tokenizer, and running it through the `SequenceClassificationExplainer`.
 
 For this example we are using `distilbert-base-uncased-finetuned-sst-2-english`, a distilbert model finetuned on a sentiment analysis task.
@@ -182,7 +145,7 @@ The `PairwiseSequenceClassificationExplainer` is a variant of the the `SequenceC
 This explainer calculates pairwise attributions for two passed inputs `text1` and `text2` using the model
 and tokenizer given in the constructor.
 
-Also, since a common use case for pairwise sequence classification is to compare two inputs similarity -  models of this nature typically only have a single output node rather than multiple for each class. The pairwise sequence classification has some useful utility functions to make interpreting single node outputs clearer.
+Also, since a common use case for pairwise sequence classification is to compare two inputs similarity - models of this nature typically only have a single output node rather than multiple for each class. The pairwise sequence classification has some useful utility functions to make interpreting single node outputs clearer.
 
 By default for models that output a single node the attributions are with respect to the inputs pushing the scores closer to 1.0, however if you want to see the
 attributions with respect to scores closer to 0.0 you can pass `flip_sign=True`. For similarity
@@ -274,9 +237,8 @@ This simply inverts the sign of the attributions ensuring that they are with res
 
 </details>
 
-### MultiLabel Classification Explainer
-
-<details><summary>Click to expand</summary>
+<details><summary>MultiLabel Classification Explainer</summary>
+<p>
 
 This explainer is an extension of the `SequenceClassificationExplainer` and is thus compatible with all sequence classification models from the Transformers package. The key change in this explainer is that it caclulates attributions for each label in the model's config and returns a dictionary of word attributions w.r.t to each label. The `visualize()` method also displays a table of attributions with attributions calculated per label.
 
@@ -510,9 +472,7 @@ cls_explainer.visualize("multilabel_viz.html")
 
 </details>
 
-### Zero Shot Classification Explainer
-
-<details><summary>Click to expand</summary>
+<details><summary>Zero Shot Classification Explainer</summary>
 
 _Models using this explainer must be previously trained on NLI classification downstream tasks and have a label in the model's config called either "entailment" or "ENTAILMENT"._
 
@@ -640,9 +600,7 @@ zero_shot_explainer.visualize("zero_shot.html")
 
 </details>
 
-### Question Answering Explainer
-
-<details><summary>Click to expand</summary>
+<details><summary>Question Answering Explainer</summary>
 
 Let's start by initializing a transformers' Question Answering model and tokenizer, and running it through the `QuestionAnsweringExplainer`.
 
@@ -778,9 +736,7 @@ qa_explainer.visualize("bert_qa_viz.html")
 
 </details>
 
-### Token Classification (NER) explainer
-
-<details><summary>Click to expand</summary>
+<details><summary>Token Classification (NER) explainer</summary>
 
 _This is currently an experimental explainer under active development and is not yet fully tested. The explainers' API is subject to change as are the attribution methods, if you find any bugs please let me know._
 
@@ -905,44 +861,148 @@ For more details about how the `TokenClassificationExplainer` works, you can che
 
 </details>
 
-<a name="future"/>
+### Vision Explainers
+
+<details><summary> Image Classification Explainer </summary>
+
+<p>
+
+The `ImageClassificationExplainer` is designed to work with all models from the Transformers library that are trained for image classification (Swin, ViT etc). It provides attributions for every pixel in that image that can be easily visualized using the explainers built in `visualize` method.
+
+Initialising an image classification is very simple, all you need a is a image classification model finetuned or trained to work with Huggingface and its feature extractor.
+
+For this example we are using `google/vit-base-patch16-224`, a Vision Transformer (ViT) model pre-trained on ImageNet-21k that predicts from 1000 possible classes.
+
+```python
+from transformers import AutoFeatureExtractor, AutoModelForImageClassification
+from transformers_interpret import ImageClassificationExplainer
+from PIL import Image
+import requests
+
+model_name = "google/vit-base-patch16-224"
+model = AutoModelForImageClassification.from_pretrained(model_name)
+feature_extractor = AutoFeatureExtractor.from_pretrained(model_name)
+
+# With both the model and feature extractor initialized we are now able to get explanations on an image, we will use a simple image of a golden retriever.
+image_link = "https://imagesvc.meredithcorp.io/v3/mm/image?url=https%3A%2F%2Fstatic.onecms.io%2Fwp-content%2Fuploads%2Fsites%2F47%2F2020%2F08%2F16%2Fgolden-retriever-177213599-2000.jpg"
+
+image = Image.open(requests.get(image_link, stream=True).raw)
+
+image_classification_explainer = ImageClassificationExplainer(model=model, feature_extractor=feature_extractor)
+
+image_attributions = image_classification_explainer(
+    image
+)
+
+print(image_attributions.shape)
+```
+
+Which will return the following list of tuples:
+
+```python
+>>> torch.Size([1, 3, 224, 224])
+```
+
+#### Visualizing Image Attributions
+
+Because we are dealing with images visualization is even more straightforward than in text models.
+
+Attrbutions can be easily visualized using the `visualize` method of the explainer. There are currently 4 supported visualization methods.
+
+- `heatmap` - a heatmap of positive and negative attributions is drawn in using the dimensions of the image.
+- `overlay` - the heatmap is overlayed over a grayscaled version of the original image
+- `masked_image` - the absolute value of attrbutions is used to create a mask over original image
+- `alpha_scaling` - Sets alpha channel (transparency) of each pixel to be equal to normalized attribution value.
+
+#### Heatmap
+
+```python
+image_classification_explainer.visualize(
+    method="heatmap",
+    side_by_side=True,
+    outlier_threshold=0.03
+
+)
+```
+
+<a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/vision/heatmap_sbs.png">
+
+#### Overlay
+
+```python
+image_classification_explainer.visualize(
+    method="overlay",
+    side_by_side=True,
+    outlier_threshold=0.03
+
+)
+```
+
+<a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/vision/overlay_sbs.png">
+
+#### Masked Image
+
+```python
+image_classification_explainer.visualize(
+    method="masked_image",
+    side_by_side=True,
+    outlier_threshold=0.03
+
+)
+```
+
+<a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/vision/masked_image_sbs.png">
+
+#### Alpha Scaling
+
+```python
+image_classification_explainer.visualize(
+    method="alpha_scaling",
+    side_by_side=True,
+    outlier_threshold=0.03
+
+)
+```
+
+<a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/vision/alpha_scaling_sbs.png">
+
+</details>
 
 ## Future Development
 
-This package is still in its early days and there is much more planned. For a 1.0.0 release we're aiming to have:
+This package is still in active development and there is much more planned. For a 1.0.0 release we're aiming to have:
 
 - Clean and thorough documentation website
 - ~~Support for Question Answering models~~
 - ~~Support for NER models~~
 - ~~Support for Zero Shot Classification models.~~
 - ~~Ability to show attributions for multiple embedding type, rather than just the word embeddings.~~
+- Support for SentenceTransformer embedding models and other image embeddings
 - Additional attribution methods
-- Support for vision transformer models
+- ~~Support for vision transformer models~~
 - In depth examples
 - ~~A nice logo~~ (thanks @Voyz)
 - and more... feel free to submit your suggestions!
-
-<a name="contributing"/>
 
 ## Contributing
 
 If you would like to make a contribution please checkout our [contribution guidelines](https://github.com/cdpierse/transformers-interpret/blob/master/CONTRIBUTING.md)
 
-<a name="contact"/>
-
 ## Questions / Get In Touch
 
-The main contributor to this repository is [@cdpierse](https://github.com/cdpierse).
+The maintainer of this repository is [@cdpierse](https://github.com/cdpierse).
 
 If you have any questions, suggestions, or would like to make a contribution (please do 😁), feel free to get in touch at charlespierse@gmail.com
 
-I'd also highly suggest checking out [Captum](https://captum.ai/) if you find model explainability and interpretability interesting. They are doing amazing and important work. In fact, this package stands on the shoulders of the the incredible work being done by the teams at [Pytorch Captum](https://captum.ai/) and [Hugging Face](https://huggingface.co/) and would not exist if not for the amazing job they are both doing in the fields of NLP and model interpretability respectively.
+I'd also highly suggest checking out [Captum](https://captum.ai/) if you find model explainability and interpretability interesting.
+
+This package stands on the shoulders of the the incredible work being done by the teams at [Pytorch Captum](https://captum.ai/) and [Hugging Face](https://huggingface.co/) and would not exist if not for the amazing job they are both doing in the fields of ML and model interpretability respectively.
 
 ## Reading and Resources
 
-<a name="reading-resources"/>
+<details><summary>Captum</summary>
 
-**Captum**
+<p>
 
 All of the attributions within this package are calculated using PyTorch's explainability package [Captum](https://captum.ai/). See below for some useful links related to Captum.
 
@@ -951,7 +1011,11 @@ All of the attributions within this package are calculated using PyTorch's expla
 - [API Reference](https://captum.ai/api/)
 - [Model Interpretability with Captum - Narine Kokhilkyan (Video)](https://www.youtube.com/watch?v=iVSIFm0UN9I)
 
-**Attributions**
+</details>
+
+<details><summary>Attribution</summary>
+
+<p>
 
 Integrated Gradients (IG) and a variation of it Layer Integrated Gradients (LIG) are the core attribution methods on which Transformers Interpret is currently built. Below are some useful resources including the original paper and some video links explaining the inner mechanics. If you are curious about what is going on inside of Transformers Interpret I highly recommend checking out at least one of these resources.
 
@@ -960,7 +1024,9 @@ Integrated Gradients (IG) and a variation of it Layer Integrated Gradients (LIG)
 - [Henry AI Labs YouTube Primer on IG](https://www.youtube.com/watch?v=MB8KYX5UzKw)
 - [Explaining Explanations: Axiomatic Feature Interactions for Deep Networks](http://export.arxiv.org/abs/2002.04138) more recent paper [2020] extending the work of the original paper.
 
-## Miscellaneous
+</details>
+
+<details><summary>Miscellaneous</summary>
 
 **Captum Links**
 
@@ -970,3 +1036,5 @@ Below are some links I used to help me get this package together using Captum. T
 - [Link to runnable colab of captum with BERT](https://colab.research.google.com/drive/1snFbxdVDtL3JEFW7GNfRs1PZKgNHfoNz)
 
 [transformers]: https://huggingface.co/transformers/
+
+</details>

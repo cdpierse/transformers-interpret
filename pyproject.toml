@@ -31,6 +31,8 @@ twine = "^4.0.1"
 pytest = "^5.4.2"
 black = {version = "^22.6.0", allow-prereleases = true}
 pytest-cov = "^3.0.0"
+jupyterlab = "^3.4.5"
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
