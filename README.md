@@ -38,7 +38,7 @@ pip install transformers-interpret
 
 ### Text Explainers
 
-<details><summary> Sequence Classification Explainer and Pairwise Sequence Classification</summary>
+<details><summary>Sequence Classification Explainer and Pairwise Sequence Classification</summary>
 
 <p>
 Let's start by initializing a transformers' model and tokenizer, and running it through the `SequenceClassificationExplainer`.
@@ -926,6 +926,8 @@ image_classification_explainer.visualize(
 ```
 
 <a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/vision/heatmap_sbs.png">
+<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/vision/heatmap_sbs.png" width="100%" height="100%" align="center"/>
+</a>
 
 #### Overlay
 
@@ -939,6 +941,9 @@ image_classification_explainer.visualize(
 ```
 
 <a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/vision/overlay_sbs.png">
+<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/vision/overlay_sbs.png" width="100%" height="100%" align="center"/>
+</a>
+
 
 #### Masked Image
 
@@ -952,6 +957,9 @@ image_classification_explainer.visualize(
 ```
 
 <a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/vision/masked_image_sbs.png">
+<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/vision/masked_image_sbs.png" width="100%" height="100%" align="center"/>
+</a>
+
 
 #### Alpha Scaling
 
@@ -965,7 +973,9 @@ image_classification_explainer.visualize(
 ```
 
 <a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/vision/alpha_scaling_sbs.png">
+<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/vision/alpha_scaling_sbs.png" width="100%" height="100%" align="center"/>
 
+</a>
 </details>
 
 ## Future Development
