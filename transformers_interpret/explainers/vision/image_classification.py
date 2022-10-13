@@ -1,6 +1,6 @@
 import warnings
 from enum import Enum, unique
-from typing import Any, List, Optional, Tuple, Union, Dict
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -8,9 +8,8 @@ from captum.attr import IntegratedGradients, NoiseTunnel
 from captum.attr import visualization as viz
 from PIL import Image
 from transformers import AutoFeatureExtractor, AutoModelForImageClassification
-from transformers.modeling_utils import PreTrainedModel
-
 from transformers.image_utils import ImageFeatureExtractionMixin
+from transformers.modeling_utils import PreTrainedModel
 
 from .attribution_types import AttributionType, NoiseTunnelType
 
@@ -133,6 +132,8 @@ class ImageClassificationExplainer:
                 n_steps=self.n_steps_noise_tunnel,
             )
 
+        return self.attributions
+
     @staticmethod
     def _get_id2label_and_label2id_dict(
         labels: List[str],
@@ -174,7 +175,7 @@ class ImageClassificationExplainer:
         if noise_tunnel_n_samples:
             self.noise_tunnel_n_samples = noise_tunnel_n_samples
 
-        self._calculate_attributions(self.inputs, class_name, index)
+        return self._calculate_attributions(self.inputs, class_name, index)
 
 
 class VisualizationMethods(Enum):

@@ -977,6 +977,7 @@ This package is still in active development and there is much more planned. For 
 - ~~Support for NER models~~
 - ~~Support for Zero Shot Classification models.~~
 - ~~Ability to show attributions for multiple embedding type, rather than just the word embeddings.~~
+- Support for SentenceTransformer embedding models and other image embeddings
 - Additional attribution methods
 - ~~Support for vision transformer models~~
 - In depth examples
