@@ -163,7 +163,7 @@ class ImageClassificationExplainer:
         except ValueError:
             raise ValueError(f"noise_tunnel_type must be one of {NoiseTunnelType.__members__}")
 
-        self.inputs = self.feature_extractor(image, return_tensors="pt")
+        self.inputs = self.feature_extractor(image, return_tensors="pt").to(self.device)
         self.predicted_index = self.model(self.inputs["pixel_values"]).logits.argmax().item()
 
         if n_steps:
