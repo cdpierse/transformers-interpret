@@ -65,14 +65,14 @@ class ImageClassificationExplainer:
         side_by_side: bool = False,
     ):
         outlier_threshold = min(outlier_threshold * 100, 100)
-        np_attributions = np.transpose(self.attributions.squeeze().cpu().detach().numpy(), (1, 2, 0))
+        attributions_t = np.transpose(self.attributions.squeeze(), (1, 2, 0))
         if use_original_image_pixels:
             np_image = np.asarray(
-                self.feature_extractor.resize(self._image, size=(np_attributions.shape[0], np_attributions.shape[1]))
+                self.feature_extractor.resize(self._image, size=(attributions_t.shape[0], attributions_t.shape[1]))
             )
         else:
             # uses the normalized image pixels which is what the model sees, but can be hard to interpret visually
-            np_image = np.transpose(self.inputs["pixel_values"].squeeze().cpu().detach().numpy(), (1, 2, 0))
+            np_image = np.transpose(self.inputs.squeeze(), (1, 2, 0))
 
         if sign == "all" and method in ["alpha_scaling", "masked_image"]:
             warnings.warn(
@@ -83,7 +83,7 @@ class ImageClassificationExplainer:
             sign = "positive"
 
         visualizer = ImageAttributionVisualizer(
-            attributions=np_attributions,
+            attributions=attributions_t,
             pixel_values=np_image,
             outlier_threshold=outlier_threshold,
             pred_class=self.id2label[self.predicted_index],
@@ -102,7 +102,7 @@ class ImageClassificationExplainer:
         outputs = self.model(inputs)
         return outputs["logits"]
 
-    def _calculate_attributions(self, inputs: torch.Tensor, class_name: Union[int, None], index: Union[int, None]):
+    def _calculate_attributions(self, class_name: Union[int, None], index: Union[int, None]) -> np.ndarray:
 
         if class_name:
             self.selected_index = self.label2id[class_name]
@@ -115,23 +115,26 @@ class ImageClassificationExplainer:
         if self.attribution_type == AttributionType.INTEGRATED_GRADIENTS.value:
             ig = IntegratedGradients(self._forward_func)
             self.attributions, self.delta = ig.attribute(
-                inputs["pixel_values"],
+                self.inputs,
                 target=self.selected_index,
                 internal_batch_size=self.internal_batch_size,
                 n_steps=self.n_steps,
                 return_convergence_delta=True,
             )
+            self.delta = self.delta.cpu().detach().numpy()
         if self.attribution_type == AttributionType.INTEGRATED_GRADIENTS_NOISE_TUNNEL.value:
             ig_nt = IntegratedGradients(self._forward_func)
             nt = NoiseTunnel(ig_nt)
             self.attributions = nt.attribute(
-                inputs["pixel_values"],
+                self.inputs,
                 nt_samples=self.noise_tunnel_n_samples,
                 nt_type=self.noise_tunnel_type,
                 target=self.selected_index,
                 n_steps=self.n_steps_noise_tunnel,
             )
 
+        self.inputs = self.inputs.cpu().detach().numpy()
+        self.attributions = self.attributions.cpu().detach().numpy()
         return self.attributions
 
     @staticmethod
@@ -163,8 +166,8 @@ class ImageClassificationExplainer:
         except ValueError:
             raise ValueError(f"noise_tunnel_type must be one of {NoiseTunnelType.__members__}")
 
-        self.inputs = self.feature_extractor(image, return_tensors="pt")
-        self.predicted_index = self.model(self.inputs["pixel_values"]).logits.argmax().item()
+        self.inputs = self.feature_extractor(image, return_tensors="pt").to(self.device)["pixel_values"]
+        self.predicted_index = self.model(self.inputs).logits.argmax().item()
 
         if n_steps:
             self.n_steps = n_steps
@@ -175,7 +178,7 @@ class ImageClassificationExplainer:
         if noise_tunnel_n_samples:
             self.noise_tunnel_n_samples = noise_tunnel_n_samples
 
-        return self._calculate_attributions(self.inputs, class_name, index)
+        return self._calculate_attributions(class_name, index)
 
 
 class VisualizationMethods(Enum):
