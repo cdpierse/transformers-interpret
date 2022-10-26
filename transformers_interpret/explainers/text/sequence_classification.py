@@ -91,7 +91,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         return id2label, label2id
 
     def encode(self, text: str = None) -> list:
-        return self.tokenizer.encode(text, add_special_tokens=False)
+        return self.tokenizer.encode(text, add_special_tokens=False, truncation=True, max_length=self.tokenizer.model_max_length)
 
     def decode(self, input_ids: torch.Tensor) -> list:
         "Decode 'input_ids' to string using tokenizer"

@@ -121,7 +121,7 @@ class BaseExplainer(ABC):
             raise NotImplementedError("Lists of text are not currently supported.")
 
         text_ids = self.encode(text)
-        input_ids = self.tokenizer.encode(text, add_special_tokens=True)
+        input_ids = self.tokenizer.encode(text, add_special_tokens=False, truncation=True, max_length=self.tokenizer.model_max_length)
 
         # if no special tokens were added
         if len(text_ids) == len(input_ids):
