@@ -159,7 +159,7 @@ For this example we are using `"cross-encoder/ms-marco-MiniLM-L-6-v2"`, a high q
 ```python
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-from transformers_interpret.explainers.sequence_classification import PairwiseSequenceClassificationExplainer
+from transformers_interpret import PairwiseSequenceClassificationExplainer
 
 model = AutoModelForSequenceClassification.from_pretrained("cross-encoder/ms-marco-MiniLM-L-6-v2")
 tokenizer = AutoTokenizer.from_pretrained("cross-encoder/ms-marco-MiniLM-L-6-v2")
