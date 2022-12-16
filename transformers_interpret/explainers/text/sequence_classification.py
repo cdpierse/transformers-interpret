@@ -183,8 +183,10 @@ class SequenceClassificationExplainer(BaseExplainer):
             self.pred_probs = torch.sigmoid(preds)[0][0]
             return torch.sigmoid(preds)[:, :]
 
-        self.pred_probs = torch.softmax(preds, dim=1)[0][self.selected_index]
-        return torch.softmax(preds, dim=1)[:, self.selected_index]
+        self.pred_probs = torch.sigmoid(preds)[0][self.selected_index]
+        return torch.sigmoid(preds)[:, self.selected_index]
+        #self.pred_probs = torch.softmax(preds, dim=1)[0][self.selected_index]
+        #return            torch.softmax(preds, dim=1)[:, self.selected_index]
 
     def _calculate_attributions(self, embeddings: Embedding, index: int = None, class_name: str = None):  # type: ignore
         (

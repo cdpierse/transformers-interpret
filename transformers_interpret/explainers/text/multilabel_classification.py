@@ -127,7 +127,7 @@ class MultiLabelClassificationExplainer(SequenceClassificationExplainer):
 
         self.attributions = []
         self.pred_probs = []
-        self.labels = list(self.label2id.keys())
+        self.labels = [item[0] for item in sorted(self.label2id.items(), key=lambda x: x[1])]
         self.label_probs_dict = {}
         for i in range(self.model.config.num_labels):
             explainer = SequenceClassificationExplainer(
