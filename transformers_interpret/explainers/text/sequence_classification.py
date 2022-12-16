@@ -37,6 +37,7 @@ class SequenceClassificationExplainer(BaseExplainer):
         tokenizer: PreTrainedTokenizer,
         attribution_type: str = "lig",
         custom_labels: Optional[List[str]] = None,
+        independent_labels = False
     ):
         """
         Args:
@@ -46,6 +47,7 @@ class SequenceClassificationExplainer(BaseExplainer):
             custom_labels (List[str], optional): Applies custom labels to label2id and id2label configs.
                                                  Labels must be same length as the base model configs' labels.
                                                  Labels and ids are applied index-wise. Defaults to None.
+            independent_labels: If set to true, the sigmoid activation function is used on model output logits. Otherwise the softmax function is used. Defaults to False (Softmax).
 
         Raises:
             AttributionTypeNotSupportedError:
@@ -77,6 +79,8 @@ class SequenceClassificationExplainer(BaseExplainer):
 
         self.internal_batch_size = None
         self.n_steps = 50
+
+        self.independent_labels = independent_labels
 
     @staticmethod
     def _get_id2label_and_label2id_dict(
@@ -182,11 +186,13 @@ class SequenceClassificationExplainer(BaseExplainer):
             self._single_node_output = True
             self.pred_probs = torch.sigmoid(preds)[0][0]
             return torch.sigmoid(preds)[:, :]
-
-        self.pred_probs = torch.sigmoid(preds)[0][self.selected_index]
-        return torch.sigmoid(preds)[:, self.selected_index]
-        #self.pred_probs = torch.softmax(preds, dim=1)[0][self.selected_index]
-        #return            torch.softmax(preds, dim=1)[:, self.selected_index]
+        
+        if self.independent_labels:
+            self.pred_probs = torch.sigmoid(preds)[0][self.selected_index]
+            return torch.sigmoid(preds)[:, self.selected_index]
+        else:
+            self.pred_probs = torch.softmax(preds, dim=1)[0][self.selected_index]
+            return torch.softmax(preds, dim=1)[:, self.selected_index]
 
     def _calculate_attributions(self, embeddings: Embedding, index: int = None, class_name: str = None):  # type: ignore
         (

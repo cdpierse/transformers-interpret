@@ -25,6 +25,8 @@ class MultiLabelClassificationExplainer(SequenceClassificationExplainer):
     is for word_embeddings, if `1` is passed then attributions are w.r.t to position_embeddings.
     If a model does not take position ids in its forward method (distilbert) a warning will
     occur and the default word_embeddings will be chosen instead.
+
+    The sigmoid activation function is applied to the model outputs to produce final predictions.
     """
 
     def __init__(
@@ -36,6 +38,7 @@ class MultiLabelClassificationExplainer(SequenceClassificationExplainer):
     ):
         super().__init__(model, tokenizer, attribution_type, custom_labels)
         self.labels = []
+        self.independent_labels = True
 
     @property
     def word_attributions(self) -> dict:
@@ -133,6 +136,7 @@ class MultiLabelClassificationExplainer(SequenceClassificationExplainer):
             explainer = SequenceClassificationExplainer(
                 self.model,
                 self.tokenizer,
+                independent_labels=self.independent_labels
             )
             explainer(text, i, embedding_type)
 
@@ -152,3 +156,33 @@ class MultiLabelClassificationExplainer(SequenceClassificationExplainer):
         s += ")"
 
         return s
+
+class MultiClassClassificationExplainer(MultiLabelClassificationExplainer):
+    """
+    Explainer for independently explaining label attributions in a multi-label fashion
+    for models of type `{MODEL_NAME}ForSequenceClassification` from the Transformers package.
+    Every label is explained independently and the word attributions are a dictionary of labels
+    mapping to the word attributions for that label. Even if the model itself is not multi-label
+    by the resulting word attributions treat the labels as independent.
+
+    Calculates attribution for `text` using the given model
+    and tokenizer. Since this is a multi-label explainer, the attribution calculation time scales
+    linearly with the number of labels.
+
+    This explainer also allows for attributions with respect to a particlar embedding type.
+    This can be selected by passing a `embedding_type`. The default value is `0` which
+    is for word_embeddings, if `1` is passed then attributions are w.r.t to position_embeddings.
+    If a model does not take position ids in its forward method (distilbert) a warning will
+    occur and the default word_embeddings will be chosen instead.
+
+    The Softmax activation function is applied to the model outputs to produce final predictions.
+    """
+    def __init__(
+        self,
+        model: PreTrainedModel,
+        tokenizer: PreTrainedTokenizer,
+        attribution_type="lig",
+        custom_labels: Optional[List[str]] = None,
+    ):
+        super().__init__(model, tokenizer, attribution_type, custom_labels)
+        self.independent_labels = False
