@@ -1,11 +1,12 @@
-from typing import Dict, List, Optional, Tuple, Union
-
-from captum.attr import visualization as viz
-from transformers import PreTrainedModel, PreTrainedTokenizer
-import torch
-from transformers_interpret import BaseExplainer, LIGAttributions
 import warnings
+from typing import List, Optional
+
+import torch
+from captum.attr import visualization as viz
 from torch.nn.modules.sparse import Embedding
+from transformers import PreTrainedModel, PreTrainedTokenizer
+
+from transformers_interpret import LIGAttributions
 
 from .sequence_classification import SequenceClassificationExplainer
 

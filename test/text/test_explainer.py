@@ -9,6 +9,7 @@ from transformers import (
     PreTrainedTokenizer,
     PreTrainedTokenizerFast,
 )
+
 from transformers_interpret import BaseExplainer
 
 DISTILBERT_MODEL = AutoModelForMaskedLM.from_pretrained("distilbert-base-uncased")

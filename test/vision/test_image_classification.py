@@ -1,11 +1,12 @@
-import imp
+import os
+
 import pytest
 import requests
 from PIL import Image
 from transformers import AutoFeatureExtractor, AutoModelForImageClassification
+
 from transformers_interpret import ImageClassificationExplainer
 from transformers_interpret.explainers.vision.attribution_types import AttributionType
-import os
 
 model_name = "apple/mobilevit-small"
 MODEL = AutoModelForImageClassification.from_pretrained(model_name)

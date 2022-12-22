@@ -10,3 +10,13 @@ repos:
     hooks:
       - id: black
         args: [--line-length=120, --target-version=py38]
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.10.1
+    hooks:
+        - id: isort
+          args: [-m, '3', --tc, --profile, black]
+  - repo: https://github.com/myint/autoflake
+    rev: v1.4
+    hooks:
+        - id: autoflake
+          args: [--in-place, --remove-all-unused-imports]

@@ -1,13 +1,11 @@
 import warnings
-from enum import Enum, unique
-from typing import Any, Dict, List, Optional, Tuple, Union
+from enum import Enum
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
-import torch
 from captum.attr import IntegratedGradients, NoiseTunnel
 from captum.attr import visualization as viz
 from PIL import Image
-from transformers import AutoFeatureExtractor, AutoModelForImageClassification
 from transformers.image_utils import ImageFeatureExtractionMixin
 from transformers.modeling_utils import PreTrainedModel
 
