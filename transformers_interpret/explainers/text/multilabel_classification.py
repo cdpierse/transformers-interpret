@@ -1,12 +1,8 @@
-import warnings
 from typing import List, Optional
 
 import torch
 from captum.attr import visualization as viz
-from torch.nn.modules.sparse import Embedding
 from transformers import PreTrainedModel, PreTrainedTokenizer
-
-from transformers_interpret import LIGAttributions
 
 from .sequence_classification import SequenceClassificationExplainer
 
@@ -112,58 +108,6 @@ class MultiLabelClassificationExplainer(SequenceClassificationExplainer):
 
         self.pred_probs = torch.sigmoid(preds)[0][self.selected_index]
         return torch.sigmoid(preds)[:, self.selected_index]
-
-    def _calculate_attributions(self, embeddings: Embedding, index: int = None, class_name: str = None):  # type: ignore
-        (
-            self.input_ids,
-            self.ref_input_ids,
-            self.sep_idx,
-        ) = self._make_input_reference_pair(self.text)
-
-        (
-            self.position_ids,
-            self.ref_position_ids,
-        ) = self._make_input_reference_position_id_pair(self.input_ids)
-
-        (
-            self.token_type_ids,
-            self.ref_token_type_ids,
-        ) = self._make_input_reference_token_type_pair(self.input_ids, self.sep_idx)
-
-        self.attention_mask = self._make_attention_mask(self.input_ids)
-
-        if index is not None:
-            self.selected_index = index
-        elif class_name is not None:
-            if class_name in self.label2id.keys():
-                self.selected_index = int(self.label2id[class_name])
-            else:
-                s = f"'{class_name}' is not found in self.label2id keys."
-                s += "Defaulting to predicted index instead."
-                warnings.warn(s)
-                self.selected_index = int(self.predicted_class_index)
-        else:
-            self.selected_index = int(self.predicted_class_index)
-
-        reference_tokens = [token.replace("Ġ", "") for token in self.decode(self.input_ids)]
-        lig = LIGAttributions(
-            custom_forward=self._forward,
-            embeddings=embeddings,
-            tokens=reference_tokens,
-            input_ids=self.input_ids,
-            ref_input_ids=self.ref_input_ids,
-            sep_id=self.sep_idx,
-            attention_mask=self.attention_mask,
-            position_ids=self.position_ids,
-            ref_position_ids=self.ref_position_ids,
-            token_type_ids=self.token_type_ids,
-            ref_token_type_ids=self.ref_token_type_ids,
-            internal_batch_size=self.internal_batch_size,
-            n_steps=self.n_steps,
-        )
-
-        lig.summarize()
-        self.attributions = lig
 
     def __call__(
         self,
