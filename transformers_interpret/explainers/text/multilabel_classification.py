@@ -1,5 +1,6 @@
-from typing import Dict, List, Optional, Tuple, Union
+from typing import List, Optional
 
+import torch
 from captum.attr import visualization as viz
 from transformers import PreTrainedModel, PreTrainedTokenizer
 
@@ -66,7 +67,7 @@ class MultiLabelClassificationExplainer(SequenceClassificationExplainer):
 
         score_viz = [
             self.attributions[i].visualize_attributions(  # type: ignore
-                self.pred_probs[i],
+                self.pred_probs_list[i],
                 "",  # including a predicted class name does not make sense for this explainer
                 "n/a" if not true_class else true_class,  # no true class name for this explainer by default
                 self.labels[i],
@@ -87,6 +88,26 @@ class MultiLabelClassificationExplainer(SequenceClassificationExplainer):
             with open(html_filepath, "w") as html_file:
                 html_file.write(html.data)
         return html
+
+    def _forward(  # type: ignore
+        self,
+        input_ids: torch.Tensor,
+        token_type_ids=None,
+        position_ids: torch.Tensor = None,
+        attention_mask: torch.Tensor = None,
+    ):
+
+        preds = self._get_preds(input_ids, token_type_ids, position_ids, attention_mask)
+        preds = preds[0]
+
+        # if it is a single output node
+        if len(preds[0]) == 1:
+            self._single_node_output = True
+            self.pred_probs = torch.sigmoid(preds)[0][0]
+            return torch.sigmoid(preds)[:, :]
+
+        self.pred_probs = torch.sigmoid(preds)[0][self.selected_index]
+        return torch.sigmoid(preds)[:, self.selected_index]
 
     def __call__(
         self,
@@ -126,20 +147,22 @@ class MultiLabelClassificationExplainer(SequenceClassificationExplainer):
             self.internal_batch_size = internal_batch_size
 
         self.attributions = []
-        self.pred_probs = []
-        self.labels = list(self.label2id.keys())
+        self.pred_probs_list = []
+        self.labels = [item[0] for item in sorted(self.label2id.items(), key=lambda x: x[1])]
         self.label_probs_dict = {}
         for i in range(self.model.config.num_labels):
             explainer = SequenceClassificationExplainer(
                 self.model,
                 self.tokenizer,
             )
+            self.selected_index = i
+            explainer._forward = self._forward
             explainer(text, i, embedding_type)
 
             self.attributions.append(explainer.attributions)
             self.input_ids = explainer.input_ids
-            self.pred_probs.append(explainer.pred_probs)
-            self.label_probs_dict[self.id2label[i]] = explainer.pred_probs
+            self.pred_probs_list.append(self.pred_probs)
+            self.label_probs_dict[self.id2label[i]] = self.pred_probs
 
         return self.word_attributions
 

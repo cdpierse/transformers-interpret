@@ -65,7 +65,7 @@ Before you submit your pull request consider the following guidelines:
 
 - Search [GitHub](https://github.com/cdpierse/transformers-interpret/pulls) for an open or closed Pull Request
   that relates to your submission. You don't want to duplicate effort.
-- Create a fork of a repository and set up a remote that points to the original project: 
+- Create a fork of a repository and set up a remote that points to the original project:
 
   ```shell
   git remote add upstream git@github.com:cdpierse/transformers-interpret.git

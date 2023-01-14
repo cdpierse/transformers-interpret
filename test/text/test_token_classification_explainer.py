@@ -1,5 +1,6 @@
 import pytest
 from transformers import AutoModelForTokenClassification, AutoTokenizer
+
 from transformers_interpret import TokenClassificationExplainer
 from transformers_interpret.errors import (
     AttributionTypeNotSupportedError,

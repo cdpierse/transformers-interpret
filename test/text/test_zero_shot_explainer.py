@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
 from transformers_interpret import ZeroShotClassificationExplainer
 from transformers_interpret.errors import AttributionTypeNotSupportedError
 
