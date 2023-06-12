@@ -594,8 +594,8 @@ For the `ZeroShotClassificationExplainer` the visualize() method returns a table
 zero_shot_explainer.visualize("zero_shot.html")
 ```
 
-<a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/zero_shot_example.png">
-<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/zero_shot_example.png" width="100%" height="100%" align="center" />
+<a href="https://github.com/cdpierse/transformers-interpret/blob/master/images/zero_shot_example2.png">
+<img src="https://github.com/cdpierse/transformers-interpret/blob/master/images/zero_shot_example2.png" width="100%" height="100%" align="center" />
 </a>
 
 </details>
