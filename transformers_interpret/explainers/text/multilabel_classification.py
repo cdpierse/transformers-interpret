@@ -157,7 +157,7 @@ class MultiLabelClassificationExplainer(SequenceClassificationExplainer):
             )
             self.selected_index = i
             explainer._forward = self._forward
-            explainer(text, i, embedding_type)
+            explainer(text, i, None, embedding_type, internal_batch_size, n_steps)
 
             self.attributions.append(explainer.attributions)
             self.input_ids = explainer.input_ids
